@@ -1,15 +1,6 @@
 import React, { useState } from 'react';
 import { Patient, KanbanStage } from '../types/index.js';
-import {
-  AlertCircle,
-  Clock,
-  ArrowRight,
-  MoreVertical,
-  Activity,
-  UserCheck,
-  Calendar,
-  AlertTriangle,
-} from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 interface ClinicalKanbanProps {
   patients: Patient[];
@@ -19,14 +10,14 @@ interface ClinicalKanbanProps {
   onOpenDischargeForPatient: (patient: Patient) => void;
 }
 
-const STAGES: { id: KanbanStage; label: string; color: string; badgeBg: string }[] = [
-  { id: 'New Admission', label: 'Kemasukan Baru', color: 'border-blue-500', badgeBg: 'bg-blue-50 text-blue-800 border-blue-200' },
-  { id: 'Hospitalisation', label: 'Wad / Rawatan Biasa', color: 'border-teal-500', badgeBg: 'bg-teal-50 text-teal-800 border-teal-200' },
-  { id: 'Red Alert', label: 'Red Alert (Kritikal)', color: 'border-rose-500', badgeBg: 'bg-rose-50 text-rose-800 border-rose-200' },
-  { id: 'TCA', label: 'TCA (Susulan Hospital)', color: 'border-sky-500', badgeBg: 'bg-sky-50 text-sky-800 border-sky-200' },
-  { id: 'Home Leave', label: 'Cuti Rumah (Home Leave)', color: 'border-indigo-500', badgeBg: 'bg-indigo-50 text-indigo-800 border-indigo-200' },
-  { id: 'Refuse Medication', label: 'Tolak Ubat (Refuse Meds)', color: 'border-amber-500', badgeBg: 'bg-amber-50 text-amber-800 border-amber-200' },
-  { id: 'Discharged', label: 'Discaj / Keluar', color: 'border-slate-400', badgeBg: 'bg-slate-100 text-slate-700 border-slate-300' },
+const STAGES: { id: KanbanStage; label: string }[] = [
+  { id: 'New Admission', label: 'Kemasukan Baru' },
+  { id: 'Hospitalisation', label: 'Wad / Jagaan' },
+  { id: 'Red Alert', label: 'Red Alert' },
+  { id: 'TCA', label: 'TCA (Susulan)' },
+  { id: 'Home Leave', label: 'Cuti Rumah' },
+  { id: 'Refuse Medication', label: 'Tolak Ubat' },
+  { id: 'Discharged', label: 'Discaj' },
 ];
 
 export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
@@ -49,46 +40,55 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Kanban Header Note */}
-      <div className="flex items-center justify-between">
+      {/* Kanban Header */}
+      <div className="bg-white p-5 rounded-3xl border border-emerald-950/5 shadow-xs flex items-center justify-between">
         <div>
-          <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-            Papan Kanban Klinikal (Clinical Workflow Board)
+          <h2 className="text-base font-bold text-slate-900 tracking-tight">
+            Papan Kanban Klinikal (7 Fasa)
           </h2>
-          <p className="text-xs text-slate-500">
-            Jejak fasa perjalanan setiap pesakit dari kemasukan hingga discaj merangkumi amaran Red Alert dan temujanji TCA.
+          <p className="text-xs text-slate-500 mt-0.5">
+            Fasa perjalanan pesakit merangkumi amaran klinikal Red Alert dan susulan hospital.
           </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#EAF5DC] text-[#0B3B2C]">
+            7 Peringkat Aliran
+          </span>
         </div>
       </div>
 
-      {/* Kanban Board Horizontal Scroll */}
-      <div className="flex gap-3 overflow-x-auto pb-4 items-start min-h-[550px]">
+      {/* Horizontal Scroll Columns */}
+      <div className="flex gap-4 overflow-x-auto pb-4 items-start min-h-[550px]">
         {STAGES.map((stage) => {
           const stagePatients = patients.filter(
             (p) => (p.kanban_stage || 'New Admission') === stage.id
           );
 
+          const isAlertColumn = stage.id === 'Red Alert';
+
           return (
             <div
               key={stage.id}
-              className="w-72 shrink-0 bg-slate-100/80 rounded-xl border border-slate-200/80 flex flex-col max-h-[750px]"
+              className={`w-72 shrink-0 rounded-3xl border flex flex-col max-h-[750px] transition-colors shadow-2xs ${
+                isAlertColumn
+                  ? 'bg-rose-50/50 border-rose-200'
+                  : 'bg-white/80 border-emerald-950/5'
+              }`}
             >
               {/* Column Header */}
-              <div
-                className={`p-3 bg-white rounded-t-xl border-b border-slate-200 border-t-4 ${stage.color} flex items-center justify-between shadow-2xs`}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-slate-800">{stage.label}</span>
-                </div>
-                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${stage.badgeBg}`}>
+              <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-900 tracking-tight">
+                  {stage.label}
+                </span>
+                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-[#F4F8F4] text-[#0B3B2C] tabular-nums">
                   {stagePatients.length}
                 </span>
               </div>
 
-              {/* Cards Container */}
-              <div className="p-2.5 space-y-2.5 overflow-y-auto flex-1">
+              {/* Cards list */}
+              <div className="p-3 space-y-3 overflow-y-auto flex-1">
                 {stagePatients.length === 0 ? (
-                  <div className="py-8 text-center text-xs text-slate-400 italic">
+                  <div className="py-12 text-center text-xs text-slate-400">
                     Tiada pesakit
                   </div>
                 ) : (
@@ -97,70 +97,66 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
                     return (
                       <div
                         key={patient.id}
-                        className={`p-3 bg-white rounded-lg border transition-all hover:shadow-sm ${
+                        className={`p-3.5 bg-white rounded-2xl border transition-all shadow-2xs ${
                           isRed
-                            ? 'border-rose-300 ring-1 ring-rose-200'
-                            : 'border-slate-200 hover:border-slate-300'
+                            ? 'border-rose-300 ring-2 ring-rose-100'
+                            : 'border-emerald-950/5 hover:border-emerald-200'
                         }`}
                       >
-                        {/* Top: MRN & Zone/Bed */}
-                        <div className="flex items-center justify-between gap-1 mb-1.5">
-                          <span className="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">
+                        {/* Header: MRN & Location */}
+                        <div className="flex items-center justify-between text-xs mb-1">
+                          <span className="font-mono text-[11px] font-bold text-slate-400">
                             {patient.mrn}
                           </span>
-                          <span
-                            className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                              patient.zone === 'Zon Lelaki'
-                                ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                                : 'bg-pink-50 text-pink-700 border border-pink-200'
-                            }`}
-                          >
+                          <span className="text-[11px] font-semibold text-[#0B3B2C] bg-[#EAF5DC] px-2 py-0.5 rounded-md">
                             {patient.room_bed || patient.zone}
                           </span>
                         </div>
 
-                        {/* Patient Name & Age */}
+                        {/* Patient Name */}
                         <div
                           onClick={() => onSelectPatient(patient.id)}
-                          className="font-bold text-xs text-slate-900 hover:text-teal-700 cursor-pointer transition-colors"
+                          className="font-bold text-xs text-slate-900 hover:text-[#0B3B2C] cursor-pointer transition-colors leading-snug mt-1"
                         >
                           {patient.full_name}
                         </div>
-                        <div className="text-[11px] text-slate-500 mt-0.5">
-                          {patient.age} tahun • {patient.gender === 'Male' ? 'Lelaki' : 'Perempuan'}
+
+                        {/* Unboxed Metadata */}
+                        <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-1.5">
+                          <span>{patient.age} thn</span>
+                          <span className="text-slate-300">·</span>
+                          <span>{patient.gender === 'Male' ? 'Lelaki' : 'Perempuan'}</span>
                         </div>
 
                         {/* Primary Diagnosis */}
-                        <div className="mt-2 text-xs text-slate-600 line-clamp-2 bg-slate-50 p-1.5 rounded border border-slate-100">
+                        <div className="mt-2 text-xs text-slate-600 line-clamp-2 leading-relaxed bg-[#F8FAF8] p-2 rounded-xl">
                           {patient.primary_diagnosis}
                         </div>
 
-                        {/* Vitals Summary Pill */}
+                        {/* Vitals Row */}
                         {(patient.latest_bp || patient.latest_temp) && (
-                          <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-mono text-slate-700">
-                            <span>BP: {patient.latest_bp || '-'}</span>
-                            <span>T: {patient.latest_temp ? `${patient.latest_temp}°C` : '-'}</span>
-                            <span>SpO2: {patient.latest_spo2 ? `${patient.latest_spo2}%` : '-'}</span>
+                          <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-mono tabular-nums text-slate-600">
+                            <span>BP {patient.latest_bp || '-'}</span>
+                            <span>{patient.latest_temp ? `${patient.latest_temp}°C` : '-'}</span>
+                            <span>{patient.latest_spo2 ? `SpO2 ${patient.latest_spo2}%` : '-'}</span>
                           </div>
                         )}
 
-                        {/* Length of stay & actions */}
-                        <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                          <span className="text-slate-500 flex items-center gap-1">
+                        {/* Footer & Actions */}
+                        <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                          <span className="text-[11px] text-slate-400 flex items-center gap-1">
                             <Clock className="w-3 h-3 text-slate-400" />
                             {patient.length_of_stay !== undefined ? `${patient.length_of_stay} hari` : 'Hari 1'}
                           </span>
 
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1.5">
                             <button
                               onClick={() => onOpenMonitoringForPatient(patient)}
-                              title="Catat pemerhatian syif"
-                              className="px-2 py-1 rounded bg-slate-100 hover:bg-teal-50 hover:text-teal-700 text-slate-700 font-semibold transition-colors"
+                              className="px-2 py-1 rounded-xl text-[11px] font-semibold text-slate-700 hover:text-[#0B3B2C] hover:bg-[#EAF5DC] transition-colors"
                             >
                               Catat
                             </button>
 
-                            {/* Move Stage Selector */}
                             <select
                               value={patient.kanban_stage || stage.id}
                               disabled={updatingId === patient.admission_id}
@@ -175,11 +171,11 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
                                 }
                               }}
                               aria-label={`Ubah fasa pesakit ${patient.full_name}`}
-                              className="px-1.5 py-1 rounded bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-[10px] font-medium cursor-pointer"
+                              className="px-2 py-1 rounded-xl border border-slate-200 bg-[#F8FAF8] text-slate-700 text-[10px] font-bold cursor-pointer focus:outline-hidden"
                             >
                               {STAGES.map((s) => (
                                 <option key={s.id} value={s.id}>
-                                  ➔ {s.label}
+                                  {s.label}
                                 </option>
                               ))}
                             </select>

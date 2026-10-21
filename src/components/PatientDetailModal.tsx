@@ -55,30 +55,30 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-3xl w-full max-h-[92vh] flex flex-col my-auto">
+      <div className="bg-white rounded-3xl border border-emerald-950/10 shadow-2xl max-w-3xl w-full max-h-[92vh] flex flex-col my-auto overflow-hidden">
         {/* Header */}
-        <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50 rounded-t-2xl">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-teal-700 text-white">
-              <User className="w-5 h-5" />
+        <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-[#F8FAF8]">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-[#0B3B2C] text-[#C5E875] flex items-center justify-center">
+              <User className="w-5 h-5 stroke-[2.5]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold text-slate-900">
+                <h2 className="text-base font-bold text-slate-900 tracking-tight">
                   {data?.patient ? data.patient.full_name : 'Profil Pesakit'}
                 </h2>
                 {data?.patient && (
-                  <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-700">
+                  <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#EAF5DC] text-[#0B3B2C]">
                     {data.patient.mrn}
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 mt-0.5">
                 {data?.patient ? `${data.patient.zone} • ${data.patient.room_bed || 'Tanpa Katil'}` : 'Memuat data...'}
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200">
+          <button onClick={onClose} className="p-2 rounded-2xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -302,9 +302,9 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
                   onClose();
                   onOpenMonitoring(data.patient);
                 }}
-                className="px-4 py-2 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-xs"
+                className="px-4 py-2.5 rounded-2xl bg-[#0B3B2C] hover:bg-[#07281E] text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-xs"
               >
-                <ClipboardList className="w-4 h-4" />
+                <ClipboardList className="w-4 h-4 text-[#C5E875]" />
                 <span>+ Catat Pemantauan</span>
               </button>
 
@@ -313,7 +313,7 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
                   onClose();
                   onOpenDischarge(data.patient);
                 }}
-                className="px-3.5 py-2 rounded-lg border border-rose-300 hover:bg-rose-50 text-rose-700 font-semibold text-xs transition-colors flex items-center gap-1.5"
+                className="px-4 py-2.5 rounded-2xl border border-rose-300 hover:bg-rose-50 text-rose-700 font-semibold text-xs transition-colors flex items-center gap-1.5"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Discaj Pesakit</span>

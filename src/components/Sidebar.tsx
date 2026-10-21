@@ -12,6 +12,8 @@ import {
   Settings,
   X,
   HeartPulse,
+  Sparkles,
+  Bed,
 } from 'lucide-react';
 
 export type NavTab =
@@ -41,16 +43,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
 
-  const navItems: { id: NavTab; label: string; icon: React.FC<{ className?: string }>; adminOnly?: boolean }[] = [
+  const clinicalItems: { id: NavTab; label: string; icon: React.FC<{ className?: string }> }[] = [
     { id: 'dashboard', label: 'Papan Pemuka', icon: LayoutDashboard },
-    { id: 'patients', label: 'Senarai Pesakit', icon: Users },
-    { id: 'kanban', label: 'Papan Kanban Klinikal', icon: Kanban },
-    { id: 'care_board', label: 'Patient Care Board (ADL)', icon: CheckSquare },
-    { id: 'monitoring', label: 'Rekod Pemantauan (DAPUD)', icon: FileSpreadsheet },
-    { id: 'reports', label: 'Laporan & Eksport CSV', icon: FileText },
+    { id: 'patients', label: 'Direktori Pesakit', icon: Users },
+    { id: 'kanban', label: 'Aliran Kanban', icon: Kanban },
+    { id: 'care_board', label: 'Care Board (ADL)', icon: CheckSquare },
+    { id: 'monitoring', label: 'Log DAPUD', icon: FileSpreadsheet },
+  ];
+
+  const adminItems: { id: NavTab; label: string; icon: React.FC<{ className?: string }>; adminOnly?: boolean }[] = [
+    { id: 'reports', label: 'Laporan & Eksport', icon: FileText },
     { id: 'staff', label: 'Pengurusan Staf', icon: UserCog, adminOnly: true },
-    { id: 'audit', label: 'Log Audit Keselamatan', icon: ShieldCheck, adminOnly: true },
-    { id: 'settings', label: 'Tetapan Akaun', icon: Settings },
+    { id: 'audit', label: 'Log Keselamatan', icon: ShieldCheck, adminOnly: true },
+    { id: 'settings', label: 'Tetapan Sistem', icon: Settings },
   ];
 
   return (
@@ -58,71 +63,137 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Mobile Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-xs lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-xs lg:hidden transition-opacity"
           onClick={onClose}
         />
       )}
 
-      {/* Sidebar container */}
+      {/* Floating Modern Rounded Sidebar matching reference */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-100 flex flex-col transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white lg:my-3 lg:ml-3 lg:h-[calc(100vh-24px)] lg:rounded-3xl border border-emerald-950/10 shadow-xs flex flex-col justify-between transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        {/* Brand / Logo */}
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-teal-500/20 text-teal-400 border border-teal-500/30 flex items-center justify-center">
-              <HeartPulse className="w-5 h-5" />
+        <div>
+          {/* Logo & Brand Header */}
+          <div className="p-5 pb-4 border-b border-slate-100 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#0B3B2C] text-[#C5E875] flex items-center justify-center shadow-xs">
+                <HeartPulse className="w-5 h-5 stroke-[2.5]" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-extrabold text-slate-900 text-sm tracking-tight">Convee</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#C5E875] text-[#0D382B]">
+                    Care
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 font-medium">Patient Monitoring</p>
+              </div>
             </div>
-            <div>
-              <div className="text-sm font-bold text-white tracking-wide">CONVEE CARE</div>
-              <div className="text-[10px] text-teal-400 font-medium">Monitoring & Clinical Board</div>
+
+            <button
+              onClick={onClose}
+              className="p-1 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 lg:hidden"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Facility Zone Dropdown-like Pill */}
+          <div className="px-4 pt-3 pb-1">
+            <div className="px-3 py-2 rounded-2xl bg-[#F4F8F4] border border-emerald-950/5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                <span className="text-xs font-semibold text-slate-700">Wad 2 Zon (L & P)</span>
+              </div>
+              <span className="text-[10px] font-mono text-slate-400 font-bold">12 Katil</span>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-md text-slate-400 hover:text-white lg:hidden"
-          >
-            <X className="w-5 h-5" />
-          </button>
+
+          {/* Navigation Items */}
+          <nav className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-270px)]">
+            {/* Section 1: Operasi Klinikal */}
+            <div>
+              <div className="px-3 pt-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                Operasi Klinikal
+              </div>
+              <div className="space-y-1">
+                {clinicalItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = currentTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        onSelectTab(item.id);
+                        onClose();
+                      }}
+                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs transition-all ${
+                        isActive
+                          ? 'bg-[#C5E875] text-[#0D382B] font-bold shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-[#F2F6F2] font-medium'
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#0D382B]' : 'text-slate-400'}`} />
+                      <span className="truncate">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Section 2: Pentadbiran & Laporan */}
+            <div>
+              <div className="px-3 pt-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                Pentadbiran & Rekod
+              </div>
+              <div className="space-y-1">
+                {adminItems
+                  .filter((item) => !item.adminOnly || isAdmin)
+                  .map((item) => {
+                    const Icon = item.icon;
+                    const isActive = currentTab === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          onSelectTab(item.id);
+                          onClose();
+                        }}
+                        className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs transition-all ${
+                          isActive
+                            ? 'bg-[#C5E875] text-[#0D382B] font-bold shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-[#F2F6F2] font-medium'
+                        }`}
+                      >
+                        <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#0D382B]' : 'text-slate-400'}`} />
+                        <span className="truncate">{item.label}</span>
+                      </button>
+                    );
+                  })}
+              </div>
+            </div>
+          </nav>
         </div>
 
-        {/* Navigation list */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-            Menu Operasi
-          </div>
-          {navItems
-            .filter((item) => !item.adminOnly || isAdmin)
-            .map((item) => {
-              const Icon = item.icon;
-              const isActive = currentTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    onSelectTab(item.id);
-                    onClose();
-                  }}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                    isActive
-                      ? 'bg-teal-600 text-white shadow-xs font-semibold'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-        </nav>
-
-        {/* Footer info */}
-        <div className="p-3 border-t border-slate-800 text-xs text-slate-400">
-          <div className="px-3 py-2 rounded-lg bg-slate-800/60 border border-slate-700/50">
-            <div className="text-[11px] font-semibold text-slate-300">Cloudflare Workers + D1</div>
-            <div className="text-[10px] text-teal-400 font-mono mt-0.5">SQLite Active • Asia/KL</div>
+        {/* Bottom Facility Capacity Badge */}
+        <div className="p-4 border-t border-slate-100">
+          <div className="p-3.5 rounded-2xl bg-[#EAF5DC]/70 border border-[#C5E875]/60 text-slate-900">
+            <div className="flex items-center justify-between text-xs font-bold mb-1.5">
+              <span className="flex items-center gap-1.5 text-[#0B3B2C]">
+                <Bed className="w-3.5 h-3.5" />
+                Kapasiti Katil
+              </span>
+              <span className="text-[11px] font-mono text-emerald-800 font-extrabold">6 / 12</span>
+            </div>
+            {/* Progress bar */}
+            <div className="w-full h-1.5 bg-white/80 rounded-full overflow-hidden">
+              <div className="h-full bg-[#0B3B2C] rounded-full" style={{ width: '50%' }} />
+            </div>
+            <p className="text-[10px] text-slate-500 mt-2 font-medium">
+              Zon Lelaki: 3/6 · Zon Perempuan: 3/6
+            </p>
           </div>
         </div>
       </aside>

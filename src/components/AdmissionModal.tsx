@@ -94,19 +94,19 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col my-auto">
+      <div className="bg-white rounded-3xl border border-emerald-950/10 shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col my-auto overflow-hidden">
         {/* Header */}
-        <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50 rounded-t-2xl">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-teal-700 text-white">
-              <UserPlus className="w-5 h-5" />
+        <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-[#F8FAF8]">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-[#0B3B2C] text-[#C5E875] flex items-center justify-center">
+              <UserPlus className="w-5 h-5 stroke-[2.5]" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-slate-900">Pendaftaran Kemasukan Pesakit Baru</h2>
+              <h2 className="text-base font-bold text-slate-900 tracking-tight">Pendaftaran Kemasukan Pesakit Baru</h2>
               <p className="text-xs text-slate-500">Nombor MRN (cth: PT-007) akan dijana secara automatik.</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200">
+          <button onClick={onClose} className="p-2 rounded-2xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -301,21 +301,21 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({
           </div>
 
           {/* Footer actions */}
-          <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-2">
+          <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-100 font-semibold text-slate-700 transition-colors"
+              className="px-4 py-2.5 rounded-2xl border border-slate-200 hover:bg-slate-100 font-semibold text-slate-700 transition-colors text-xs"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold transition-colors flex items-center gap-2 shadow-xs"
+              className="px-5 py-2.5 rounded-2xl bg-[#0B3B2C] hover:bg-[#07281E] text-white font-semibold transition-colors flex items-center gap-2 shadow-xs text-xs"
             >
-              <Check className="w-4 h-4" />
+              <Check className="w-4 h-4 text-[#C5E875]" />
               <span>{loading ? 'Mendaftar...' : 'Sahkan & Daftar'}</span>
             </button>
           </div>

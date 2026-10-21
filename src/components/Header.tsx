@@ -1,14 +1,14 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext.js';
 import {
-  Activity,
   LogOut,
-  UserCheck,
-  PlusCircle,
-  ClipboardList,
+  Plus,
+  ClipboardPenLine,
   Menu,
+  Search,
+  Bell,
   Clock,
-  ShieldAlert,
+  CircleDot,
 } from 'lucide-react';
 import { ZoneType } from '../types/index.js';
 
@@ -32,129 +32,133 @@ export const Header: React.FC<HeaderProps> = ({
   // Determine current active shift based on local hour
   const now = new Date();
   const hour = now.getHours();
-  let activeShiftLabel = 'Syif AM (7:00am - 5:00pm)';
+  let activeShiftName = 'Syif AM';
+  let activeShiftHours = '07:00 – 17:00';
   let isVitalShift = true;
 
   if (hour >= 17 && hour < 21) {
-    activeShiftLabel = 'Syif PM (5:00pm - 9:00pm)';
+    activeShiftName = 'Syif PM';
+    activeShiftHours = '17:00 – 21:00';
     isVitalShift = false;
   } else if (hour >= 21 || hour < 7) {
-    activeShiftLabel = 'Syif Night (9:00pm - 7:00am)';
+    activeShiftName = 'Syif Night';
+    activeShiftHours = '21:00 – 07:00';
     isVitalShift = true;
   }
 
+  const initials = user?.full_name
+    ? user.full_name
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+    : 'U';
+
   return (
-    <header className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-xs">
-      <div className="px-4 py-2.5 flex items-center justify-between gap-3">
-        {/* Left: Hamburger & Facility Branding */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onToggleSidebar}
-            className="p-1.5 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100 lg:hidden"
-            aria-label="Toggle menu"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
+    <header className="px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+      {/* Left: Mobile hamburger & Global Search bar styled like reference */}
+      <div className="flex items-center gap-3 flex-1 max-w-md">
+        <button
+          onClick={onToggleSidebar}
+          className="p-2.5 rounded-2xl bg-white border border-emerald-950/5 text-slate-600 hover:text-slate-900 shadow-2xs lg:hidden"
+          aria-label="Toggle navigation menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
 
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-teal-700 flex items-center justify-center text-white shadow-xs">
-              <Activity className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-slate-900 tracking-tight text-base">CONVEE CARE CENTRE</span>
-              </div>
-              <p className="hidden lg:block text-xs text-slate-500 font-medium">Sistem Pemantauan Pesakit & Papan Klinikal</p>
-            </div>
+        {/* Search bar with ⌘ K badge like reference */}
+        <div className="relative w-full hidden sm:block">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+          <input
+            type="text"
+            placeholder="Cari pesakit, rekod, atau katil..."
+            className="w-full pl-9 pr-14 py-2.5 bg-white rounded-2xl border border-emerald-950/5 text-xs focus:outline-hidden focus:ring-1 focus:ring-[#0B3B2C] shadow-2xs transition-all"
+          />
+          <div className="absolute right-3 top-2.5 flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-[#F4F8F4] text-[10px] font-mono font-semibold text-slate-500 border border-emerald-950/5">
+            <span>⌘</span>
+            <span>K</span>
           </div>
         </div>
+      </div>
 
-        {/* Middle: Zone Filter & Live Shift Indicator */}
-        <div className="hidden md:flex items-center gap-2.5">
-          {/* Shift indicator */}
-          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200">
-            <Clock className="w-3.5 h-3.5 text-slate-500" />
-            <span>{activeShiftLabel}</span>
-            {isVitalShift && (
-              <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
-                Pemeriksaan Vital
-              </span>
-            )}
-          </div>
+      {/* Middle: Zone Selector buttons */}
+      <div className="hidden lg:flex items-center gap-2">
+        <div className="inline-flex rounded-2xl border border-emerald-950/5 p-1 bg-white shadow-2xs text-xs font-medium">
+          <button
+            onClick={() => onZoneChange('')}
+            className={`px-3.5 py-1.5 rounded-xl transition-all ${
+              currentZone === ''
+                ? 'bg-[#C5E875] text-[#0D382B] font-bold shadow-2xs'
+                : 'text-slate-600 hover:text-slate-950'
+            }`}
+          >
+            Semua Zon
+          </button>
+          <button
+            onClick={() => onZoneChange('Zon Lelaki')}
+            className={`px-3.5 py-1.5 rounded-xl transition-all ${
+              currentZone === 'Zon Lelaki'
+                ? 'bg-[#C5E875] text-[#0D382B] font-bold shadow-2xs'
+                : 'text-slate-600 hover:text-blue-900'
+            }`}
+          >
+            Zon Lelaki
+          </button>
+          <button
+            onClick={() => onZoneChange('Zon Perempuan')}
+            className={`px-3.5 py-1.5 rounded-xl transition-all ${
+              currentZone === 'Zon Perempuan'
+                ? 'bg-[#C5E875] text-[#0D382B] font-bold shadow-2xs'
+                : 'text-slate-600 hover:text-rose-900'
+            }`}
+          >
+            Zon Perempuan
+          </button>
+        </div>
+      </div>
 
-          {/* Zone Selector Buttons */}
-          <div className="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-100 text-xs font-medium">
-            <button
-              onClick={() => onZoneChange('')}
-              className={`px-3 py-1 rounded-md transition-colors ${
-                currentZone === ''
-                  ? 'bg-white text-slate-900 font-semibold shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Semua Zon
-            </button>
-            <button
-              onClick={() => onZoneChange('Zon Lelaki')}
-              className={`px-3 py-1 rounded-md transition-colors ${
-                currentZone === 'Zon Lelaki'
-                  ? 'bg-blue-600 text-white font-semibold shadow-xs'
-                  : 'text-slate-600 hover:text-blue-700'
-              }`}
-            >
-              Zon Lelaki
-            </button>
-            <button
-              onClick={() => onZoneChange('Zon Perempuan')}
-              className={`px-3 py-1 rounded-md transition-colors ${
-                currentZone === 'Zon Perempuan'
-                  ? 'bg-pink-600 text-white font-semibold shadow-xs'
-                  : 'text-slate-600 hover:text-pink-700'
-              }`}
-            >
-              Zon Perempuan
-            </button>
-          </div>
+      {/* Right: Shift Status, User & Primary CTA Button */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Shift indicator badge */}
+        <div className="hidden xl:flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-white border border-emerald-950/5 text-xs font-medium shadow-2xs text-slate-700">
+          <Clock className="w-3.5 h-3.5 text-slate-400" />
+          <span className="font-bold text-[#0B3B2C]">{activeShiftName}</span>
+          <span className="text-slate-300">·</span>
+          <span className="font-mono text-slate-500 tabular-nums text-[11px]">{activeShiftHours}</span>
         </div>
 
-        {/* Right: Action Buttons & User Profile */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onOpenAdmission}
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold shadow-xs transition-colors"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>Daftar Pesakit</span>
-          </button>
-
-          <button
-            onClick={onOpenMonitoring}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs transition-colors"
-          >
-            <ClipboardList className="w-4 h-4" />
-            <span>Catat Syif</span>
-          </button>
-
-          <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
-
-          {/* User info */}
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:block text-right">
-              <div className="text-xs font-bold text-slate-800">{user?.full_name}</div>
-              <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-                {user?.role === 'admin' ? 'Pentadbir' : 'Jururawat Bertugas'}
-              </div>
+        {/* User Card */}
+        <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-2xl bg-white border border-emerald-950/5 shadow-2xs">
+          <div className="w-8 h-8 rounded-full bg-[#EAF5DC] text-[#0B3B2C] flex items-center justify-center font-bold text-xs ring-2 ring-[#C5E875]">
+            {initials}
+          </div>
+          <div className="hidden sm:block text-left text-xs leading-none">
+            <div className="font-bold text-slate-900 truncate max-w-[120px]">
+              {user?.full_name}
             </div>
-
-            <button
-              onClick={() => logout()}
-              title="Log keluar sistem"
-              className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
+            <div className="text-[10px] text-slate-400 mt-1 font-mono">
+              ID: {user?.id.slice(-6).toUpperCase()}
+            </div>
           </div>
+          <button
+            onClick={() => logout()}
+            title="Log keluar sistem"
+            className="p-1 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors ml-1"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+          </button>
         </div>
+
+        {/* Primary CTA (Inspired by + Create campaigns in reference) */}
+        <button
+          onClick={onOpenAdmission}
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-[#0B3B2C] hover:bg-[#07281E] text-white text-xs font-semibold transition-all shadow-xs shrink-0"
+        >
+          <Plus className="w-3.5 h-3.5 text-[#C5E875]" />
+          <span>Daftar Pesakit</span>
+        </button>
       </div>
     </header>
   );

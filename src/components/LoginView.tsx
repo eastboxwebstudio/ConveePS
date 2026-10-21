@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext.js';
-import { Activity, Lock, User, AlertCircle, ShieldCheck } from 'lucide-react';
+import { Lock, User, AlertCircle, HeartPulse, ShieldCheck, ArrowRight } from 'lucide-react';
 
 export const LoginView: React.FC = () => {
   const { login } = useAuth();
@@ -33,28 +33,35 @@ export const LoginView: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col justify-center items-center p-4">
-      <div className="max-w-md w-full space-y-6">
-        {/* Branding header */}
+    <div className="min-h-screen bg-[#EAF1E9] flex flex-col justify-center items-center p-4 antialiased">
+      <div className="max-w-sm w-full space-y-6">
+        {/* Corporate Healthcare Branding */}
         <div className="text-center space-y-2">
-          <div className="inline-flex w-12 h-12 rounded-2xl bg-teal-600 text-white items-center justify-center shadow-lg shadow-teal-500/20 mb-1">
-            <Activity className="w-7 h-7" />
+          <div className="inline-flex w-14 h-14 rounded-3xl bg-[#0B3B2C] text-[#C5E875] items-center justify-center shadow-xs mb-1">
+            <HeartPulse className="w-7 h-7 stroke-[2.5]" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-white">CONVEE CARE CENTRE</h1>
-          <p className="text-xs text-slate-400">
-            Sistem Pemantauan Pesakit & Papan Klinikal (DAPUD)
-          </p>
+          <div>
+            <div className="flex items-center justify-center gap-1.5">
+              <h1 className="text-xl font-extrabold tracking-tight text-slate-900">CONVEE</h1>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#C5E875] text-[#0D382B]">
+                CARE
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 font-medium mt-1">
+              Patient Monitoring & Clinical Operations
+            </p>
+          </div>
         </div>
 
-        {/* Login Card */}
-        <div className="bg-white rounded-2xl p-6 shadow-xl border border-slate-200 space-y-5">
-          <div>
+        {/* Corporate Login Card */}
+        <div className="bg-white rounded-3xl p-7 shadow-xs border border-emerald-950/5 space-y-5">
+          <div className="pb-3 border-b border-slate-100">
             <h2 className="text-sm font-bold text-slate-900">Log Masuk Kakitangan</h2>
-            <p className="text-xs text-slate-500">Masukkan nama pengguna dan kata laluan berdaftar.</p>
+            <p className="text-xs text-slate-400 mt-0.5">Sahkan identiti anda untuk memulakan sesi syif bertugas.</p>
           </div>
 
           {error && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-xs font-medium flex items-start gap-2">
+            <div className="p-3.5 bg-rose-50 border border-rose-200/80 rounded-2xl text-rose-700 text-xs font-medium flex items-start gap-2">
               <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
@@ -62,31 +69,31 @@ export const LoginView: React.FC = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
             <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Nama Pengguna (Username)</label>
+              <label className="font-bold text-slate-700">Nama Pengguna (Username)</label>
               <div className="relative">
-                <User className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                 <input
                   type="text"
                   required
                   placeholder="admin atau nurse.hajar"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 focus:border-teal-600 focus:outline-hidden font-mono"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-2xl border border-emerald-950/10 focus:ring-1 focus:ring-[#0B3B2C] focus:outline-hidden font-mono text-xs transition-colors bg-[#F8FAF8]"
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Kata Laluan (Passcode)</label>
+              <label className="font-bold text-slate-700">Kata Laluan (Passcode)</label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                 <input
                   type="password"
                   required
                   placeholder="••••••••"
                   value={passcode}
                   onChange={(e) => setPasscode(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 focus:border-teal-600 focus:outline-hidden font-mono"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-2xl border border-emerald-950/10 focus:ring-1 focus:ring-[#0B3B2C] focus:outline-hidden font-mono text-xs transition-colors bg-[#F8FAF8]"
                 />
               </div>
             </div>
@@ -94,9 +101,10 @@ export const LoginView: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 px-4 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold text-xs transition-colors shadow-xs"
+              className="w-full py-3 px-4 rounded-2xl bg-[#0B3B2C] hover:bg-[#07281E] text-white font-semibold text-xs transition-all shadow-xs mt-2 flex items-center justify-center gap-2"
             >
-              {loading ? 'Mengesahkan...' : 'Log Masuk'}
+              <span>{loading ? 'Mengesahkan Pengguna...' : 'Log Masuk Sesi'}</span>
+              <ArrowRight className="w-4 h-4 text-[#C5E875]" />
             </button>
           </form>
 
@@ -107,28 +115,28 @@ export const LoginView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => handleQuickLogin('admin', 'Admin@123')}
-                className="p-2 text-left rounded-lg bg-slate-50 hover:bg-teal-50 border border-slate-200 hover:border-teal-200 transition-colors"
+                className="p-2.5 text-left rounded-2xl bg-[#F8FAF8] hover:bg-[#EAF5DC] border border-emerald-950/5 transition-colors cursor-pointer group"
               >
-                <div className="font-bold text-[11px] text-slate-800">Admin</div>
-                <div className="text-[10px] text-slate-500 font-mono">admin / Admin@123</div>
+                <div className="font-bold text-[11px] text-slate-800 group-hover:text-[#0B3B2C]">Admin</div>
+                <div className="text-[10px] text-slate-400 font-mono">admin / Admin@123</div>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleQuickLogin('nurse.hajar', 'Nurse@123')}
-                className="p-2 text-left rounded-lg bg-slate-50 hover:bg-teal-50 border border-slate-200 hover:border-teal-200 transition-colors"
+                className="p-2.5 text-left rounded-2xl bg-[#F8FAF8] hover:bg-[#EAF5DC] border border-emerald-950/5 transition-colors cursor-pointer group"
               >
-                <div className="font-bold text-[11px] text-slate-800">Staff Nurse</div>
-                <div className="text-[10px] text-slate-500 font-mono">nurse.hajar / Nurse@123</div>
+                <div className="font-bold text-[11px] text-slate-800 group-hover:text-[#0B3B2C]">Staff Nurse</div>
+                <div className="text-[10px] text-slate-400 font-mono">nurse.hajar / Nurse@123</div>
               </button>
             </div>
           </div>
         </div>
 
-        {/* Security watermark */}
-        <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
-          <ShieldCheck className="w-3.5 h-3.5" />
-          <span>Cloudflare D1 • SQLite Encryption & PBKDF2 Web Crypto</span>
+        {/* Corporate Accreditation footer */}
+        <div className="text-center text-[11px] text-slate-500 flex items-center justify-center gap-1.5 font-medium">
+          <ShieldCheck className="w-3.5 h-3.5 text-[#0B3B2C]" />
+          <span>Cloudflare D1 · Convee Healthcare Protocol</span>
         </div>
       </div>
     </div>

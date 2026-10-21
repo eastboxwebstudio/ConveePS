@@ -52,52 +52,52 @@ export const DischargeModal: React.FC<DischargeModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-lg w-full flex flex-col my-auto">
+      <div className="bg-white rounded-3xl border border-emerald-950/10 shadow-2xl max-w-lg w-full flex flex-col my-auto overflow-hidden">
         {/* Header */}
-        <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50 rounded-t-2xl">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-rose-600 text-white">
-              <LogOut className="w-5 h-5" />
+        <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-[#F8FAF8]">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-rose-600 text-white flex items-center justify-center shadow-xs">
+              <LogOut className="w-5 h-5 stroke-[2.5]" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-slate-900">Proses Pelepasan / Discaj Pesakit</h2>
-              <p className="text-xs text-slate-500">Pelepasan rasmi daripada Convee Care Centre.</p>
+              <h2 className="text-base font-bold text-slate-900 tracking-tight">Proses Pelepasan / Discaj Pesakit</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Pelepasan rasmi terus daripada Convee Care Centre.</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200">
+          <button onClick={onClose} className="p-2 rounded-2xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
           {error && (
-            <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-medium">
+            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 font-medium">
               {error}
             </div>
           )}
 
           {/* Patient summary pill */}
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+          <div className="p-4 rounded-2xl bg-[#F8FAF8] border border-emerald-950/5">
             <div className="flex items-center justify-between">
               <div>
-                <span className="font-mono text-xs font-bold text-slate-800">{patient.mrn}</span>
-                <span className="text-slate-400 mx-2">•</span>
+                <span className="font-mono text-xs font-bold text-slate-700">{patient.mrn}</span>
+                <span className="text-slate-300 mx-2">•</span>
                 <span className="font-bold text-slate-900">{patient.full_name}</span>
               </div>
-              <span className="text-slate-500 text-[11px] font-semibold">{patient.zone}</span>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#EAF5DC] text-[#0B3B2C]">{patient.zone}</span>
             </div>
-            <div className="text-slate-500 text-[11px] mt-1">
+            <div className="text-slate-500 text-[11px] mt-1.5">
               Diagnosis: {patient.primary_diagnosis}
             </div>
           </div>
 
           <div className="space-y-1">
-            <label className="font-semibold text-slate-700">Destinasi Discaj *</label>
+            <label className="font-bold text-slate-700">Destinasi Discaj *</label>
             <select
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
+              className="w-full px-3.5 py-2.5 rounded-2xl border border-emerald-950/10 bg-[#F8FAF8] text-slate-800 font-semibold focus:outline-hidden"
             >
               <option value="Rumah (Jagaan Keluarga)">Rumah (Jagaan Keluarga)</option>
               <option value="Hospital Rujukan / Pakar">Hospital Rujukan / Pakar</option>
@@ -107,24 +107,24 @@ export const DischargeModal: React.FC<DischargeModalProps> = ({
           </div>
 
           <div className="space-y-1">
-            <label className="font-semibold text-slate-700">Ringkasan Pelepasan & Keadaan Semasa</label>
+            <label className="font-bold text-slate-700">Ringkasan Pelepasan & Keadaan Semasa</label>
             <textarea
               rows={3}
               placeholder="cth: Pesakit discaj dalam keadaan stabil, luka kering, ubat dibekalkan untuk 2 minggu."
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-teal-600 focus:outline-hidden"
+              className="w-full px-3.5 py-2.5 rounded-2xl border border-emerald-950/10 focus:ring-1 focus:ring-[#0B3B2C] focus:outline-hidden bg-[#F8FAF8]"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="font-semibold text-slate-700">Bekalan Ubat Yang Diserahkan</label>
+            <label className="font-bold text-slate-700">Bekalan Ubat Yang Diserahkan</label>
             <input
               type="text"
               placeholder="cth: Amlodipine 10mg (14 hari), Aspirin 100mg (14 hari)"
               value={medsGiven}
               onChange={(e) => setMedsGiven(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-teal-600 focus:outline-hidden"
+              className="w-full px-3.5 py-2.5 rounded-2xl border border-emerald-950/10 focus:ring-1 focus:ring-[#0B3B2C] focus:outline-hidden bg-[#F8FAF8]"
             />
           </div>
 
@@ -134,26 +134,26 @@ export const DischargeModal: React.FC<DischargeModalProps> = ({
                 type="checkbox"
                 checked={contactNotified}
                 onChange={(e) => setContactNotified(e.target.checked)}
-                className="w-4 h-4 rounded text-teal-600 border-slate-300 focus:ring-teal-500"
+                className="w-4 h-4 rounded text-emerald-800 border-slate-300 focus:ring-emerald-700"
               />
-              <span className="font-medium">Waris / Penjaga telah dimaklumkan mengenai discaj ini.</span>
+              <span className="font-medium text-xs">Waris / Penjaga telah dimaklumkan mengenai discaj ini.</span>
             </label>
           </div>
 
           {/* Footer actions */}
-          <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-2">
+          <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-100 font-semibold text-slate-700 transition-colors"
+              className="px-4 py-2.5 rounded-2xl border border-slate-200 hover:bg-slate-100 font-semibold text-slate-700 transition-colors text-xs"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold transition-colors flex items-center gap-2 shadow-xs"
+              className="px-5 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-semibold transition-colors flex items-center gap-2 shadow-xs text-xs"
             >
               <Check className="w-4 h-4" />
               <span>{loading ? 'Memproses...' : 'Sahkan & Lengkapkan Discaj'}</span>

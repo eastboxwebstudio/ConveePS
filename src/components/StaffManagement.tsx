@@ -89,30 +89,30 @@ export const StaffManagement: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Header bar */}
-      <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-teal-50 text-teal-700">
-            <UserCog className="w-5 h-5" />
+      <div className="p-5 bg-white rounded-3xl border border-emerald-950/5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-2xl bg-[#EAF5DC] text-[#0B3B2C] flex items-center justify-center">
+            <UserCog className="w-5 h-5 stroke-[2.5]" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-slate-900">Pengurusan Akaun Staf & Jururawat</h2>
-            <p className="text-xs text-slate-500">Kawalan akses peranan Admin dan Staff Nurse serta pengurusan kata laluan.</p>
+            <h2 className="text-base font-bold text-slate-900 tracking-tight">Pengurusan Akaun Staf & Jururawat</h2>
+            <p className="text-xs text-slate-500 mt-0.5">Kawalan akses peranan Admin dan Staff Nurse serta pengurusan kata laluan.</p>
           </div>
         </div>
 
         <button
           onClick={() => setIsAddOpen(true)}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold shadow-xs transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#0B3B2C] hover:bg-[#07281E] text-white text-xs font-semibold shadow-xs transition-colors shrink-0"
         >
-          <UserPlus className="w-4 h-4" />
+          <UserPlus className="w-4 h-4 text-[#C5E875]" />
           <span>Tambah Staf Baru</span>
         </button>
       </div>
 
       {successMsg && (
-        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800 text-xs font-medium flex items-center justify-between">
+        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-xs font-medium flex items-center justify-between">
           <span>{successMsg}</span>
           <button onClick={() => setSuccessMsg(null)}>
             <X className="w-4 h-4" />
@@ -121,7 +121,7 @@ export const StaffManagement: React.FC = () => {
       )}
 
       {error && (
-        <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-800 text-xs font-medium flex items-center justify-between">
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 text-xs font-medium flex items-center justify-between">
           <span>{error}</span>
           <button onClick={() => setError(null)}>
             <X className="w-4 h-4" />
@@ -130,7 +130,7 @@ export const StaffManagement: React.FC = () => {
       )}
 
       {/* Staff table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-3xl border border-emerald-950/5 shadow-xs overflow-hidden">
         <table className="w-full text-left border-collapse text-xs">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
