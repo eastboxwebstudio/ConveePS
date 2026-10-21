@@ -1,0 +1,18 @@
+name = "patient-monitoring-system"
+main = "src/worker/index.ts"
+compatibility_date = "2026-10-21"
+compatibility_flags = ["nodejs_compat"]
+
+[site]
+bucket = "./dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "patient-monitoring-d1"
+database_id = "your-cloudflare-d1-database-id-here"
+migrations_dir = "./migrations"
+
+[vars]
+ENVIRONMENT = "production"
+FACILITY_NAME = "Convee Care Centre"
+TIMEZONE = "Asia/Kuala_Lumpur"

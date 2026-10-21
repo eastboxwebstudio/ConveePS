@@ -1,0 +1,6 @@
+{
+  "name": "Patient Monitoring System",
+  "description": "Healthcare patient monitoring, admission lifecycle, clinical observation tracking, and nursing board system.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,684 @@
+# MASTER PROMPT: PATIENT MONITORING SYSTEM
+## Cloudflare Workers + D1 | Production-Oriented Full-Stack Application
+
+Act as a senior full-stack software architect, healthcare information system analyst, UI/UX designer, database engineer, and Cloudflare deployment specialist.
+
+Build a complete, secure, responsive web application called **Patient Monitoring System**. The application must track patients throughout their entire journey from admission to discharge.
+
+This must be a working full-stack application, not a static mockup or a frontend-only demonstration.
+
+## 1. Primary Objectives
+
+Build a system that allows authorized hospital or healthcare facility personnel to:
+
+- Register and manage patient admissions.
+- Monitor patients throughout their stay.
+- Record updates and observations according to the approved facility workflow.
+- Track the current stage and status of every patient.
+- Maintain a chronological history of patient monitoring activities.
+- Process and record patient discharge.
+- Search and retrieve active and discharged patient records.
+- Manage staff accounts through an administrator.
+- Audit important user actions.
+
+The system has two roles only:
+
+1. Admin
+2. Staff Nurse
+
+Use the supplied Google Sheets as the primary reference for the actual workflow, fields, terminology, formulas, status definitions, and reporting requirements.
+
+Spreadsheet references:
+
+- https://docs.google.com/spreadsheets/d/1komR-2Jqng8z-cRNR6y0DokP2IdI0NHsW59dPbjb5to/edit?gid=1616194676#gid=1616194676
+- https://docs.google.com/spreadsheets/d/1komR-2Jqng8z-cRNR6y0DokP2IdI0NHsW59dPbjb5to/edit?gid=0#gid=0
+- https://docs.google.com/spreadsheets/d/1komR-2Jqng8z-cRNR6y0DokP2IdI0NHsW59dPbjb5to/edit?gid=716650735#gid=716650735
+- https://docs.google.com/spreadsheets/d/1komR-2Jqng8z-cRNR6y0DokP2IdI0NHsW59dPbjb5to/edit?gid=521989591#gid=521989591
+
+Do not assume that you can access these spreadsheets automatically. If their contents are unavailable, ask me to provide exported XLSX/CSV files before finalizing the data model.
+
+Do not invent clinical fields, required observations, medical protocols, or workflow rules. Create a field-mapping document that maps each relevant spreadsheet tab and column to the proposed application fields. Identify any missing information and request clarification when necessary.
+
+## 2. Required Technology Stack
+
+Use the following stack:
+
+- Frontend: React + TypeScript.
+- Build tool: Vite.
+- Styling: Tailwind CSS.
+- UI components: accessible, reusable components.
+- Icons: Lucide.
+- Backend: Cloudflare Workers.
+- API: REST API served by Cloudflare Workers.
+- Database: Cloudflare D1 using SQLite-compatible SQL.
+- Database migrations: version-controlled SQL migration files.
+- Deployment: Cloudflare Workers with a static frontend asset build.
+- Development and deployment tooling: Wrangler CLI.
+- Source control: GitHub-compatible project structure.
+
+Use the current, supported Cloudflare Workers application structure and configuration.
+
+Do not use Firebase, Supabase, PostgreSQL, MySQL, localStorage as a database, or a separate Node.js production server.
+
+Use D1 for persistent application data. Use Cloudflare bindings for database access.
+
+Keep all database access on the server side. Never expose database credentials, privileged API secrets, or authentication secrets in frontend code.
+
+Before implementation, verify compatibility between the chosen frontend build, Cloudflare Workers, D1 bindings, and current Wrangler configuration. Follow current official Cloudflare documentation where available.
+
+## 3. User Roles and Permissions
+
+### Admin
+
+Admin must be able to:
+
+- Log in using an individual account and passcode.
+- View the system dashboard.
+- Create new Staff Nurse accounts.
+- Edit staff names, usernames, and account details.
+- Generate or reset staff passcodes.
+- Activate or deactivate staff accounts.
+- Revoke active sessions when an account is disabled or credentials are reset.
+- View active and discharged patients.
+- Register admissions and correct authorized patient information.
+- View monitoring history.
+- Review and authorize discharge according to the configured workflow.
+- View activity and audit logs.
+- Access reports and export authorized records.
+- Configure approved system-level settings.
+
+Prevent the system from accidentally removing its last active administrator. Protect administrator accounts from unauthorized deletion or privilege escalation.
+
+### Staff Nurse
+
+Staff Nurse must be able to:
+
+- Log in using an individual username and passcode.
+- View the patient list permitted by the configured access policy.
+- Search and filter patient records.
+- View authorized patient details.
+- Record monitoring observations and nursing updates defined by the approved workflow.
+- Add timestamped notes and updates.
+- View the chronological history of a patient.
+- Update permitted workflow statuses.
+- Initiate a discharge request if the configured workflow allows it.
+- View their own activity history where appropriate.
+
+Staff Nurse must not be able to:
+
+- Create, delete, or promote user accounts.
+- Change roles or administrator permissions.
+- Reset another user's passcode.
+- Delete audit logs.
+- Permanently delete patient records.
+- Override administrator-only approval requirements.
+- Access records or actions prohibited by their permissions.
+
+Enforce authorization in the backend for every protected endpoint. Hiding buttons in the frontend is not sufficient.
+
+## 4. Passcode-Based Authentication
+
+Implement secure authentication using a username and an administrator-issued passcode.
+
+Requirements:
+
+- Each account must have a unique username.
+- Store only a strong, salted password/passcode hash; never store plaintext passcodes.
+- Use a modern password hashing algorithm suitable for the Workers runtime, such as PBKDF2 using Web Crypto, or another securely supported implementation.
+- Enforce minimum passcode length and reasonable complexity rules appropriate to the facility's security policy.
+- Apply login rate limiting and temporary lockout or progressive delays after repeated failed attempts.
+- Do not reveal whether a username exists when authentication fails.
+- Use secure, random session tokens.
+- Store session identifiers in appropriately configured Secure, HttpOnly, SameSite cookies.
+- Store session records server-side in D1 or another explicitly approved Cloudflare session mechanism.
+- Implement session expiry, logout, session revocation, and credential-reset invalidation.
+- Validate account status and role on the server.
+- Require the administrator to change initial or temporary credentials at first login.
+- Protect state-changing requests against CSRF where applicable.
+- Validate all user inputs on the server.
+- Never return passcode hashes or session secrets in API responses.
+
+A passcode is an authentication credential, not a replacement for access control. Do not rely on a shared passcode for all staff.
+
+Create a secure initial administrator bootstrap process using a secret configured through Wrangler or Cloudflare secrets. Do not hardcode default administrator credentials in the repository or automatically create a publicly accessible default admin account.
+
+## 5. Application Navigation
+
+Create role-specific navigation.
+
+### Admin navigation
+
+- Dashboard
+- Patients
+- Admissions
+- Monitoring Records
+- Discharge
+- Staff Management
+- Reports
+- Audit Logs
+- System Settings
+- My Account
+- Logout
+
+### Staff Nurse navigation
+
+- Dashboard
+- Patient List
+- Patient Details
+- Monitoring Records
+- My Activity
+- My Account
+- Logout
+
+Show only the navigation items permitted for each role. Enforce the same permissions through the API.
+
+## 6. Dashboard
+
+Create a professional healthcare operations dashboard.
+
+Display useful summary cards such as:
+
+- Total currently admitted patients.
+- New admissions for the selected period.
+- Patients awaiting required workflow updates.
+- Patients awaiting discharge processing.
+- Patients discharged during the selected period.
+- Relevant overdue workflow items, only if the approved workflow defines deadlines.
+
+Include:
+
+- Active patient list.
+- Recent admissions.
+- Recent monitoring activity.
+- Discharge activity.
+- Search and filtering.
+- Date-range filtering.
+- Status indicators.
+- Clear loading, empty, success, and error states.
+
+Calculate all figures from actual D1 data. Never use hardcoded demonstration statistics in production.
+
+Do not invent clinical risk scores or automatically classify patients as medically stable or unstable.
+
+## 7. Patient Admission and Registration
+
+Create an admission workflow based on the actual spreadsheet fields.
+
+The application should support the following general concepts, subject to confirmation against the spreadsheet:
+
+- Unique internal patient record ID.
+- Patient identifier or medical record number, where applicable.
+- Patient information required by the facility.
+- Admission date and time.
+- Ward, department, or location if applicable.
+- Admission source or category if specified.
+- Responsible or assigned staff, if required.
+- Admission status.
+- Relevant administrative remarks.
+- Record creation and update timestamps.
+
+Requirements:
+
+- Validate required fields.
+- Prevent accidental duplicate admissions.
+- Support corrections by authorized users.
+- Record who created and updated the admission.
+- Keep admission information separate from the monitoring history.
+- Use server-generated timestamps.
+- Display date and time consistently in the facility's configured timezone.
+- Do not assume a patient identifier is globally unique unless the facility's rules confirm it.
+
+Only collect patient information that is required by the approved workflow.
+
+## 8. Patient Monitoring Workflow
+
+Build a structured monitoring module using the exact relevant columns from the supplied spreadsheet.
+
+Each monitoring entry should support, where applicable:
+
+- Patient and admission reference.
+- Date and time of the observation or activity.
+- Staff member who entered the record.
+- The approved monitoring fields.
+- Notes or remarks.
+- Workflow status, if required.
+- Creation and update timestamps.
+
+Requirements:
+
+- Use field types appropriate to the source data.
+- Support numeric values, dates, times, dropdowns, text, and checkboxes where appropriate.
+- Apply validation based on approved field definitions.
+- Preserve the author and timestamp for each entry.
+- Display monitoring records in chronological order.
+- Provide a clear patient timeline.
+- Prevent unauthorized editing.
+- Do not silently overwrite previous records.
+- Preserve the original history of significant changes.
+- Where corrections are allowed, record the original value, revised value, reason where required, user, and timestamp.
+- Clearly distinguish observation time from record-entry time when both are needed.
+
+Do not invent vital-sign thresholds, treatment recommendations, clinical alerts, or automated medical decisions.
+
+If the spreadsheet defines specific fields, calculations, conditional formatting, or workflow rules, reproduce them accurately after confirming their meaning.
+
+## 9. Patient Status and Lifecycle
+
+Support a configurable patient lifecycle, initially covering:
+
+- Admission in progress.
+- Admitted / Active.
+- Monitoring in progress, if required.
+- Discharge pending, if required.
+- Discharged.
+- Cancelled or corrected admission, if permitted by the approved workflow.
+
+Treat these as proposed states, not final clinical policy. Map the actual states from the spreadsheets before implementing them.
+
+Requirements:
+
+- Record every important status transition.
+- Store the previous status, new status, user, and timestamp.
+- Validate allowed transitions on the backend.
+- Prevent discharged patients from appearing in the active list by default.
+- Retain historical records after discharge.
+- Reopening a discharged admission must require explicit permission and an audit trail.
+- Never delete a patient history simply because the patient has been discharged.
+
+## 10. Discharge Workflow
+
+Build the discharge process according to the facility's approved workflow.
+
+The workflow may include:
+
+- Selecting an active admission.
+- Reviewing required admission and monitoring records.
+- Completing required discharge fields.
+- Recording the discharge date and time.
+- Recording authorized discharge details and remarks.
+- Identifying the staff member who initiated the process.
+- Obtaining an authorized approval if required.
+- Updating the admission status to Discharged.
+- Recording the final status transition.
+- Displaying the completed discharge record in the patient history.
+
+The system must prevent discharge completion if mandatory administrative fields or approved workflow requirements remain incomplete.
+
+Do not invent mandatory clinical criteria or assert that a patient is medically fit for discharge. The application records and enforces the workflow specified by the facility; clinical decisions remain with authorized healthcare professionals.
+
+## 11. Staff Management
+
+Build a complete staff administration module.
+
+Admin must be able to:
+
+- Create a staff account.
+- Assign a unique username.
+- Set a temporary passcode.
+- Edit permitted profile information.
+- Reset a passcode.
+- Activate or deactivate an account.
+- View account creation date and last login where available.
+- View account status.
+- Revoke existing sessions.
+
+Use soft deactivation instead of permanent deletion when staff accounts have associated records.
+
+Preserve the identity of the staff member who created each monitoring entry, even after the staff account has been deactivated.
+
+Prevent username duplication and unauthorized role changes.
+
+## 12. Database Design
+
+Design a normalized D1 schema with foreign keys, indexes, constraints, and version-controlled migrations.
+
+Consider tables such as:
+
+- users
+- sessions
+- patients
+- admissions
+- monitoring_records
+- monitoring_field_definitions, if configurable fields are genuinely required
+- admission_status_history
+- discharge_records
+- audit_logs
+- system_settings, if needed
+
+Adjust the schema to match the spreadsheet instead of creating unnecessary generic tables.
+
+Expected database principles:
+
+- Use primary keys and appropriate foreign keys.
+- Add indexes for patient identifiers, admission status, admission dates, and common searches.
+- Use UTC timestamps in storage and convert to the facility's timezone for display.
+- Use transactions for multi-step operations that must succeed or fail together.
+- Add appropriate uniqueness constraints.
+- Use parameterized SQL queries.
+- Define clear deletion and retention rules.
+- Preserve historical records and audit integrity.
+- Store no unnecessary sensitive information.
+- Never store authentication secrets in audit metadata.
+
+Produce complete SQL migration files and explain the relationships between tables.
+
+Do not store the entire application database in a single JSON column or a single unstructured table.
+
+## 13. REST API
+
+Implement a documented API with consistent request validation and error handling.
+
+Suggested endpoints:
+
+Authentication:
+- POST /api/auth/login
+- POST /api/auth/logout
+- GET /api/auth/me
+- POST /api/auth/change-passcode
+
+Dashboard:
+- GET /api/dashboard/summary
+
+Staff:
+- GET /api/staff
+- POST /api/staff
+- GET /api/staff/:id
+- PATCH /api/staff/:id
+- POST /api/staff/:id/reset-passcode
+- POST /api/staff/:id/deactivate
+- POST /api/staff/:id/activate
+
+Patients:
+- GET /api/patients
+- POST /api/patients
+- GET /api/patients/:id
+- PATCH /api/patients/:id
+
+Admissions:
+- GET /api/admissions
+- POST /api/admissions
+- GET /api/admissions/:id
+- PATCH /api/admissions/:id
+
+Monitoring:
+- GET /api/admissions/:id/monitoring
+- POST /api/admissions/:id/monitoring
+- GET /api/monitoring/:id
+- PATCH /api/monitoring/:id, only when correction is permitted
+
+Discharge:
+- GET /api/discharges
+- POST /api/admissions/:id/discharge
+- GET /api/discharges/:id
+
+Audit:
+- GET /api/audit-logs
+
+Reports:
+- GET /api/reports/admissions
+- GET /api/reports/discharges
+- GET /api/reports/monitoring
+
+These are proposed endpoints. Adjust them to the finalized data model and workflow.
+
+For every endpoint:
+
+- Validate authentication.
+- Validate authorization.
+- Validate request parameters and body.
+- Use parameterized database queries.
+- Return appropriate HTTP status codes.
+- Return consistent JSON responses.
+- Avoid exposing internal exceptions or sensitive data.
+- Apply pagination and filtering to list endpoints.
+- Enforce access control for exports and individual patient records.
+- Apply rate limiting to sensitive endpoints.
+
+## 14. UI/UX Requirements
+
+Design a modern, professional healthcare management interface.
+
+Visual direction:
+
+- Clean, calm, clinical design.
+- White or light neutral background.
+- Subtle blue or teal accents.
+- Clear typography and spacing.
+- Readable tables.
+- Accessible form controls.
+- Consistent status badges.
+- Responsive sidebar navigation.
+- Mobile-friendly layouts for staff nurses.
+- Desktop-optimized administration and reporting.
+- Confirmation dialogs for sensitive operations.
+- Toast notifications for successful or failed actions.
+- Clear validation messages.
+- Accessible contrast and keyboard navigation.
+
+Build reusable components for:
+
+- Sidebar.
+- Header.
+- Dashboard cards.
+- Data tables.
+- Search and filter controls.
+- Forms.
+- Patient status indicators.
+- Patient timeline.
+- Modal dialogs.
+- Pagination.
+- Loading skeletons.
+- Empty states.
+- Error states.
+
+Use realistic UI labels and dates, but do not seed production with fabricated patient information.
+
+The login screen should provide username and passcode fields and a clear error message when authentication fails.
+
+## 15. Patient Search and Reports
+
+Provide searchable and filterable patient records.
+
+Search and filters may include:
+
+- Patient identifier.
+- Patient name, if permitted.
+- Admission date range.
+- Current admission status.
+- Ward or department, if present in the source workflow.
+- Discharge date range.
+- Staff member, where authorized.
+
+Provide reports for admissions, monitoring activities, and discharges based on the actual source requirements.
+
+Allow CSV export where authorized. Apply the same permissions and filters to exported data as to on-screen records.
+
+Do not expose sensitive patient data through public URLs, analytics services, client-side logs, or unprotected downloads.
+
+## 16. Audit and Accountability
+
+Maintain an audit trail for important actions, including:
+
+- Login success and failure events where appropriate.
+- Account creation and deactivation.
+- Passcode reset events without recording the passcode.
+- Patient creation and authorized edits.
+- Admission and discharge transitions.
+- Monitoring record creation and correction.
+- Report exports.
+- Permission-related events.
+
+Record the actor, action, target record, timestamp, and relevant non-sensitive metadata.
+
+Audit logs must not be editable or deletable through ordinary application endpoints.
+
+Avoid recording passcodes, session tokens, or unnecessary patient information in logs.
+
+Implement appropriate pagination and administrator-only access for audit log review.
+
+## 17. Healthcare Privacy and Security
+
+Patient records contain sensitive personal information.
+
+Build the system using privacy and security by design.
+
+Requirements:
+
+- Enforce least-privilege access.
+- Require authenticated access to all patient endpoints.
+- Apply server-side role and resource authorization.
+- Use HTTPS in production.
+- Validate and normalize input.
+- Protect against SQL injection, XSS, CSRF, and insecure direct object references.
+- Configure security headers.
+- Avoid storing sensitive information in browser storage.
+- Do not cache protected patient responses in publicly accessible caches.
+- Keep secrets in Cloudflare secrets or appropriate protected bindings.
+- Implement session expiry and revocation.
+- Define backups, recovery, retention, and deletion procedures.
+- Avoid third-party analytics or services that receive identifiable patient information unless explicitly approved.
+- Do not include real patient data in development fixtures or public repositories.
+
+Treat applicable Malaysian personal data protection, healthcare confidentiality, facility security policies, and retention requirements as matters requiring verification before production deployment.
+
+Do not claim regulatory compliance merely because security features have been implemented. Identify outstanding compliance and operational requirements.
+
+## 18. Cloudflare Deployment
+
+Prepare the project for deployment to Cloudflare Workers with D1.
+
+Provide:
+
+- A complete project directory structure.
+- package.json.
+- TypeScript configuration.
+- Vite configuration.
+- Wrangler configuration.
+- Cloudflare D1 binding.
+- SQL migration files.
+- Frontend build and asset-serving configuration.
+- API implementation.
+- Environment variable and secret documentation.
+- Development scripts.
+- Production deployment scripts.
+- A README with step-by-step instructions.
+
+The deployment process must cover:
+
+1. Install dependencies.
+2. Authenticate with Cloudflare.
+3. Create a D1 database.
+4. Configure the database binding.
+5. Apply database migrations locally.
+6. Apply migrations to the production database.
+7. Configure required secrets.
+8. Bootstrap the first administrator securely.
+9. Run the application locally.
+10. Build and deploy to Cloudflare Workers.
+11. Verify authentication and database connectivity.
+12. Configure the custom domain if required.
+
+Use actual Cloudflare commands and configuration that match the selected project structure.
+
+Do not place production secrets in committed files.
+
+Never run destructive production database operations without explicit confirmation and a verified backup.
+
+## 19. Testing Requirements
+
+Implement automated tests where practical.
+
+Cover at least:
+
+- Successful login.
+- Invalid passcode.
+- Inactive account login rejection.
+- Session expiration and logout.
+- Admin-only staff management.
+- Staff Nurse access restrictions.
+- Patient admission creation.
+- Monitoring record creation.
+- Unauthorized patient access rejection.
+- Valid and invalid status transitions.
+- Discharge workflow validation.
+- Audit log creation.
+- Duplicate record prevention.
+- API validation errors.
+- Database migration execution.
+
+Include instructions for testing against a local D1 database.
+
+Do not mark features as complete unless they are implemented and tested.
+
+## 20. Implementation Workflow
+
+Work in the following phases.
+
+### Phase 1 — Spreadsheet Analysis
+
+Inspect all supplied spreadsheet tabs and produce:
+
+- A list of tabs and their purpose.
+- A field-by-field mapping.
+- Identification of duplicate or related fields.
+- Workflow and status mapping.
+- Formula and validation mapping.
+- Required reports.
+- Unresolved questions.
+
+If the spreadsheets cannot be accessed, stop short of claiming that the workflow has been faithfully reproduced. Request the source files and continue only with clearly labelled provisional assumptions.
+
+### Phase 2 — Architecture and Database
+
+Produce the system architecture, permission matrix, entity relationship design, SQL schema, and migrations.
+
+### Phase 3 — Backend
+
+Implement authentication, authorization, database operations, workflow validation, audit logging, and API error handling.
+
+### Phase 4 — Frontend
+
+Implement the complete role-based interface and connect every form, table, filter, and action to the real API.
+
+### Phase 5 — Testing
+
+Run type checks, build checks, database migration checks, and available automated tests. Fix errors before proceeding.
+
+### Phase 6 — Deployment
+
+Prepare and document the Cloudflare Workers and D1 deployment process.
+
+### Phase 7 — Handover
+
+Provide:
+
+- Final project structure.
+- Database schema and migrations.
+- API documentation.
+- Role and permission documentation.
+- Environment and secret setup.
+- Local development instructions.
+- Production deployment instructions.
+- Testing results.
+- Known limitations and outstanding questions.
+
+## 21. Non-Negotiable Rules
+
+- Do not build a frontend-only demo.
+- Do not substitute localStorage for D1.
+- Do not use mock API responses as production functionality.
+- Do not invent spreadsheet columns or clinical procedures.
+- Do not expose privileged credentials to the browser.
+- Do not trust frontend-only authorization.
+- Do not permanently delete patient history when discharging a patient.
+- Do not generate fake patient data in production.
+- Do not claim deployment succeeded unless it was actually verified.
+- Do not leave buttons that appear functional but have no working implementation.
+- Do not skip migrations, validation, error handling, or security checks.
+- Do not attempt to implement every feature in one oversized code-generation step if this compromises correctness.
+
+Start with Phase 1. Confirm which spreadsheet data is accessible, analyze the workflow, and identify missing information. Then propose the database design and implementation plan before generating the complete application.
+
+Once the schema and workflow are confirmed, implement the application incrementally, keeping the project runnable after each phase.
+
+The final deliverable must be a maintainable, secure, functional application that can be deployed to Cloudflare Workers with D1.
