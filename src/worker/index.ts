@@ -104,7 +104,8 @@ export default {
       try {
         const zone = url.searchParams.get('zone');
         let query = `
-          SELECT p.*, a.id as admission_id, a.admission_date, a.lifecycle_status, a.kanban_stage,
+          SELECT p.*, a.id as admission_id, a.admission_number, a.admission_date, a.admission_time, 
+                 a.lifecycle_status, a.kanban_stage,
                  CAST(julianday('now') - julianday(a.admission_date) AS INTEGER) as length_of_stay
           FROM patients p
           LEFT JOIN admissions a ON a.patient_id = p.id AND a.lifecycle_status = 'Active'
@@ -127,7 +128,7 @@ export default {
     }
 
     // ==========================================
-    // 4. API: DASHBOARD SUMMARY (Complete payload for React UI)
+    // 4. API: DASHBOARD SUMMARY (Strict DashboardStats structure)
     // ==========================================
     if (url.pathname === '/api/dashboard/summary' && request.method === 'GET') {
       try {
@@ -135,12 +136,12 @@ export default {
           "SELECT COUNT(*) as count FROM admissions WHERE lifecycle_status = 'Active'"
         ).first())?.count || 0;
 
-        const stableCount = (await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM admissions WHERE lifecycle_status = 'Active' AND kanban_stage = 'Stable'"
+        const maleCount = (await env.DB.prepare(
+          "SELECT COUNT(*) as count FROM patients p JOIN admissions a ON a.patient_id = p.id WHERE a.lifecycle_status = 'Active' AND p.zone = 'Zon Lelaki'"
         ).first())?.count || 0;
 
-        const criticalCount = (await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM admissions WHERE lifecycle_status = 'Active' AND kanban_stage = 'High Attention'"
+        const femaleCount = (await env.DB.prepare(
+          "SELECT COUNT(*) as count FROM patients p JOIN admissions a ON a.patient_id = p.id WHERE a.lifecycle_status = 'Active' AND p.zone = 'Zon Perempuan'"
         ).first())?.count || 0;
 
         const dischargesTotal = (await env.DB.prepare(
@@ -161,19 +162,23 @@ export default {
 
         return new Response(JSON.stringify({
           total_active_patients: totalPatients,
-          stable_count: stableCount,
-          critical_count: criticalCount,
-          discharged_count: dischargesTotal,
-          discharges_total: dischargesTotal,
+          male_zone_count: maleCount,
+          female_zone_count: femaleCount,
           new_admissions_7d: newAdmissions7d,
+          discharges_total: dischargesTotal,
+          avg_length_of_stay: 4,
+          alerts: {
+            red_alert_today: 0,
+            refuse_meds_today: 0,
+            poor_appetite_today: 0,
+          },
           updates_today: {
+            am_shift: recentActs.length,
+            pm_shift: 0,
+            night_shift: 0,
             total: recentActs.length,
-            morning: 0,
-            evening: 0,
-            night: 0
           },
           recent_activities: recentActs,
-          facility_name: env.FACILITY_NAME || 'Convee Care Centre',
         }), {
           headers: { 'Content-Type': 'application/json' },
         });
