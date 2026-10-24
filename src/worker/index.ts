@@ -8,7 +8,6 @@ export interface Env {
   TIMEZONE: string;
 }
 
-// PBKDF2 Hashing
 function hashPasscode(passcode: string, salt: string): string {
   return crypto.pbkdf2Sync(passcode, salt, 10000, 32, 'sha256').toString('hex');
 }
@@ -18,35 +17,20 @@ export default {
     const url = new URL(request.url);
 
     // ==========================================
-    // 1. API: AUTH LOGIN
+    // 1. AUTH: LOGIN
     // ==========================================
     if (url.pathname === '/api/auth/login' && request.method === 'POST') {
       try {
         const body: any = await request.json().catch(() => ({}));
         const { username, passcode } = body;
 
-        if (!username || !passcode) {
-          return new Response(JSON.stringify({ error: 'Sila masukkan nama pengguna dan kata laluan.' }), {
-            status: 400,
-            headers: { 'Content-Type': 'application/json' },
-          });
-        }
-
-        // Query user from D1 database
         const user = await env.DB.prepare(
           'SELECT * FROM users WHERE LOWER(username) = LOWER(?)'
-        ).bind(username.trim()).first();
+        ).bind(username?.trim() || '').first();
 
-        if (!user) {
+        if (!user || user.status !== 'active') {
           return new Response(JSON.stringify({ error: 'Nama pengguna atau kata laluan tidak sah.' }), {
             status: 401,
-            headers: { 'Content-Type': 'application/json' },
-          });
-        }
-
-        if (user.status !== 'active') {
-          return new Response(JSON.stringify({ error: 'Akaun ini telah dinonaktifkan oleh Pentadbir.' }), {
-            status: 403,
             headers: { 'Content-Type': 'application/json' },
           });
         }
@@ -59,7 +43,6 @@ export default {
           });
         }
 
-        // Generate session
         const token = crypto.randomBytes(32).toString('hex');
         const sessionId = 'ses_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
         const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -67,10 +50,6 @@ export default {
         await env.DB.prepare(
           'INSERT INTO sessions (id, user_id, token, expires_at) VALUES (?, ?, ?, ?)'
         ).bind(sessionId, user.id, token, expiresAt).run();
-
-        await env.DB.prepare(
-          "UPDATE users SET last_login_at = datetime('now') WHERE id = ?"
-        ).bind(user.id).run();
 
         const headers = new Headers({
           'Content-Type': 'application/json',
@@ -89,69 +68,114 @@ export default {
           },
         }), { status: 200, headers });
       } catch (err: any) {
-        return new Response(JSON.stringify({ error: 'Ralat pelayan: ' + err.message }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
       }
     }
 
     // ==========================================
-    // 2. API: AUTH CHECK (GET /api/auth/me)
+    // 2. AUTH: ME
     // ==========================================
     if (url.pathname === '/api/auth/me') {
       try {
-        const cookieHeader = request.headers.get('cookie') || '';
-        const tokenMatch = cookieHeader.match(/convee_session=([^;]+)/);
-        const authHeader = request.headers.get('authorization') || '';
-        const token = authHeader.replace(/^Bearer\s+/, '') || (tokenMatch ? tokenMatch[1] : null);
-
-        if (!token) {
-          return new Response(JSON.stringify({ user: null }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          });
-        }
+        const cookie = request.headers.get('cookie') || '';
+        const token = (cookie.match(/convee_session=([^;]+)/) || [])[1] || request.headers.get('authorization')?.replace(/^Bearer\s+/, '');
+        if (!token) return new Response(JSON.stringify({ user: null }), { headers: { 'Content-Type': 'application/json' } });
 
         const session = await env.DB.prepare(
           "SELECT user_id FROM sessions WHERE token = ? AND datetime(expires_at) > datetime('now')"
         ).bind(token).first();
 
-        if (!session) {
-          return new Response(JSON.stringify({ user: null }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          });
-        }
+        if (!session) return new Response(JSON.stringify({ user: null }), { headers: { 'Content-Type': 'application/json' } });
 
         const user = await env.DB.prepare(
           'SELECT id, username, full_name, role, status, must_change_passcode FROM users WHERE id = ?'
         ).bind(session.user_id).first();
 
-        return new Response(JSON.stringify({ user }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return new Response(JSON.stringify({ user }), { headers: { 'Content-Type': 'application/json' } });
       } catch {
-        return new Response(JSON.stringify({ user: null }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return new Response(JSON.stringify({ user: null }), { headers: { 'Content-Type': 'application/json' } });
       }
     }
 
     // ==========================================
-    // 3. API: LOGOUT
+    // 3. API: PATIENTS
     // ==========================================
-    if (url.pathname === '/api/auth/logout') {
-      const headers = new Headers({
-        'Content-Type': 'application/json',
-        'Set-Cookie': 'convee_session=; Path=/; Max-Age=0',
-      });
-      return new Response(JSON.stringify({ success: true }), { status: 200, headers });
+    if (url.pathname === '/api/patients' && request.method === 'GET') {
+      try {
+        const zone = url.searchParams.get('zone');
+        let query = `
+          SELECT p.*, a.id as admission_id, a.admission_date, a.lifecycle_status, a.kanban_stage,
+                 CAST(julianday('now') - julianday(a.admission_date) AS INTEGER) as length_of_stay
+          FROM patients p
+          LEFT JOIN admissions a ON a.patient_id = p.id AND a.lifecycle_status = 'Active'
+          WHERE 1=1
+        `;
+        const params: any[] = [];
+        if (zone) {
+          query += ' AND p.zone = ?';
+          params.push(zone);
+        }
+        query += ' ORDER BY p.room_bed ASC';
+
+        const { results: patients } = await env.DB.prepare(query).bind(...params).all();
+        return new Response(JSON.stringify({ patients: patients || [] }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
     }
 
-    // Serve Static SPA Assets (Frontend UI)
+    // ==========================================
+    // 4. API: DASHBOARD SUMMARY
+    // ==========================================
+    if (url.pathname === '/api/dashboard/summary' && request.method === 'GET') {
+      try {
+        const totalPatients = await env.DB.prepare(
+          "SELECT COUNT(*) as count FROM admissions WHERE lifecycle_status = 'Active'"
+        ).first();
+
+        const stableCount = await env.DB.prepare(
+          "SELECT COUNT(*) as count FROM admissions WHERE lifecycle_status = 'Active' AND kanban_stage = 'Stable'"
+        ).first();
+
+        const criticalCount = await env.DB.prepare(
+          "SELECT COUNT(*) as count FROM admissions WHERE lifecycle_status = 'Active' AND kanban_stage = 'High Attention'"
+        ).first();
+
+        const dischargedCount = await env.DB.prepare(
+          "SELECT COUNT(*) as count FROM admissions WHERE lifecycle_status = 'Discharged'"
+        ).first();
+
+        return new Response(JSON.stringify({
+          total_active_patients: totalPatients?.count || 0,
+          stable_count: stableCount?.count || 0,
+          critical_count: criticalCount?.count || 0,
+          discharged_count: dischargedCount?.count || 0,
+          facility_name: env.FACILITY_NAME || 'Convee Care Centre',
+        }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+
+    // ==========================================
+    // 5. API: UPDATE KANBAN STAGE
+    // ==========================================
+    if (url.pathname.startsWith('/api/admissions/') && url.pathname.endsWith('/stage') && request.method === 'PATCH') {
+      try {
+        const admissionId = url.pathname.split('/')[3];
+        const { stage } = await request.json();
+        await env.DB.prepare('UPDATE admissions SET kanban_stage = ? WHERE id = ?').bind(stage, admissionId).run();
+        return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+
+    // Static Assets fallback
     return env.ASSETS.fetch(request);
   },
 };
