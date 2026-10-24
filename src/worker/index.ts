@@ -98,37 +98,7 @@ export default {
     }
 
     // ==========================================
-    // 3. API: PATIENTS
-    // ==========================================
-    if (url.pathname === '/api/patients' && request.method === 'GET') {
-      try {
-        const zone = url.searchParams.get('zone');
-        let query = `
-          SELECT p.*, a.id as admission_id, a.admission_number, a.admission_date, a.admission_time, 
-                 a.lifecycle_status, a.kanban_stage,
-                 CAST(julianday('now') - julianday(a.admission_date) AS INTEGER) as length_of_stay
-          FROM patients p
-          LEFT JOIN admissions a ON a.patient_id = p.id AND a.lifecycle_status = 'Active'
-          WHERE 1=1
-        `;
-        const params: any[] = [];
-        if (zone) {
-          query += ' AND p.zone = ?';
-          params.push(zone);
-        }
-        query += ' ORDER BY p.room_bed ASC';
-
-        const { results: patients } = await env.DB.prepare(query).bind(...params).all();
-        return new Response(JSON.stringify({ patients: patients || [] }), {
-          headers: { 'Content-Type': 'application/json' },
-        });
-      } catch (err: any) {
-        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
-      }
-    }
-
-    // ==========================================
-    // 4. API: DASHBOARD SUMMARY (Strict DashboardStats structure)
+    // 3. API: DASHBOARD SUMMARY
     // ==========================================
     if (url.pathname === '/api/dashboard/summary' && request.method === 'GET') {
       try {
@@ -187,7 +157,156 @@ export default {
       }
     }
 
-    // Static Assets fallback
+    // ==========================================
+    // 4. API: PATIENT DETAILS (GET /api/patients/:id)
+    // ==========================================
+    const patientDetailMatch = url.pathname.match(/^\/api\/patients\/([^\/]+)$/);
+    if (patientDetailMatch && request.method === 'GET') {
+      try {
+        const patientId = patientDetailMatch[1];
+
+        const patient = await env.DB.prepare(`
+          SELECT p.*, a.id as admission_id, a.admission_number, a.admission_date, a.admission_time, 
+                 a.lifecycle_status, a.kanban_stage,
+                 CAST(julianday('now') - julianday(a.admission_date) AS INTEGER) as length_of_stay
+          FROM patients p
+          LEFT JOIN admissions a ON a.patient_id = p.id AND a.lifecycle_status = 'Active'
+          WHERE p.id = ?
+        `).bind(patientId).first();
+
+        if (!patient) {
+          return new Response(JSON.stringify({ error: 'Pesakit tidak dijumpai.' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
+        }
+
+        const { results: admissions } = await env.DB.prepare(
+          'SELECT * FROM admissions WHERE patient_id = ? ORDER BY admission_date DESC'
+        ).bind(patientId).all();
+
+        const { results: monitoring } = await env.DB.prepare(
+          'SELECT * FROM monitoring_records WHERE patient_id = ? ORDER BY timestamp DESC'
+        ).bind(patientId).all();
+
+        const discharge = await env.DB.prepare(
+          'SELECT * FROM discharge_records WHERE patient_id = ? ORDER BY discharge_date DESC LIMIT 1'
+        ).bind(patientId).first();
+
+        return new Response(JSON.stringify({
+          patient,
+          admissions: admissions || [],
+          monitoring: monitoring || [],
+          discharge: discharge || undefined,
+        }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+
+    // ==========================================
+    // 5. API: PATIENTS LIST (GET /api/patients)
+    // ==========================================
+    if (url.pathname === '/api/patients' && request.method === 'GET') {
+      try {
+        const zone = url.searchParams.get('zone');
+        let query = `
+          SELECT p.*, a.id as admission_id, a.admission_number, a.admission_date, a.admission_time, 
+                 a.lifecycle_status, a.kanban_stage,
+                 CAST(julianday('now') - julianday(a.admission_date) AS INTEGER) as length_of_stay
+          FROM patients p
+          LEFT JOIN admissions a ON a.patient_id = p.id AND a.lifecycle_status = 'Active'
+          WHERE 1=1
+        `;
+        const params: any[] = [];
+        if (zone) {
+          query += ' AND p.zone = ?';
+          params.push(zone);
+        }
+        query += ' ORDER BY p.room_bed ASC';
+
+        const { results: patients } = await env.DB.prepare(query).bind(...params).all();
+        return new Response(JSON.stringify({ patients: patients || [] }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+
+    // ==========================================
+    // 6. API: CREATE MONITORING (POST /api/monitoring)
+    // ==========================================
+    if (url.pathname === '/api/monitoring' && request.method === 'POST') {
+      try {
+        const body = await request.json();
+        const id = 'mon_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+        const timestamp = body.timestamp || new Date().toISOString();
+
+        await env.DB.prepare(`
+          INSERT INTO monitoring_records (
+            id, admission_id, patient_id, staff_user_id, staff_name, timestamp, shift,
+            clinical_status, blood_pressure, pulse_rate, temperature, spo2, blood_sugar,
+            pain_level, general_condition, consciousness, mobility_status, appetite,
+            urine_output, bowel_movement, medication_intake, hygiene_care, feeding_care,
+            wound_dressing, repositioning, mobilisation, nursing_report, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        `).bind(
+          id, body.admission_id, body.patient_id, body.staff_user_id || 'system', body.staff_name || 'Jururawat',
+          timestamp, body.shift || 'AM (7:00-5:00)', body.clinical_status || 'Stable',
+          body.blood_pressure || null, body.pulse_rate || null, body.temperature || null,
+          body.spo2 || null, body.blood_sugar || null, body.pain_level || 0,
+          body.general_condition || '', body.consciousness || '', body.mobility_status || '',
+          body.appetite || 'FAIR', body.urine_output || '', body.bowel_movement || 0,
+          body.medication_intake || 'SERVED', body.hygiene_care || '', body.feeding_care || '',
+          body.wound_dressing || '', body.repositioning || '', body.mobilisation || '',
+          body.nursing_report || ''
+        ).run();
+
+        return new Response(JSON.stringify({ success: true, monitoringId: id, clinicalStatus: body.clinical_status || 'Stable' }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+
+    // ==========================================
+    // 7. API: UPDATE KANBAN STAGE
+    // ==========================================
+    if (url.pathname.startsWith('/api/admissions/') && url.pathname.endsWith('/stage') && request.method === 'PATCH') {
+      try {
+        const admissionId = url.pathname.split('/')[3];
+        const body: any = await request.json();
+        const stage = body.kanban_stage || body.stage;
+        await env.DB.prepare('UPDATE admissions SET kanban_stage = ? WHERE id = ?').bind(stage, admissionId).run();
+        return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+
+    // ==========================================
+    // 8. API: AUDIT LOGS & STAFF
+    // ==========================================
+    if (url.pathname === '/api/audit-logs' && request.method === 'GET') {
+      try {
+        const { results: logs } = await env.DB.prepare('SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 50').all();
+        return new Response(JSON.stringify({ logs: logs || [] }), { headers: { 'Content-Type': 'application/json' } });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ logs: [] }), { headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+
+    if (url.pathname === '/api/staff' && request.method === 'GET') {
+      try {
+        const { results: staff } = await env.DB.prepare('SELECT id, username, full_name, role, status, created_at, last_login_at FROM users').all();
+        return new Response(JSON.stringify({ staff: staff || [] }), { headers: { 'Content-Type': 'application/json' } });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ staff: [] }), { headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+
+    // Static Assets fallback (Frontend UI)
     return env.ASSETS.fetch(request);
   },
 };
