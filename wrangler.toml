@@ -9,7 +9,7 @@ bucket = "./dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "patient-monitoring-d1"
-database_id = "your-cloudflare-d1-database-id-here"
+database_id = "6c5deb5c-6b3d-45e5-b47d-d1ec8012cf7c"
 migrations_dir = "./migrations"
 
 [vars]
