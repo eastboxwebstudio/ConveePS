@@ -127,49 +127,56 @@ export default {
     }
 
     // ==========================================
-    // 4. API: DASHBOARD SUMMARY
+    // 4. API: DASHBOARD SUMMARY (Complete payload for React UI)
     // ==========================================
     if (url.pathname === '/api/dashboard/summary' && request.method === 'GET') {
       try {
-        const totalPatients = await env.DB.prepare(
+        const totalPatients = (await env.DB.prepare(
           "SELECT COUNT(*) as count FROM admissions WHERE lifecycle_status = 'Active'"
-        ).first();
+        ).first())?.count || 0;
 
-        const stableCount = await env.DB.prepare(
+        const stableCount = (await env.DB.prepare(
           "SELECT COUNT(*) as count FROM admissions WHERE lifecycle_status = 'Active' AND kanban_stage = 'Stable'"
-        ).first();
+        ).first())?.count || 0;
 
-        const criticalCount = await env.DB.prepare(
+        const criticalCount = (await env.DB.prepare(
           "SELECT COUNT(*) as count FROM admissions WHERE lifecycle_status = 'Active' AND kanban_stage = 'High Attention'"
-        ).first();
+        ).first())?.count || 0;
 
-        const dischargedCount = await env.DB.prepare(
+        const dischargesTotal = (await env.DB.prepare(
           "SELECT COUNT(*) as count FROM admissions WHERE lifecycle_status = 'Discharged'"
-        ).first();
+        ).first())?.count || 0;
+
+        const newAdmissions7d = (await env.DB.prepare(
+          "SELECT COUNT(*) as count FROM admissions WHERE datetime(admission_date) >= datetime('now', '-7 days')"
+        ).first())?.count || 0;
+
+        const recentActs = (await env.DB.prepare(`
+          SELECT m.*, p.full_name as patient_name, p.mrn, p.zone, p.room_bed
+          FROM monitoring_records m
+          JOIN patients p ON m.patient_id = p.id
+          ORDER BY m.timestamp DESC
+          LIMIT 10
+        `).all())?.results || [];
 
         return new Response(JSON.stringify({
-          total_active_patients: totalPatients?.count || 0,
-          stable_count: stableCount?.count || 0,
-          critical_count: criticalCount?.count || 0,
-          discharged_count: dischargedCount?.count || 0,
+          total_active_patients: totalPatients,
+          stable_count: stableCount,
+          critical_count: criticalCount,
+          discharged_count: dischargesTotal,
+          discharges_total: dischargesTotal,
+          new_admissions_7d: newAdmissions7d,
+          updates_today: {
+            total: recentActs.length,
+            morning: 0,
+            evening: 0,
+            night: 0
+          },
+          recent_activities: recentActs,
           facility_name: env.FACILITY_NAME || 'Convee Care Centre',
         }), {
           headers: { 'Content-Type': 'application/json' },
         });
-      } catch (err: any) {
-        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
-      }
-    }
-
-    // ==========================================
-    // 5. API: UPDATE KANBAN STAGE
-    // ==========================================
-    if (url.pathname.startsWith('/api/admissions/') && url.pathname.endsWith('/stage') && request.method === 'PATCH') {
-      try {
-        const admissionId = url.pathname.split('/')[3];
-        const { stage } = await request.json();
-        await env.DB.prepare('UPDATE admissions SET kanban_stage = ? WHERE id = ?').bind(stage, admissionId).run();
-        return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
       } catch (err: any) {
         return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
       }
