@@ -14,11 +14,13 @@ import {
   HeartPulse,
   Sparkles,
   Bed,
+  PackageCheck,
 } from 'lucide-react';
 
 export type NavTab =
   | 'dashboard'
   | 'patients'
+  | 'inventory'
   | 'kanban'
   | 'care_board'
   | 'monitoring'
@@ -46,6 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const clinicalItems: { id: NavTab; label: string; icon: React.FC<{ className?: string }> }[] = [
     { id: 'dashboard', label: 'Papan Pemuka', icon: LayoutDashboard },
     { id: 'patients', label: 'Direktori Pesakit', icon: Users },
+    { id: 'inventory', label: 'Inventori & Ubatan', icon: PackageCheck },
     { id: 'kanban', label: 'Aliran Kanban', icon: Kanban },
     { id: 'care_board', label: 'Care Board (ADL)', icon: CheckSquare },
     { id: 'monitoring', label: 'Log DAPUD', icon: FileSpreadsheet },

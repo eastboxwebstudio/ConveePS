@@ -15,6 +15,7 @@ import { AuditLogsView } from './components/AuditLogsView.js';
 import { ReportsView } from './components/ReportsView.js';
 import { SettingsView } from './components/SettingsView.js';
 import { LoginView } from './components/LoginView.js';
+import { PatientInventoryModule } from './components/PatientInventoryModule.js';
 import { Patient, DashboardStats, ZoneType, KanbanStage } from './types/index.js';
 import {
   apiGetPatients,
@@ -118,6 +119,7 @@ function MainApp() {
                   setSelectedPatientForMonitoring(null);
                   setIsMonitoringOpen(true);
                 }}
+                onNavigateTab={(tab) => setCurrentTab(tab)}
               />
             )}
 
@@ -133,6 +135,13 @@ function MainApp() {
                 onOpenAdmission={() => setIsAdmissionOpen(true)}
                 currentZone={currentZone}
                 onZoneChange={(zone) => setCurrentZone(zone)}
+              />
+            )}
+
+            {currentTab === 'inventory' && (
+              <PatientInventoryModule
+                patients={patients}
+                onSelectPatientId={(id) => setDetailPatientId(id)}
               />
             )}
 

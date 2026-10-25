@@ -182,3 +182,68 @@ export interface DashboardStats {
   avg_length_of_stay: number;
   recent_activities: MonitoringRecord[];
 }
+
+export type InventoryCategory = 'personal' | 'medication';
+export type StockNecessity = 'YES' | 'NO';
+
+export interface PatientInventoryItem {
+  id: string;
+  patient_id: string;
+  category: InventoryCategory;
+  item_order: number;
+  item_name: string;
+  stock_balance: string;
+  stock_necessity: StockNecessity;
+  restock_date?: string | null;
+  restock_qty?: string | null;
+  remark?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface PatientInventoryCheck {
+  id: string;
+  patient_id: string;
+  check_date: string;
+  personal_staff_name: string;
+  med_staff_name?: string | null;
+  status: 'Draft' | 'Completed' | 'Approved';
+  total_items: number;
+  total_restock_needed: number;
+  general_remarks?: string | null;
+  created_at?: string;
+  patient_name?: string;
+  patient_mrn?: string;
+  zone?: string;
+  room_bed?: string;
+}
+
+export interface PatientInventoryCheckDetail {
+  id: string;
+  check_id: string;
+  patient_id: string;
+  category: InventoryCategory;
+  item_name: string;
+  stock_balance: string;
+  stock_necessity: StockNecessity;
+  restock_date?: string | null;
+  restock_qty?: string | null;
+  remark?: string | null;
+}
+
+export interface InventoryStats {
+  total_patients: number;
+  total_items_tracked: number;
+  total_restock_needed: number;
+  personal_restock_needed: number;
+  meds_restock_needed: number;
+  urgent_alerts: {
+    patient_id: string;
+    patient_name: string;
+    room_bed?: string;
+    item_name: string;
+    category: InventoryCategory;
+    stock_balance: string;
+    remark?: string;
+  }[];
+}

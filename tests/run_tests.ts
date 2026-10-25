@@ -417,6 +417,120 @@ async function runAllTests() {
     }
   });
 
+  // 16. Patient Inventory Initialization & Weekly Check Sheets (CECC Spreadsheets)
+  await runTest('16. Inisialisasi Inventori Pesakit & Ubatan (Patient Inventory & Meds)', async () => {
+    // Test with Aisah Bebe or first active patient
+    const patientsRes = await request('/patients?status=Active', { method: 'GET' }, adminToken);
+    if (!patientsRes.ok || patientsRes.data.patients.length === 0) {
+      throw new Error('No active patients found for inventory test');
+    }
+
+    const testPatient = patientsRes.data.patients[0];
+    const invRes = await request(`/inventory/patient/${testPatient.id}`, { method: 'GET' }, adminToken);
+    if (!invRes.ok) {
+      throw new Error(`Failed to get patient inventory: ${invRes.data?.error}`);
+    }
+
+    if (!Array.isArray(invRes.data.personal_items) || invRes.data.personal_items.length === 0) {
+      throw new Error('Expected standard personal items to be initialized for patient');
+    }
+
+    const diaperItem = invRes.data.personal_items.find((i: any) => i.item_name.toLowerCase().includes('diaper'));
+    if (!diaperItem) {
+      throw new Error('Expected Diaper to be in personal items list');
+    }
+  });
+
+  // 17. Inventory Stock Necessity Toggle & Update
+  await runTest('17. Kemas Kini Baki & Keperluan Stok (Stock Necessity Toggle)', async () => {
+    const patientsRes = await request('/patients?status=Active', { method: 'GET' }, adminToken);
+    const testPatient = patientsRes.data.patients[0];
+    const invRes = await request(`/inventory/patient/${testPatient.id}`, { method: 'GET' }, adminToken);
+    const item = invRes.data.personal_items[0];
+
+    const newNecessity = item.stock_necessity === 'YES' ? 'NO' : 'YES';
+    const updateRes = await request(
+      `/inventory/items/${item.id}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          stock_necessity: newNecessity,
+          stock_balance: '10 paks',
+          remark: 'Ujian automatik',
+        }),
+      },
+      nurseToken
+    );
+
+    if (!updateRes.ok || updateRes.data.item.stock_necessity !== newNecessity) {
+      throw new Error('Failed to update stock necessity flag');
+    }
+  });
+
+  // 18. Fast Restock Endpoint
+  await runTest('18. Rekod Penambahan Stok / Top-up Pantas (Fast Restock)', async () => {
+    const patientsRes = await request('/patients?status=Active', { method: 'GET' }, adminToken);
+    const testPatient = patientsRes.data.patients[0];
+    const invRes = await request(`/inventory/patient/${testPatient.id}`, { method: 'GET' }, adminToken);
+    const item = invRes.data.personal_items[0];
+
+    const restockRes = await request(
+      '/inventory/restock',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          itemId: item.id,
+          restockQty: '5 paks',
+          restockDate: '2026-10-24',
+          newStockBalance: '15 paks',
+          stockNecessity: 'NO',
+          remark: 'Restock oleh farmasi hospital',
+        }),
+      },
+      nurseToken
+    );
+
+    if (!restockRes.ok || restockRes.data.item.stock_balance !== '15 paks') {
+      throw new Error('Failed to process restock record');
+    }
+  });
+
+  // 19. Weekly Check Audit Session Creation
+  await runTest('19. Rekod Sesi Semakan Mingguan Lengkap (Weekly Check Audit Session)', async () => {
+    const patientsRes = await request('/patients?status=Active', { method: 'GET' }, adminToken);
+    const testPatient = patientsRes.data.patients[0];
+    const invRes = await request(`/inventory/patient/${testPatient.id}`, { method: 'GET' }, adminToken);
+
+    const checkRes = await request(
+      '/inventory/checks',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          patient_id: testPatient.id,
+          check_date: '2026-10-24',
+          personal_staff_name: 'HAJAR',
+          med_staff_name: 'AISYAH',
+          general_remarks: 'Ujian automatik semakan mingguan akhir bulan',
+          items: invRes.data.personal_items.slice(0, 3).map((it: any) => ({
+            id: it.id,
+            category: it.category,
+            item_name: it.item_name,
+            stock_balance: it.stock_balance,
+            stock_necessity: 'NO',
+            restock_date: '2026-10-24',
+            restock_qty: '2',
+            remark: 'OK',
+          })),
+        }),
+      },
+      nurseToken
+    );
+
+    if (!checkRes.ok || !checkRes.data.check_id) {
+      throw new Error('Failed to record weekly check session');
+    }
+  });
+
   // Summary
   console.log('\n======================================================');
   const passedCount = results.filter((r) => r.passed).length;

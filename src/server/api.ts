@@ -1142,3 +1142,483 @@ apiRouter.get('/reports/export-csv', requireAuth, async (req: Request, res: Resp
     return res.status(500).json({ error: 'Gagal menjana laporan CSV.' });
   }
 });
+
+// ==========================================
+// 8. PATIENT INVENTORY & WEEKLY STOCK CHECK
+// ==========================================
+
+const STANDARD_PERSONAL_ITEMS = [
+  'Diaper',
+  'Wet Tissue',
+  'Tissue',
+  'Underpad',
+  'Adult Wipes',
+  'Gloves',
+  'Lotion / Cream',
+  'Milk',
+  'Dressing item',
+  'Toiletries',
+  'Shaver',
+  'Tooth Brush',
+  'Tube',
+  'Snacking Food',
+];
+
+// 8.1 Summary KPI & Urgent Restock Alerts
+apiRouter.get('/inventory/summary', requireAuth, async (_req: Request, res: Response) => {
+  try {
+    const totalPatientsRow = await first<{ cnt: number }>('SELECT COUNT(DISTINCT patient_id) as cnt FROM patient_inventory_items');
+    const totalItemsRow = await first<{ cnt: number }>('SELECT COUNT(*) as cnt FROM patient_inventory_items');
+    const totalRestockRow = await first<{ cnt: number }>(
+      "SELECT COUNT(*) as cnt FROM patient_inventory_items WHERE stock_necessity = 'YES'"
+    );
+    const personalRestockRow = await first<{ cnt: number }>(
+      "SELECT COUNT(*) as cnt FROM patient_inventory_items WHERE stock_necessity = 'YES' AND category = 'personal'"
+    );
+    const medsRestockRow = await first<{ cnt: number }>(
+      "SELECT COUNT(*) as cnt FROM patient_inventory_items WHERE stock_necessity = 'YES' AND category = 'medication'"
+    );
+
+    const urgentAlerts = await all<{
+      patient_id: string;
+      patient_name: string;
+      room_bed: string;
+      item_name: string;
+      category: 'personal' | 'medication';
+      stock_balance: string;
+      remark: string;
+    }>(
+      `SELECT i.patient_id, p.full_name as patient_name, p.room_bed, i.item_name, i.category, i.stock_balance, i.remark
+       FROM patient_inventory_items i
+       JOIN patients p ON p.id = i.patient_id
+       WHERE i.stock_necessity = 'YES'
+       ORDER BY i.category DESC, p.full_name ASC`
+    );
+
+    return res.json({
+      total_patients: totalPatientsRow?.cnt || 0,
+      total_items_tracked: totalItemsRow?.cnt || 0,
+      total_restock_needed: totalRestockRow?.cnt || 0,
+      personal_restock_needed: personalRestockRow?.cnt || 0,
+      meds_restock_needed: medsRestockRow?.cnt || 0,
+      urgent_alerts: urgentAlerts,
+    });
+  } catch (err: any) {
+    console.error('Error fetching inventory summary:', err);
+    return res.status(500).json({ error: 'Gagal mendapatkan ringkasan inventori.' });
+  }
+});
+
+// 8.2 Get or Auto-Initialize Patient Inventory Sheet
+apiRouter.get('/inventory/patient/:patientId', requireAuth, async (req: Request, res: Response) => {
+  const { patientId } = req.params;
+
+  try {
+    const patient = await first<any>('SELECT * FROM patients WHERE id = ?', [patientId]);
+    if (!patient) {
+      return res.status(404).json({ error: 'Pesakit tidak dijumpai.' });
+    }
+
+    let items = await all<any>(
+      'SELECT * FROM patient_inventory_items WHERE patient_id = ? ORDER BY category ASC, item_order ASC, item_name ASC',
+      [patientId]
+    );
+
+    // Auto-seed standard personal items if patient has none yet
+    const hasPersonal = items.some((i) => i.category === 'personal');
+    if (!hasPersonal) {
+      for (let idx = 0; idx < STANDARD_PERSONAL_ITEMS.length; idx++) {
+        const itemName = STANDARD_PERSONAL_ITEMS[idx];
+        const itemId = 'inv_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 6);
+        await run(
+          `INSERT INTO patient_inventory_items (id, patient_id, category, item_order, item_name, stock_balance, stock_necessity, restock_date, restock_qty, remark)
+           VALUES (?, ?, 'personal', ?, ?, 'Cukup', 'NO', '', '', '')`,
+          [itemId, patientId, idx + 1, itemName]
+        );
+      }
+    }
+
+    // Auto-seed prescribed medications if patient has prescribed_medications and no medication items yet
+    const hasMeds = items.some((i) => i.category === 'medication');
+    if (!hasMeds && patient.prescribed_medications) {
+      const medList = patient.prescribed_medications
+        .split(/[,;\n]+/)
+        .map((s: string) => s.trim())
+        .filter((s: string) => s.length > 0);
+
+      for (let idx = 0; idx < medList.length; idx++) {
+        const medName = medList[idx];
+        const itemId = 'inv_m_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 6);
+        await run(
+          `INSERT INTO patient_inventory_items (id, patient_id, category, item_order, item_name, stock_balance, stock_necessity, restock_date, restock_qty, remark)
+           VALUES (?, ?, 'medication', ?, ?, '14 tab', 'NO', '', '', 'Mencukupi')`,
+          [itemId, patientId, idx + 1, medName]
+        );
+      }
+    }
+
+    // Re-fetch all items after auto-seed
+    items = await all<any>(
+      'SELECT * FROM patient_inventory_items WHERE patient_id = ? ORDER BY category ASC, item_order ASC, item_name ASC',
+      [patientId]
+    );
+
+    const personalItems = items.filter((i) => i.category === 'personal');
+    const medicationItems = items.filter((i) => i.category === 'medication');
+
+    // Get latest weekly check
+    const latestCheck = await first<any>(
+      'SELECT * FROM patient_inventory_checks WHERE patient_id = ? ORDER BY check_date DESC, created_at DESC LIMIT 1',
+      [patientId]
+    );
+
+    // Get recent check history
+    const checkHistory = await all<any>(
+      'SELECT * FROM patient_inventory_checks WHERE patient_id = ? ORDER BY check_date DESC LIMIT 10',
+      [patientId]
+    );
+
+    return res.json({
+      patient,
+      personal_items: personalItems,
+      medication_items: medicationItems,
+      latest_check: latestCheck,
+      check_history: checkHistory,
+    });
+  } catch (err: any) {
+    console.error('Error fetching patient inventory:', err);
+    return res.status(500).json({ error: 'Gagal memuatkan data inventori pesakit.' });
+  }
+});
+
+// 8.3 Update an inventory item
+apiRouter.put('/inventory/items/:itemId', requireAuth, async (req: Request, res: Response) => {
+  const { itemId } = req.params;
+  const { stock_balance, stock_necessity, restock_date, restock_qty, remark, item_name } = req.body || {};
+
+  try {
+    const existing = await first<any>('SELECT * FROM patient_inventory_items WHERE id = ?', [itemId]);
+    if (!existing) {
+      return res.status(404).json({ error: 'Item inventori tidak dijumpai.' });
+    }
+
+    await run(
+      `UPDATE patient_inventory_items
+       SET stock_balance = COALESCE(?, stock_balance),
+           stock_necessity = COALESCE(?, stock_necessity),
+           restock_date = COALESCE(?, restock_date),
+           restock_qty = COALESCE(?, restock_qty),
+           remark = COALESCE(?, remark),
+           item_name = COALESCE(?, item_name),
+           updated_at = datetime('now')
+       WHERE id = ?`,
+      [
+        stock_balance !== undefined ? String(stock_balance) : null,
+        stock_necessity || null,
+        restock_date !== undefined ? String(restock_date) : null,
+        restock_qty !== undefined ? String(restock_qty) : null,
+        remark !== undefined ? String(remark) : null,
+        item_name || null,
+        itemId,
+      ]
+    );
+
+    await logAudit(
+      req.user!,
+      'UPDATE_INVENTORY_ITEM',
+      'patient_inventory_items',
+      itemId,
+      `Mengemas kini stok ${existing.item_name}: Baki="${stock_balance}", Perlu="${stock_necessity}".`
+    );
+
+    const updated = await first<any>('SELECT * FROM patient_inventory_items WHERE id = ?', [itemId]);
+    return res.json({ success: true, item: updated });
+  } catch (err: any) {
+    console.error('Error updating inventory item:', err);
+    return res.status(500).json({ error: 'Gagal mengemas kini item inventori.' });
+  }
+});
+
+// 8.4 Add new item or medication for a patient
+apiRouter.post('/inventory/items', requireAuth, async (req: Request, res: Response) => {
+  const {
+    patient_id,
+    category,
+    item_name,
+    stock_balance = '0',
+    stock_necessity = 'NO',
+    restock_date = '',
+    restock_qty = '',
+    remark = '',
+  } = req.body || {};
+
+  if (!patient_id || !item_name || !category) {
+    return res.status(400).json({ error: 'Sila lengkapkan ID pesakit, nama item dan kategori.' });
+  }
+
+  try {
+    const itemId = 'inv_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 6);
+    const maxOrderRow = await first<{ max_order: number }>(
+      'SELECT MAX(item_order) as max_order FROM patient_inventory_items WHERE patient_id = ? AND category = ?',
+      [patient_id, category]
+    );
+    const itemOrder = (maxOrderRow?.max_order || 0) + 1;
+
+    await run(
+      `INSERT INTO patient_inventory_items (id, patient_id, category, item_order, item_name, stock_balance, stock_necessity, restock_date, restock_qty, remark)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        itemId,
+        patient_id,
+        category,
+        itemOrder,
+        item_name.trim(),
+        String(stock_balance),
+        stock_necessity,
+        String(restock_date || ''),
+        String(restock_qty || ''),
+        String(remark || ''),
+      ]
+    );
+
+    await logAudit(
+      req.user!,
+      'ADD_INVENTORY_ITEM',
+      'patient_inventory_items',
+      itemId,
+      `Menambah item inventori ${item_name} (${category}) untuk pesakit ID ${patient_id}.`
+    );
+
+    const newItem = await first<any>('SELECT * FROM patient_inventory_items WHERE id = ?', [itemId]);
+    return res.status(201).json({ success: true, item: newItem });
+  } catch (err: any) {
+    console.error('Error adding inventory item:', err);
+    return res.status(500).json({ error: 'Gagal menambah item inventori.' });
+  }
+});
+
+// 8.5 Delete inventory item
+apiRouter.delete('/inventory/items/:itemId', requireAuth, async (req: Request, res: Response) => {
+  const { itemId } = req.params;
+  try {
+    const item = await first<any>('SELECT * FROM patient_inventory_items WHERE id = ?', [itemId]);
+    if (!item) {
+      return res.status(404).json({ error: 'Item tidak dijumpai.' });
+    }
+
+    await run('DELETE FROM patient_inventory_items WHERE id = ?', [itemId]);
+    await logAudit(
+      req.user!,
+      'DELETE_INVENTORY_ITEM',
+      'patient_inventory_items',
+      itemId,
+      `Memadam item inventori ${item.item_name} (${item.category}) bagi pesakit ${item.patient_id}.`
+    );
+
+    return res.json({ success: true, message: 'Item berjaya dipadam.' });
+  } catch (err: any) {
+    console.error('Error deleting inventory item:', err);
+    return res.status(500).json({ error: 'Gagal memadam item inventori.' });
+  }
+});
+
+// 8.6 Record Fast Restock / Topup
+apiRouter.post('/inventory/restock', requireAuth, async (req: Request, res: Response) => {
+  const { itemId, restockQty, restockDate, newStockBalance, stockNecessity = 'NO', remark } = req.body || {};
+
+  if (!itemId) {
+    return res.status(400).json({ error: 'Item ID diperlukan untuk restock.' });
+  }
+
+  try {
+    const item = await first<any>('SELECT * FROM patient_inventory_items WHERE id = ?', [itemId]);
+    if (!item) {
+      return res.status(404).json({ error: 'Item tidak dijumpai.' });
+    }
+
+    const todayDate = restockDate || new Date().toISOString().split('T')[0];
+
+    await run(
+      `UPDATE patient_inventory_items
+       SET stock_balance = COALESCE(?, stock_balance),
+           stock_necessity = ?,
+           restock_date = ?,
+           restock_qty = COALESCE(?, restock_qty),
+           remark = COALESCE(?, remark),
+           updated_at = datetime('now')
+       WHERE id = ?`,
+      [
+        newStockBalance !== undefined ? String(newStockBalance) : null,
+        stockNecessity,
+        todayDate,
+        restockQty !== undefined ? String(restockQty) : null,
+        remark !== undefined ? String(remark) : null,
+        itemId,
+      ]
+    );
+
+    await logAudit(
+      req.user!,
+      'RESTOCK_INVENTORY_ITEM',
+      'patient_inventory_items',
+      itemId,
+      `Restock item ${item.item_name}: Kuantiti ditambah ${restockQty || '-'}, baki baharu ${newStockBalance || item.stock_balance}.`
+    );
+
+    const updated = await first<any>('SELECT * FROM patient_inventory_items WHERE id = ?', [itemId]);
+    return res.json({ success: true, item: updated });
+  } catch (err: any) {
+    console.error('Error restocking inventory item:', err);
+    return res.status(500).json({ error: 'Gagal merekod penambahan stok.' });
+  }
+});
+
+// 8.7 Record Complete Weekly Stock Check Session
+apiRouter.post('/inventory/checks', requireAuth, async (req: Request, res: Response) => {
+  const {
+    patient_id,
+    check_date,
+    personal_staff_name,
+    med_staff_name,
+    general_remarks,
+    items = [],
+  } = req.body || {};
+
+  if (!patient_id || !check_date || !personal_staff_name) {
+    return res.status(400).json({ error: 'Sila lengkapkan maklumat semakan mingguan (Pesakit, Tarikh, Nama Staf).' });
+  }
+
+  try {
+    const checkId = 'chk_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 6);
+    let totalItems = items.length;
+    let totalRestockNeeded = 0;
+
+    for (const it of items) {
+      if (it.stock_necessity === 'YES') {
+        totalRestockNeeded++;
+      }
+    }
+
+    await run(
+      `INSERT INTO patient_inventory_checks (id, patient_id, check_date, personal_staff_name, med_staff_name, status, total_items, total_restock_needed, general_remarks)
+       VALUES (?, ?, ?, ?, ?, 'Completed', ?, ?, ?)`,
+      [
+        checkId,
+        patient_id,
+        check_date,
+        personal_staff_name.trim(),
+        med_staff_name?.trim() || null,
+        totalItems,
+        totalRestockNeeded,
+        general_remarks || null,
+      ]
+    );
+
+    // Save snapshot of each checked item and update the master item table
+    for (const it of items) {
+      const detailId = 'det_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 6);
+      await run(
+        `INSERT INTO patient_inventory_check_details (id, check_id, patient_id, category, item_name, stock_balance, stock_necessity, restock_date, restock_qty, remark)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          detailId,
+          checkId,
+          patient_id,
+          it.category || 'personal',
+          it.item_name,
+          String(it.stock_balance || '0'),
+          it.stock_necessity || 'NO',
+          String(it.restock_date || ''),
+          String(it.restock_qty || ''),
+          String(it.remark || ''),
+        ]
+      );
+
+      if (it.id) {
+        await run(
+          `UPDATE patient_inventory_items
+           SET stock_balance = ?,
+               stock_necessity = ?,
+               restock_date = ?,
+               restock_qty = ?,
+               remark = ?,
+               updated_at = datetime('now')
+           WHERE id = ?`,
+          [
+            String(it.stock_balance || '0'),
+            it.stock_necessity || 'NO',
+            String(it.restock_date || ''),
+            String(it.restock_qty || ''),
+            String(it.remark || ''),
+            it.id,
+          ]
+        );
+      }
+    }
+
+    await logAudit(
+      req.user!,
+      'RECORD_WEEKLY_CHECK',
+      'patient_inventory_checks',
+      checkId,
+      `Menyimpan semakan mingguan inventori pesakit ID ${patient_id} (${totalRestockNeeded} item perlu topup).`
+    );
+
+    return res.status(201).json({
+      success: true,
+      check_id: checkId,
+      total_items: totalItems,
+      total_restock_needed: totalRestockNeeded,
+    });
+  } catch (err: any) {
+    console.error('Error saving weekly check:', err);
+    return res.status(500).json({ error: 'Gagal merekod semakan mingguan.' });
+  }
+});
+
+// 8.8 Export Inventory CSV for spreadsheet reporting
+apiRouter.get('/inventory/export-csv/:patientId', requireAuth, async (req: Request, res: Response) => {
+  const { patientId } = req.params;
+
+  try {
+    const patient = await first<any>('SELECT * FROM patients WHERE id = ?', [patientId]);
+    if (!patient) return res.status(404).json({ error: 'Pesakit tidak dijumpai.' });
+
+    const items = await all<any>(
+      'SELECT * FROM patient_inventory_items WHERE patient_id = ? ORDER BY category ASC, item_order ASC',
+      [patientId]
+    );
+
+    const headers = ['Kategori', 'No', 'Item / Nama Ubat', 'Stock Balance', 'Stock Necessity', 'Restock Date', 'Qty', 'Remark'];
+    let csv = `CECC - PATIENT PERSONAL ITEM - WEEKLY STOCK UPDATE\n`;
+    csv += `Pesakit: "${patient.full_name}", MRN: "${patient.mrn}", Katil: "${patient.room_bed || '-'}"\n\n`;
+    csv += headers.join(',') + '\n';
+
+    let personalIdx = 1;
+    let medIdx = 1;
+
+    for (const it of items) {
+      const isPersonal = it.category === 'personal';
+      const num = isPersonal ? personalIdx++ : medIdx++;
+      const row = [
+        `"${isPersonal ? 'Barangan Peribadi' : '15. Ubatan Pesakit'}"`,
+        num,
+        `"${(it.item_name || '').replace(/"/g, '""')}"`,
+        `"${(it.stock_balance || '').replace(/"/g, '""')}"`,
+        `"${it.stock_necessity || 'NO'}"`,
+        `"${it.restock_date || ''}"`,
+        `"${it.restock_qty || ''}"`,
+        `"${(it.remark || '').replace(/"/g, '""')}"`,
+      ];
+      csv += row.join(',') + '\n';
+    }
+
+    const filename = `Inventori_${patient.full_name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    return res.send(csv);
+  } catch (err: any) {
+    console.error('Error exporting inventory CSV:', err);
+    return res.status(500).json({ error: 'Gagal mengeksport CSV inventori.' });
+  }
+});

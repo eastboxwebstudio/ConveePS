@@ -9,6 +9,7 @@ const DATA_DIR = path.resolve(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'local.d1.sqlite');
 const MIGRATION_1 = path.resolve(process.cwd(), 'migrations/0001_initial.sql');
 const MIGRATION_2 = path.resolve(process.cwd(), 'migrations/0002_seed.sql');
+const MIGRATION_3 = path.resolve(process.cwd(), 'migrations/0003_patient_inventory.sql');
 
 function persistDb() {
   if (!dbInstance) return;
@@ -65,6 +66,18 @@ export async function getDb(): Promise<Database> {
       }
       persistDb();
       console.log('Database initialized and persisted successfully.');
+    }
+
+    const invCheck = dbInstance.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='patient_inventory_items'");
+    const hasInvTable = invCheck.length > 0 && invCheck[0].values.length > 0;
+    if (!hasInvTable) {
+      console.log('Running D1 inventory migration (0003_patient_inventory.sql)...');
+      if (fs.existsSync(MIGRATION_3)) {
+        const sql3 = fs.readFileSync(MIGRATION_3, 'utf-8');
+        dbInstance.run(sql3);
+        persistDb();
+        console.log('Patient inventory tables created and seeded.');
+      }
     }
   } catch (err) {
     console.error('Error during database migration init:', err);

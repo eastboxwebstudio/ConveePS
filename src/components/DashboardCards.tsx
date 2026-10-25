@@ -15,13 +15,17 @@ import {
   ArrowUpRight,
   ClipboardCheck,
   Sparkles,
+  PackageCheck,
+  Pill,
 } from 'lucide-react';
+import { NavTab } from './Sidebar.js';
 
 interface DashboardCardsProps {
   stats: DashboardStats | null;
   onSelectPatient: (patientId: string) => void;
   onOpenAdmission: () => void;
   onOpenMonitoring: () => void;
+  onNavigateTab?: (tab: NavTab) => void;
 }
 
 export const DashboardCards: React.FC<DashboardCardsProps> = ({
@@ -29,6 +33,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
   onSelectPatient,
   onOpenAdmission,
   onOpenMonitoring,
+  onNavigateTab,
 }) => {
   const [selectedDay, setSelectedDay] = useState<number>(3); // Wednesday active
   const [timeFilter, setTimeFilter] = useState<'All' | '30D' | '7D'>('7D');
@@ -505,14 +510,26 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
             </div>
           </div>
 
-          {/* Quick Action Button */}
-          <button
-            onClick={onOpenMonitoring}
-            className="mt-4 w-full py-2.5 px-4 rounded-2xl bg-[#0B3B2C] hover:bg-[#07281E] text-white text-xs font-semibold flex items-center justify-center gap-2 transition-colors shadow-xs"
-          >
-            <ClipboardCheck className="w-4 h-4 text-[#C5E875]" />
-            <span>Rekod Pemantauan Sekarang</span>
-          </button>
+          {/* Quick Action Buttons */}
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button
+              onClick={onOpenMonitoring}
+              className="py-2.5 px-3 rounded-2xl bg-[#0B3B2C] hover:bg-[#07281E] text-white text-xs font-semibold flex items-center justify-center gap-2 transition-colors shadow-xs"
+            >
+              <ClipboardCheck className="w-4 h-4 text-[#C5E875]" />
+              <span>Rekod Vital (DAPUD)</span>
+            </button>
+
+            {onNavigateTab && (
+              <button
+                onClick={() => onNavigateTab('inventory')}
+                className="py-2.5 px-3 rounded-2xl bg-[#EAF5DC] hover:bg-[#d8eec0] text-[#0B3B2C] text-xs font-bold flex items-center justify-center gap-2 transition-colors border border-emerald-950/10 shadow-xs"
+              >
+                <PackageCheck className="w-4 h-4 text-[#0B3B2C]" />
+                <span>Inventori & Ubatan</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

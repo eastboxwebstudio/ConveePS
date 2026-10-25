@@ -8,6 +8,9 @@ import {
   DashboardStats,
   KanbanStage,
   ZoneType,
+  PatientInventoryItem,
+  PatientInventoryCheck,
+  InventoryStats,
 } from '../types/index.js';
 
 const BASE_URL = '/api';
@@ -179,4 +182,95 @@ export async function apiGetAuditLogs() {
 export function getExportCsvUrl(type: 'patients' | 'monitoring') {
   const token = localStorage.getItem('convee_token') || '';
   return `/api/reports/export-csv?type=${type}&token=${encodeURIComponent(token)}`;
+}
+
+// 9. Patient Inventory & Medication APIs
+export async function apiGetInventorySummary() {
+  return request<InventoryStats>('/inventory/summary');
+}
+
+export async function apiGetPatientInventory(patientId: string) {
+  return request<{
+    patient: Patient;
+    personal_items: PatientInventoryItem[];
+    medication_items: PatientInventoryItem[];
+    latest_check?: PatientInventoryCheck | null;
+    check_history: PatientInventoryCheck[];
+  }>(`/inventory/patient/${patientId}`);
+}
+
+export async function apiUpdateInventoryItem(
+  itemId: string,
+  data: Partial<PatientInventoryItem>
+) {
+  return request<{ success: boolean; item: PatientInventoryItem }>(`/inventory/items/${itemId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function apiAddInventoryItem(data: {
+  patient_id: string;
+  category: 'personal' | 'medication';
+  item_name: string;
+  stock_balance?: string;
+  stock_necessity?: 'YES' | 'NO';
+  restock_date?: string;
+  restock_qty?: string;
+  remark?: string;
+}) {
+  return request<{ success: boolean; item: PatientInventoryItem }>('/inventory/items', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function apiDeleteInventoryItem(itemId: string) {
+  return request<{ success: boolean; message: string }>(`/inventory/items/${itemId}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function apiRestockInventory(data: {
+  itemId: string;
+  restockQty?: string;
+  restockDate?: string;
+  newStockBalance?: string;
+  stockNecessity?: 'YES' | 'NO';
+  remark?: string;
+}) {
+  return request<{ success: boolean; item: PatientInventoryItem }>('/inventory/restock', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function apiSaveWeeklyCheck(data: {
+  patient_id: string;
+  check_date: string;
+  personal_staff_name: string;
+  med_staff_name?: string;
+  general_remarks?: string;
+  items: {
+    id?: string;
+    category: 'personal' | 'medication';
+    item_name: string;
+    stock_balance: string;
+    stock_necessity: 'YES' | 'NO';
+    restock_date?: string;
+    restock_qty?: string;
+    remark?: string;
+  }[];
+}) {
+  return request<{ success: boolean; check_id: string; total_items: number; total_restock_needed: number }>(
+    '/inventory/checks',
+    {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }
+  );
+}
+
+export function getExportInventoryCsvUrl(patientId: string) {
+  return `/api/inventory/export-csv/${patientId}`;
 }
