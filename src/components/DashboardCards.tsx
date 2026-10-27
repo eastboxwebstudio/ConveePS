@@ -28,6 +28,20 @@ interface DashboardCardsProps {
   onNavigateTab?: (tab: NavTab) => void;
 }
 
+function formatSafeTime(timestamp?: string | null) {
+  if (!timestamp) return '-';
+  try {
+    const d = new Date(timestamp);
+    if (isNaN(d.getTime())) return String(timestamp);
+    return d.toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return String(timestamp);
+  }
+}
+
 export const DashboardCards: React.FC<DashboardCardsProps> = ({
   stats,
   onSelectPatient,
@@ -513,8 +527,13 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
           {/* Quick Action Buttons */}
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
             <button
-              onClick={onOpenMonitoring}
-              className="py-2.5 px-3 rounded-2xl bg-[#0B3B2C] hover:bg-[#07281E] text-white text-xs font-semibold flex items-center justify-center gap-2 transition-colors shadow-xs"
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onOpenMonitoring();
+              }}
+              className="cursor-pointer py-2.5 px-3 rounded-2xl bg-[#0B3B2C] hover:bg-[#07281E] active:scale-98 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-xs"
             >
               <ClipboardCheck className="w-4 h-4 text-[#C5E875]" />
               <span>Rekod Vital (DAPUD)</span>
@@ -626,10 +645,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
                     <div className="text-right hidden sm:block">
                       <div className="text-xs font-semibold text-slate-800">{rec.staff_name}</div>
                       <div className="text-[10px] text-slate-400 font-mono">
-                        {new Date(rec.timestamp).toLocaleTimeString('en-GB', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
+                        {formatSafeTime(rec.timestamp)}
                       </div>
                     </div>
                     <div className="w-8 h-8 rounded-xl bg-slate-50 group-hover:bg-[#EAF5DC] text-slate-400 group-hover:text-[#0B3B2C] flex items-center justify-center transition-colors">

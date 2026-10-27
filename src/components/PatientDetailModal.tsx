@@ -25,6 +25,20 @@ interface PatientDetailModalProps {
   onOpenDischarge: (patient: Patient) => void;
 }
 
+function formatSafeDateTime(timestamp?: string | null) {
+  if (!timestamp) return '-';
+  try {
+    const d = new Date(timestamp);
+    if (isNaN(d.getTime())) return String(timestamp);
+    return d.toLocaleString('en-GB', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+  } catch {
+    return String(timestamp);
+  }
+}
+
 export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
   patientId,
   onClose,
@@ -222,10 +236,7 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
                               </span>
                               <span className="text-slate-400">•</span>
                               <span className="text-slate-500 text-[11px] font-mono">
-                                {new Date(rec.timestamp).toLocaleString('en-GB', {
-                                  dateStyle: 'medium',
-                                  timeStyle: 'short',
-                                })}
+                                {formatSafeDateTime(rec.timestamp)}
                               </span>
                             </div>
 

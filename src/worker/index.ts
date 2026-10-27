@@ -242,25 +242,54 @@ export default {
         const id = 'mon_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
         const timestamp = body.timestamp || new Date().toISOString();
 
-        await env.DB.prepare(`
-          INSERT INTO monitoring_records (
-            id, admission_id, patient_id, staff_user_id, staff_name, timestamp, shift,
-            clinical_status, blood_pressure, pulse_rate, temperature, spo2, blood_sugar,
-            pain_level, general_condition, consciousness, mobility_status, appetite,
-            urine_output, bowel_movement, medication_intake, hygiene_care, feeding_care,
-            wound_dressing, repositioning, mobilisation, nursing_report, created_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-        `).bind(
-          id, body.admission_id, body.patient_id, body.staff_user_id || 'system', body.staff_name || 'Jururawat',
-          timestamp, body.shift || 'AM (7:00-5:00)', body.clinical_status || 'Stable',
-          body.blood_pressure || null, body.pulse_rate || null, body.temperature || null,
-          body.spo2 || null, body.blood_sugar || null, body.pain_level || 0,
-          body.general_condition || '', body.consciousness || '', body.mobility_status || '',
-          body.appetite || 'FAIR', body.urine_output || '', body.bowel_movement || 0,
-          body.medication_intake || 'SERVED', body.hygiene_care || '', body.feeding_care || '',
-          body.wound_dressing || '', body.repositioning || '', body.mobilisation || '',
-          body.nursing_report || ''
-        ).run();
+        // Try inserting with enhanced DAPUD columns first
+        try {
+          await env.DB.prepare(`
+            INSERT INTO monitoring_records (
+              id, admission_id, patient_id, staff_user_id, staff_name, timestamp, shift,
+              clinical_status, blood_pressure, pulse_rate, temperature, spo2, blood_sugar,
+              pain_level, general_condition, consciousness, mobility_status, appetite,
+              urine_output, urine_other, bowel_movement, medication_intake, hygiene_care, feeding_care,
+              wound_dressing, repositioning, mobilisation, nursing_report,
+              diet_plan, tube_has_ngt, tube_has_cbd, tube_type, tube_material, tube_replacement_date, tube_size,
+              patient_behavior, attachment_image, nurse_advice, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+          `).bind(
+            id, body.admission_id || null, body.patient_id, body.staff_user_id || 'system', body.staff_name || 'Jururawat',
+            timestamp, body.shift || 'Morning (7:00am-5:00pm)', body.clinical_status || 'Stable',
+            body.blood_pressure || null, body.pulse_rate || null, body.temperature || null,
+            body.spo2 || null, body.blood_sugar || '-', body.pain_level || 0,
+            body.general_condition || 'Stable', body.consciousness || 'Alert', body.mobility_status || 'Independent',
+            body.appetite || 'Good', body.urine_output || 'Normal', body.urine_other || null, body.bowel_movement || 0,
+            body.medication_intake || 'SERVED', body.hygiene_care || 'Normal shower', body.feeding_care || 'DONE',
+            body.wound_dressing || 'N/A', body.repositioning || 'N/A', body.mobilisation || '1',
+            body.nursing_report || null,
+            body.diet_plan || null, body.tube_has_ngt ? 1 : 0, body.tube_has_cbd ? 1 : 0,
+            body.tube_type || null, body.tube_material || null, body.tube_replacement_date || null, body.tube_size || null,
+            body.patient_behavior || null, body.attachment_image || null, body.nurse_advice || null
+          ).run();
+        } catch (insertErr) {
+          // Fallback to legacy columns if migration 0004 not yet fully applied in D1
+          await env.DB.prepare(`
+            INSERT INTO monitoring_records (
+              id, admission_id, patient_id, staff_user_id, staff_name, timestamp, shift,
+              clinical_status, blood_pressure, pulse_rate, temperature, spo2, blood_sugar,
+              pain_level, general_condition, consciousness, mobility_status, appetite,
+              urine_output, bowel_movement, medication_intake, hygiene_care, feeding_care,
+              wound_dressing, repositioning, mobilisation, nursing_report, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+          `).bind(
+            id, body.admission_id || null, body.patient_id, body.staff_user_id || 'system', body.staff_name || 'Jururawat',
+            timestamp, body.shift || 'Morning (7:00am-5:00pm)', body.clinical_status || 'Stable',
+            body.blood_pressure || null, body.pulse_rate || null, body.temperature || null,
+            body.spo2 || null, body.blood_sugar || '-', body.pain_level || 0,
+            body.general_condition || 'Stable', body.consciousness || 'Alert', body.mobility_status || 'Independent',
+            body.appetite || 'Good', body.urine_output || 'Normal', body.bowel_movement || 0,
+            body.medication_intake || 'SERVED', body.hygiene_care || 'Normal shower', body.feeding_care || 'DONE',
+            body.wound_dressing || 'N/A', body.repositioning || 'N/A', body.mobilisation || '1',
+            body.nursing_report || null
+          ).run();
+        }
 
         return new Response(JSON.stringify({ success: true, monitoringId: id, clinicalStatus: body.clinical_status || 'Stable' }), {
           headers: { 'Content-Type': 'application/json' },

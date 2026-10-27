@@ -28,7 +28,7 @@ import {
   PatientConditionBowel,
   PatientBehaviorCategory,
 } from '../types/index.js';
-import { apiCreateMonitoring, uploadImageToR2 } from '../lib/api.js';
+import { apiCreateMonitoring, apiGetPatients, uploadImageToR2 } from '../lib/api.js';
 
 interface MonitoringModalProps {
   isOpen: boolean;
@@ -94,6 +94,7 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
   patients,
   selectedPatient,
 }) => {
+  const [internalPatients, setInternalPatients] = useState<Patient[]>(patients);
   const [patientId, setPatientId] = useState<string>('');
   const [shift, setShift] = useState<ShiftType>('Morning (7:00am-5:00pm)');
   const [clinicalStatus, setClinicalStatus] = useState<ClinicalStatus>('Stable');
@@ -133,6 +134,7 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
   // Picture Attachment (e.g. Wound Photo)
   const [attachmentImage, setAttachmentImage] = useState<string | null>(null);
   const [previewEnlargedImage, setPreviewEnlargedImage] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Nurse Advice & Handover
@@ -162,20 +164,45 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
     }
   }, [isOpen]);
 
+  // Keep internal patients list in sync or fetch active patients if empty
   useEffect(() => {
+    if (patients && patients.length > 0) {
+      setInternalPatients(patients);
+    } else if (isOpen) {
+      apiGetPatients({ status: 'Active' })
+        .then((res) => {
+          if (res?.patients && res.patients.length > 0) {
+            setInternalPatients(res.patients);
+          }
+        })
+        .catch((err) => console.error('Failed to load active patients for monitoring:', err));
+    }
+  }, [patients, isOpen]);
+
+  // Sync patient selection and defaults when modal opens or patient changes
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const available = Array.isArray(internalPatients) && internalPatients.length > 0
+      ? internalPatients
+      : (Array.isArray(patients) ? patients : []);
+
     if (selectedPatient) {
       setPatientId(selectedPatient.id);
-      // If patient is tube fed or has diagnosis, prepopulate defaults
-      if (selectedPatient.feeding_method?.toLowerCase().includes('tube') || selectedPatient.feeding_method?.toLowerCase().includes('ngt')) {
+      const fm = String(selectedPatient.feeding_method || '').toLowerCase();
+      if (fm.includes('tube') || fm.includes('ngt')) {
         setHasNgt(true);
         setDietPlan('Susu Ensure via NGT 250ml x 4 kali');
-      } else if (selectedPatient.feeding_method?.toLowerCase().includes('soft')) {
+      } else if (fm.includes('soft')) {
         setDietPlan('Makan bubur lembut');
+      } else if (selectedPatient.latest_diet_plan) {
+        setDietPlan(selectedPatient.latest_diet_plan);
       }
-    } else if (patients.length > 0 && !patientId) {
-      setPatientId(patients[0].id);
+    } else if (available.length > 0 && available[0]?.id) {
+      setPatientId((prev) => (prev && available.some((p) => p?.id === prev) ? prev : available[0].id));
     }
-  }, [selectedPatient, patients]);
+    setError(null);
+  }, [isOpen, selectedPatient, patients, internalPatients]);
 
   // Auto trigger Red Alert detection based on vital entries
   useEffect(() => {
@@ -187,19 +214,17 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
     }
   }, [temp, spo2, pulse]);
 
-  if (!isOpen) return null;
-
-  const isVitalShift = shift.startsWith('Morning') || shift.startsWith('AM') || shift.startsWith('Night');
+  const currentShiftStr = String(shift || 'Morning');
+  const isVitalShift = currentShiftStr.startsWith('Morning') || currentShiftStr.startsWith('AM') || currentShiftStr.startsWith('Night');
 
   function handleBehaviorToggle(bId: PatientBehaviorCategory) {
-    if (selectedBehaviors.includes(bId)) {
-      setSelectedBehaviors(selectedBehaviors.filter((item) => item !== bId));
+    const currentList = Array.isArray(selectedBehaviors) ? selectedBehaviors : [];
+    if (currentList.includes(bId)) {
+      setSelectedBehaviors(currentList.filter((item) => item !== bId));
     } else {
-      setSelectedBehaviors([...selectedBehaviors, bId]);
+      setSelectedBehaviors([...currentList, bId]);
     }
   }
-
-  const [uploadingImage, setUploadingImage] = useState(false);
 
   function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -303,11 +328,16 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
     }
   }
 
-  const activePatientObj = patients.find((p) => p.id === patientId);
+  const availablePatients = Array.isArray(internalPatients) && internalPatients.length > 0
+    ? internalPatients
+    : (Array.isArray(patients) ? patients : []);
+  const activePatientObj = availablePatients.find((p) => p && p.id === patientId);
+
+  if (!isOpen) return null;
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
         <div className="bg-white rounded-3xl border border-emerald-950/10 shadow-2xl max-w-3xl w-full max-h-[92vh] flex flex-col my-auto overflow-hidden">
           {/* Header */}
           <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-[#F8FAF8]">
@@ -350,11 +380,18 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
                   onChange={(e) => setPatientId(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-medium"
                 >
-                  {patients.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.mrn} — {p.full_name} ({p.room_bed || p.zone})
-                    </option>
-                  ))}
+                  {availablePatients.length === 0 ? (
+                    <option value="">Tiada pesakit aktif dijumpai</option>
+                  ) : (
+                    availablePatients.map((p) => {
+                      if (!p) return null;
+                      return (
+                        <option key={p.id} value={p.id}>
+                          {p.mrn} — {p.full_name} ({p.room_bed || p.zone || 'Wad'})
+                        </option>
+                      );
+                    })
+                  )}
                 </select>
               </div>
 
@@ -379,7 +416,7 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
                   <Activity className="w-4 h-4 text-emerald-700" />
                   A. Status Keadaan Pesakit (Patient Condition)
                 </span>
-                <span className="text-[10px] text-slate-400 font-medium">Berdasarkan Syif: {shift.split(' ')[0]}</span>
+                <span className="text-[10px] text-slate-400 font-medium">Berdasarkan Syif: {String(shift || 'Morning').split(' ')[0]}</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -645,13 +682,13 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
                   Tingkah Laku Pesakit (Patient Behavior)
                 </span>
                 <span className="text-[10px] text-slate-500 font-medium">
-                  {selectedBehaviors.length} dipilih (Pilihan Bertanda Dokumen)
+                  {Array.isArray(selectedBehaviors) ? selectedBehaviors.length : 0} dipilih (Pilihan Bertanda Dokumen)
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                 {BEHAVIOR_OPTIONS.map((item) => {
-                  const isSelected = selectedBehaviors.includes(item.id);
+                  const isSelected = Array.isArray(selectedBehaviors) && selectedBehaviors.includes(item.id);
                   return (
                     <button
                       type="button"
@@ -959,7 +996,7 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
 
       {/* Lightbox Image Preview Modal */}
       {previewEnlargedImage && (
-        <div className="fixed inset-0 z-60 bg-black/80 flex items-center justify-center p-4 backdrop-blur-xs">
+        <div className="fixed inset-0 z-[110] bg-black/80 flex items-center justify-center p-4 backdrop-blur-xs">
           <div className="relative max-w-2xl w-full bg-white rounded-3xl p-4 overflow-hidden shadow-2xl">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <span className="font-bold text-slate-900 text-sm">Lampiran Gambar Pemerhatian Pesakit</span>

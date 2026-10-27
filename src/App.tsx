@@ -23,6 +23,7 @@ import {
   apiUpdateKanbanStage,
 } from './lib/api.js';
 import { Activity } from 'lucide-react';
+import { ErrorBoundary } from './components/ErrorBoundary.js';
 
 function MainApp() {
   const { user, loading: authLoading } = useAuth();
@@ -204,26 +205,39 @@ function MainApp() {
         defaultZone={currentZone}
       />
 
-      <MonitoringModal
-        isOpen={isMonitoringOpen}
-        onClose={() => {
+      <ErrorBoundary
+        fallbackTitle="Ralat Membuka Modul Pemantauan DAPUD"
+        onReset={() => {
           setIsMonitoringOpen(false);
           setSelectedPatientForMonitoring(null);
         }}
-        onSuccess={() => loadData()}
-        patients={patients}
-        selectedPatient={selectedPatientForMonitoring}
-      />
+      >
+        <MonitoringModal
+          isOpen={isMonitoringOpen}
+          onClose={() => {
+            setIsMonitoringOpen(false);
+            setSelectedPatientForMonitoring(null);
+          }}
+          onSuccess={() => loadData()}
+          patients={patients}
+          selectedPatient={selectedPatientForMonitoring}
+        />
+      </ErrorBoundary>
 
-      <PatientDetailModal
-        patientId={detailPatientId}
-        onClose={() => setDetailPatientId(null)}
-        onOpenMonitoring={(p) => {
-          setSelectedPatientForMonitoring(p);
-          setIsMonitoringOpen(true);
-        }}
-        onOpenDischarge={(p) => setDischargeTarget(p)}
-      />
+      <ErrorBoundary
+        fallbackTitle="Ralat Membuka Profil Pesakit"
+        onReset={() => setDetailPatientId(null)}
+      >
+        <PatientDetailModal
+          patientId={detailPatientId}
+          onClose={() => setDetailPatientId(null)}
+          onOpenMonitoring={(p) => {
+            setSelectedPatientForMonitoring(p);
+            setIsMonitoringOpen(true);
+          }}
+          onOpenDischarge={(p) => setDischargeTarget(p)}
+        />
+      </ErrorBoundary>
 
       <DischargeModal
         isOpen={!!dischargeTarget}
@@ -237,8 +251,10 @@ function MainApp() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <MainApp />
-    </AuthProvider>
+    <ErrorBoundary fallbackTitle="Convee CarePulse menghadapi ralat tidak dijangka">
+      <AuthProvider>
+        <MainApp />
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
