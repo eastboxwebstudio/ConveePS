@@ -480,6 +480,37 @@ export default {
         const id = 'mon_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
         const timestamp = body.timestamp || new Date().toISOString();
 
+        // Resolve active admission_id for patient_id if not provided
+        let activeAdmissionId = body.admission_id;
+        if (!activeAdmissionId && body.patient_id) {
+          const activeAdm = await env.DB.prepare(
+            "SELECT id FROM admissions WHERE patient_id = ? AND lifecycle_status = 'Active' ORDER BY created_at DESC LIMIT 1"
+          ).bind(body.patient_id).first();
+          if (activeAdm && activeAdm.id) {
+            activeAdmissionId = activeAdm.id;
+          } else {
+            const anyAdm = await env.DB.prepare(
+              "SELECT id FROM admissions WHERE patient_id = ? ORDER BY created_at DESC LIMIT 1"
+            ).bind(body.patient_id).first();
+            if (anyAdm && anyAdm.id) {
+              activeAdmissionId = anyAdm.id;
+            } else {
+              // Auto-create admission for this patient if none exists in D1
+              activeAdmissionId = 'adm_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+              const admNum = `ADM-${new Date().getFullYear()}-001`;
+              const pt = await env.DB.prepare("SELECT zone, room_bed FROM patients WHERE id = ?").bind(body.patient_id).first();
+              await env.DB.prepare(`
+                INSERT INTO admissions (id, patient_id, admission_number, admission_date, admission_time, zone, room_bed, lifecycle_status, kanban_stage, created_at, updated_at)
+                VALUES (?, ?, ?, date('now'), time('now'), ?, ?, 'Active', 'New Admission', datetime('now'), datetime('now'))
+              `).bind(activeAdmissionId, body.patient_id, admNum, pt?.zone || 'Zon Lelaki', pt?.room_bed || 'Katil L-01').run();
+            }
+          }
+        }
+
+        const user = await getAuthUser(request, env);
+        const staffUserId = user?.id || body.staff_user_id || 'system';
+        const staffName = user?.full_name || body.staff_name || 'Jururawat';
+
         // Try inserting with enhanced DAPUD columns first
         try {
           await env.DB.prepare(`
@@ -493,7 +524,7 @@ export default {
               patient_behavior, attachment_image, nurse_advice, created_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
           `).bind(
-            id, body.admission_id || null, body.patient_id, body.staff_user_id || 'system', body.staff_name || 'Jururawat',
+            id, activeAdmissionId, body.patient_id, staffUserId, staffName,
             timestamp, body.shift || 'Morning (7:00am-5:00pm)', body.clinical_status || 'Stable',
             body.blood_pressure || null, body.pulse_rate || null, body.temperature || null,
             body.spo2 || null, body.blood_sugar || '-', body.pain_level || 0,
@@ -517,7 +548,7 @@ export default {
               wound_dressing, repositioning, mobilisation, nursing_report, created_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
           `).bind(
-            id, body.admission_id || null, body.patient_id, body.staff_user_id || 'system', body.staff_name || 'Jururawat',
+            id, activeAdmissionId, body.patient_id, staffUserId, staffName,
             timestamp, body.shift || 'Morning (7:00am-5:00pm)', body.clinical_status || 'Stable',
             body.blood_pressure || null, body.pulse_rate || null, body.temperature || null,
             body.spo2 || null, body.blood_sugar || '-', body.pain_level || 0,

@@ -277,6 +277,7 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
 
       await apiCreateMonitoring({
         patient_id: patientId,
+        admission_id: activePatientObj?.admission_id || selectedPatient?.admission_id || undefined,
         shift,
         clinical_status: clinicalStatus,
         blood_pressure: bp || null,
