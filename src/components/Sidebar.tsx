@@ -105,17 +105,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
           </div>
 
-          {/* Facility Zone Dropdown-like Pill */}
-          <div className="px-4 pt-3 pb-1">
-            <div className="px-3 py-2 rounded-2xl bg-[#F4F8F4] border border-emerald-950/5 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-                <span className="text-xs font-semibold text-slate-700">Wad 2 Zon (L & P)</span>
-              </div>
-              <span className="text-[10px] font-mono text-slate-400 font-bold">30 Katil</span>
-            </div>
-          </div>
-
           {/* Navigation Items */}
           <nav className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-270px)]">
             {/* Section 1: Operasi Klinikal */}
