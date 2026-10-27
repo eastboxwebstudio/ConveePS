@@ -342,3 +342,28 @@ export async function apiTestR2Connection(credentials?: {
   });
 }
 
+export async function apiSaveR2Config(credentials: {
+  accountId?: string;
+  accessKeyId?: string;
+  secretAccessKey?: string;
+  bucketName?: string;
+  publicDomain?: string;
+}) {
+  return request<{
+    success: boolean;
+    message: string;
+    testResult: { success: boolean; message: string };
+    config: {
+      accountId: string;
+      accessKeyId: string;
+      bucketName: string;
+      publicDomain: string;
+      isConfigured: boolean;
+    };
+  }>('/storage/r2/save', {
+    method: 'POST',
+    body: JSON.stringify(credentials),
+  });
+}
+
+

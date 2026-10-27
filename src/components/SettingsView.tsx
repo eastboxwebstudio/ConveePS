@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.js';
-import { apiChangePasscode } from '../lib/api.js';
+import { apiChangePasscode, apiGetR2Status, apiSaveR2Config } from '../lib/api.js';
 import { Settings, KeyRound, Shield, Check, Building2, Clock, CheckCircle } from 'lucide-react';
 
 export const SettingsView: React.FC = () => {
@@ -11,6 +11,48 @@ export const SettingsView: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Cloudflare R2 Credentials State
+  const [r2AccountId, setR2AccountId] = useState('');
+  const [r2BucketName, setR2BucketName] = useState('convee-carepulse-assets');
+  const [r2AccessKeyId, setR2AccessKeyId] = useState('');
+  const [r2SecretAccessKey, setR2SecretAccessKey] = useState('');
+  const [r2PublicDomain, setR2PublicDomain] = useState('');
+  const [r2Testing, setR2Testing] = useState(false);
+  const [r2Msg, setR2Msg] = useState<{ text: string; isError: boolean } | null>(null);
+
+  useEffect(() => {
+    apiGetR2Status().then((res) => {
+      if (res.bucketName) setR2BucketName(res.bucketName);
+      if (res.publicDomain && !res.publicDomain.includes('Standard')) setR2PublicDomain(res.publicDomain);
+    }).catch(() => {});
+  }, []);
+
+  async function handleSaveR2Config(e: React.FormEvent) {
+    e.preventDefault();
+    setR2Testing(true);
+    setR2Msg(null);
+
+    try {
+      const res = await apiSaveR2Config({
+        accountId: r2AccountId,
+        accessKeyId: r2AccessKeyId,
+        secretAccessKey: r2SecretAccessKey,
+        bucketName: r2BucketName,
+        publicDomain: r2PublicDomain,
+      });
+
+      if (res.testResult.success) {
+        setR2Msg({ text: res.testResult.message, isError: false });
+      } else {
+        setR2Msg({ text: res.testResult.message, isError: true });
+      }
+    } catch (err: any) {
+      setR2Msg({ text: err.message || 'Gagal menyimpan tetapan R2.', isError: true });
+    } finally {
+      setR2Testing(false);
+    }
+  }
 
   async function handleChangePasscode(e: React.FormEvent) {
     e.preventDefault();
@@ -179,12 +221,12 @@ export const SettingsView: React.FC = () => {
         </div>
       </div>
 
-      {/* Cloudflare R2 Storage Integration Info */}
+      {/* Cloudflare R2 Storage Integration Info & Configuration Form */}
       <div className="p-6 bg-white rounded-3xl border border-emerald-950/5 shadow-xs space-y-4 text-xs">
         <div className="flex items-center justify-between">
           <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
-            Cloudflare R2 Object Storage (Imej Inventori & Pemantauan DAPUD)
+            Tetapan Cloudflare R2 Object Storage
           </h3>
           <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold uppercase">
             R2 Active Ready
@@ -192,20 +234,95 @@ export const SettingsView: React.FC = () => {
         </div>
 
         <p className="text-slate-600 leading-relaxed">
-          Semua fail gambar yang dikepilkan (gambar rujukan barang inventori, ubatan pesakit, dan foto luka/ruam pemantauan DAPUD) disimpan secara automatik dalam Cloudflare R2 Storage untuk prestasi tinggi tanpa sebarang kos muat turun.
+          Semua gambar yang dikepilkan (gambar rujukan barang/ubat inventori & foto luka DAPUD) disimpan secara automatik di Cloudflare R2 Bucket. Sila masukkan kunci API R2 akaun Cloudflare anda jika anda ingin menyambung ke bucket persendirian anda:
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-          <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80">
-            <span className="text-slate-400 block text-[10px] uppercase font-bold">Bucket Name:</span>
-            <span className="font-mono font-bold text-slate-800 text-xs block mt-0.5">convee-carepulse-assets</span>
+        {r2Msg && (
+          <div
+            className={`p-3.5 rounded-2xl text-xs font-medium flex items-center gap-2 ${
+              r2Msg.isError
+                ? 'bg-rose-50 border border-rose-200 text-rose-800'
+                : 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+            }`}
+          >
+            <CheckCircle className="w-4 h-4 shrink-0" />
+            <span>{r2Msg.text}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSaveR2Config} className="space-y-3.5 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 block">Cloudflare Account ID</label>
+              <input
+                type="text"
+                placeholder="e.g. 8a9b7c6d5e4f3a2b1c0d"
+                value={r2AccountId}
+                onChange={(e) => setR2AccountId(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 font-mono text-xs focus:ring-1 focus:ring-emerald-700"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 block">R2 Bucket Name</label>
+              <input
+                type="text"
+                placeholder="convee-carepulse-assets"
+                value={r2BucketName}
+                onChange={(e) => setR2BucketName(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 font-mono text-xs focus:ring-1 focus:ring-emerald-700"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 block">Access Key ID</label>
+              <input
+                type="text"
+                placeholder="e.g. 2a3b4c5d6e7f..."
+                value={r2AccessKeyId}
+                onChange={(e) => setR2AccessKeyId(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 font-mono text-xs focus:ring-1 focus:ring-emerald-700"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 block">Secret Access Key</label>
+              <input
+                type="password"
+                placeholder="••••••••••••••••••••"
+                value={r2SecretAccessKey}
+                onChange={(e) => setR2SecretAccessKey(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 font-mono text-xs focus:ring-1 focus:ring-emerald-700"
+              />
+            </div>
           </div>
 
-          <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80">
-            <span className="text-slate-400 block text-[10px] uppercase font-bold">Status Storan:</span>
-            <span className="font-bold text-emerald-700 text-xs block mt-0.5">Cloudflare R2 Ready / Local Fallback Active</span>
+          <div className="space-y-1">
+            <label className="font-bold text-slate-700 block">Domain Awam / Custom Domain R2 (Pilihan)</label>
+            <input
+              type="text"
+              placeholder="e.g. https://pub-r2.convee-carepulse.com"
+              value={r2PublicDomain}
+              onChange={(e) => setR2PublicDomain(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 font-mono text-xs focus:ring-1 focus:ring-emerald-700"
+            />
           </div>
-        </div>
+
+          <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+            <span className="text-[11px] text-slate-400">
+              Sistem akan secara automatik membuat imej fallback tempatan jika R2 belum disahkan.
+            </span>
+
+            <button
+              type="submit"
+              disabled={r2Testing}
+              className="px-4 py-2 rounded-xl bg-[#0B3B2C] hover:bg-[#07281E] text-white font-bold text-xs flex items-center gap-2 transition"
+            >
+              <Check className="w-3.5 h-3.5 text-[#C5E875]" />
+              <span>{r2Testing ? 'Menyemak Sambungan...' : 'Uji & Simpan Tetapan R2'}</span>
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

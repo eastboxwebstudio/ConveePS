@@ -8,6 +8,8 @@ if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
+const CONFIG_FILE = path.resolve(process.cwd(), 'data/r2_config.json');
+
 export interface R2Config {
   accountId: string;
   accessKeyId: string;
@@ -17,16 +19,47 @@ export interface R2Config {
 }
 
 /**
- * Get R2 configuration from environment variables or default settings
+ * Get R2 configuration from file store or environment variables
  */
 export function getR2Config(): R2Config {
+  let fileConfig: Partial<R2Config> = {};
+  if (fs.existsSync(CONFIG_FILE)) {
+    try {
+      fileConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'));
+    } catch (e) {
+      console.warn('Failed reading r2_config.json:', e);
+    }
+  }
+
   return {
-    accountId: process.env.R2_ACCOUNT_ID || process.env.CF_R2_ACCOUNT_ID || '',
-    accessKeyId: process.env.R2_ACCESS_KEY_ID || process.env.CF_R2_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || process.env.CF_R2_SECRET_ACCESS_KEY || '',
-    bucketName: process.env.R2_BUCKET_NAME || process.env.CF_R2_BUCKET_NAME || 'convee-carepulse-assets',
-    publicDomain: process.env.R2_PUBLIC_URL || process.env.CF_R2_PUBLIC_URL || '',
+    accountId: fileConfig.accountId || process.env.R2_ACCOUNT_ID || process.env.CF_R2_ACCOUNT_ID || '',
+    accessKeyId: fileConfig.accessKeyId || process.env.R2_ACCESS_KEY_ID || process.env.CF_R2_ACCESS_KEY_ID || '',
+    secretAccessKey: fileConfig.secretAccessKey || process.env.R2_SECRET_ACCESS_KEY || process.env.CF_R2_SECRET_ACCESS_KEY || '',
+    bucketName: fileConfig.bucketName || process.env.R2_BUCKET_NAME || process.env.CF_R2_BUCKET_NAME || 'convee-carepulse-assets',
+    publicDomain: fileConfig.publicDomain || process.env.R2_PUBLIC_URL || process.env.CF_R2_PUBLIC_URL || '',
   };
+}
+
+/**
+ * Save R2 configuration to disk
+ */
+export function saveR2Config(config: Partial<R2Config>): R2Config {
+  const current = getR2Config();
+  const updated: R2Config = {
+    accountId: config.accountId !== undefined ? config.accountId.trim() : current.accountId,
+    accessKeyId: config.accessKeyId !== undefined ? config.accessKeyId.trim() : current.accessKeyId,
+    secretAccessKey: config.secretAccessKey !== undefined ? config.secretAccessKey.trim() : current.secretAccessKey,
+    bucketName: config.bucketName !== undefined ? config.bucketName.trim() : current.bucketName,
+    publicDomain: config.publicDomain !== undefined ? config.publicDomain.trim() : current.publicDomain,
+  };
+
+  const dataDir = path.dirname(CONFIG_FILE);
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+
+  fs.writeFileSync(CONFIG_FILE, JSON.stringify(updated, null, 2), 'utf-8');
+  return updated;
 }
 
 /**

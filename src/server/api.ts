@@ -13,6 +13,7 @@ import {
 } from './auth.js';
 import {
   getR2Config,
+  saveR2Config,
   isR2Configured,
   testR2Connection,
   uploadBase64Image,
@@ -1767,4 +1768,46 @@ apiRouter.post('/storage/r2/test', requireAdmin, async (req: Request, res: Respo
   const testRes = await testR2Connection(customConfig.accountId ? customConfig : undefined);
   return res.json(testRes);
 });
+
+// 9.4 Save Cloudflare R2 Credentials
+apiRouter.post('/storage/r2/save', requireAdmin, async (req: Request, res: Response) => {
+  const { accountId, accessKeyId, secretAccessKey, bucketName, publicDomain } = req.body || {};
+
+  try {
+    const updated = saveR2Config({
+      accountId,
+      accessKeyId,
+      secretAccessKey,
+      bucketName,
+      publicDomain,
+    });
+
+    const testRes = await testR2Connection(updated);
+
+    await logAudit(
+      req.user!,
+      'CONFIGURE_R2_STORAGE',
+      'settings',
+      null,
+      `Mengemas kini tetapan Cloudflare R2 storage: Bucket "${updated.bucketName}".`
+    );
+
+    return res.json({
+      success: true,
+      message: 'Tetapan Cloudflare R2 berjaya disimpan.',
+      testResult: testRes,
+      config: {
+        accountId: updated.accountId,
+        accessKeyId: updated.accessKeyId,
+        bucketName: updated.bucketName,
+        publicDomain: updated.publicDomain,
+        isConfigured: isR2Configured(updated),
+      },
+    });
+  } catch (err: any) {
+    console.error('Failed saving R2 config:', err);
+    return res.status(500).json({ error: 'Gagal menyimpan tetapan Cloudflare R2.' });
+  }
+});
+
 

@@ -18,3 +18,11 @@ migrations_dir = "./migrations"
 ENVIRONMENT = "production"
 FACILITY_NAME = "Convee CarePulse"
 TIMEZONE = "Asia/Kuala_Lumpur"
+
+[[r2_buckets]]
+binding = "convee-carepulse-assets"
+bucket_name = "convee-carepulse-assets"
+
+[[d1_databases]]
+binding = "DB"
+database_id = "6c5deb5c-6b3d-45e5-b47d-d1ec8012cf7c"
