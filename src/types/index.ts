@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'staff_nurse';
+export type UserRole = 'admin' | 'staff_nurse' | 'caregiver';
 export type UserStatus = 'active' | 'inactive';
 
 export interface User {
@@ -27,7 +27,12 @@ export type KanbanStage =
   | 'Refuse Medication'
   | 'Discharged';
 
-export type ShiftType = 'AM (7:00-5:00)' | 'PM (5:00-9:00)' | 'Night (9:00pm-7:00am)';
+export type ShiftType =
+  | 'Morning (7:00am-5:00pm)'
+  | 'Petang (2:00pm-12:00am)'
+  | 'Night (9:00pm-7:00am)'
+  | 'AM (7:00-5:00)'
+  | 'PM (5:00-9:00)';
 
 export type ClinicalStatus = 'Stable' | 'Red Alert';
 
@@ -59,6 +64,9 @@ export interface Patient {
   admission_time?: string;
   kanban_stage?: KanbanStage;
   length_of_stay?: number;
+  tca_date?: string | null;
+  tca_location?: string | null;
+  tca_remarks?: string | null;
 
   // Latest monitoring indicators
   latest_clinical_status?: ClinicalStatus;
@@ -69,6 +77,8 @@ export interface Patient {
   latest_appetite?: string;
   latest_med_status?: string;
   latest_monitoring_time?: string;
+  latest_nurse_advice?: string | null;
+  latest_diet_plan?: string | null;
 }
 
 export interface Admission {
@@ -84,8 +94,29 @@ export interface Admission {
   lifecycle_status: PatientStatus;
   kanban_stage: KanbanStage;
   admission_remarks?: string;
+  tca_date?: string | null;
+  tca_location?: string | null;
+  tca_remarks?: string | null;
   created_at: string;
 }
+
+export type PatientConditionGeneral = 'Stable' | 'Improving' | 'Unwell';
+export type PatientConditionConsciousness = 'Alert' | 'Drowsy' | 'Confused';
+export type PatientConditionMobility = 'Independent' | 'Assisted' | 'Bedbound';
+export type PatientConditionAppetite = 'Good' | 'Fair' | 'Poor';
+export type PatientConditionUrine = 'Normal' | 'Reduced' | 'Other';
+export type PatientConditionBowel = 'Normal' | 'No bowel motion' | 'Diarrhoea';
+
+export type PatientBehaviorCategory =
+  | 'Calm & Cooperative'
+  | 'Agitated / Restless'
+  | 'Verbal Aggression'
+  | 'Repetitive Behaviour'
+  | 'Wandering'
+  | 'Anxious / Fearful'
+  | 'Confused / Disoriented'
+  | 'Attention-Seeking'
+  | 'Emotionally Distressed';
 
 export interface MonitoringRecord {
   id: string;
@@ -105,13 +136,31 @@ export interface MonitoringRecord {
   blood_sugar?: string | null;
   pain_level: number;
 
-  // Conditions
-  general_condition?: string;
-  consciousness?: string;
-  mobility_status?: string;
-  appetite: 'GOOD' | 'FAIR' | 'POOR';
-  urine_output?: string;
+  // Conditions (As per CECC DAPUD form)
+  general_condition?: PatientConditionGeneral | string;
+  consciousness?: PatientConditionConsciousness | string;
+  mobility_status?: PatientConditionMobility | string;
+  appetite: 'GOOD' | 'FAIR' | 'POOR' | 'Good' | 'Fair' | 'Poor';
+  urine_output?: PatientConditionUrine | string;
+  urine_other?: string | null;
   bowel_movement: number;
+  bowel_status?: PatientConditionBowel | string;
+
+  // Diet Plan & Tube Management
+  diet_plan?: string | null;
+  tube_has_ngt?: number;
+  tube_has_cbd?: number;
+  tube_type?: string | null;
+  tube_material?: 'silicone' | 'PVC' | string | null;
+  tube_replacement_date?: string | null;
+  tube_size?: string | null;
+
+  // Patient Behavior (Ticked categories)
+  patient_behavior?: string | null;
+
+  // Media Attachment & Nurse Advice
+  attachment_image?: string | null;
+  nurse_advice?: string | null;
 
   // ADL Care Tasks
   medication_intake: 'SERVED' | 'REFUSE' | 'WITHHELD';
@@ -197,6 +246,7 @@ export interface PatientInventoryItem {
   restock_date?: string | null;
   restock_qty?: string | null;
   remark?: string | null;
+  image_url?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -229,6 +279,7 @@ export interface PatientInventoryCheckDetail {
   restock_date?: string | null;
   restock_qty?: string | null;
   remark?: string | null;
+  image_url?: string | null;
 }
 
 export interface InventoryStats {

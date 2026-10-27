@@ -44,11 +44,11 @@ export const LoginView: React.FC = () => {
             <div className="flex items-center justify-center gap-1.5">
               <h1 className="text-xl font-extrabold tracking-tight text-slate-900">CONVEE</h1>
               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#C5E875] text-[#0D382B]">
-                CARE
+                CarePulse
               </span>
             </div>
-            <p className="text-xs text-slate-500 font-medium mt-1">
-              Patient Monitoring & Clinical Operations
+            <p className="text-xs text-[#0B3B2C] font-semibold mt-1.5 italic block">
+              “A Daily Pulse On Every Resident”
             </p>
           </div>
         </div>
@@ -111,23 +111,32 @@ export const LoginView: React.FC = () => {
           {/* Quick Demo Credentials */}
           <div className="pt-4 border-t border-slate-100">
             <div className="text-[11px] font-semibold text-slate-500 mb-2">Pilihan Log Masuk Ujian Segera:</div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
               <button
                 type="button"
                 onClick={() => handleQuickLogin('admin', 'Admin@123')}
-                className="p-2.5 text-left rounded-2xl bg-[#F8FAF8] hover:bg-[#EAF5DC] border border-emerald-950/5 transition-colors cursor-pointer group"
+                className="p-2 text-left rounded-2xl bg-[#F8FAF8] hover:bg-[#EAF5DC] border border-emerald-950/5 transition-colors cursor-pointer group"
               >
-                <div className="font-bold text-[11px] text-slate-800 group-hover:text-[#0B3B2C]">Admin</div>
-                <div className="text-[10px] text-slate-400 font-mono">admin / Admin@123</div>
+                <div className="font-bold text-[10px] text-slate-800 group-hover:text-[#0B3B2C]">Admin</div>
+                <div className="text-[9px] text-slate-400 font-mono truncate">admin</div>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleQuickLogin('nurse.hajar', 'Nurse@123')}
-                className="p-2.5 text-left rounded-2xl bg-[#F8FAF8] hover:bg-[#EAF5DC] border border-emerald-950/5 transition-colors cursor-pointer group"
+                className="p-2 text-left rounded-2xl bg-[#F8FAF8] hover:bg-[#EAF5DC] border border-emerald-950/5 transition-colors cursor-pointer group"
               >
-                <div className="font-bold text-[11px] text-slate-800 group-hover:text-[#0B3B2C]">Staff Nurse</div>
-                <div className="text-[10px] text-slate-400 font-mono">nurse.hajar / Nurse@123</div>
+                <div className="font-bold text-[10px] text-slate-800 group-hover:text-[#0B3B2C]">Nurse</div>
+                <div className="text-[9px] text-slate-400 font-mono truncate">nurse.hajar</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleQuickLogin('caregiver.azlan', 'Nurse@123')}
+                className="p-2 text-left rounded-2xl bg-[#F8FAF8] hover:bg-[#EAF5DC] border border-emerald-950/5 transition-colors cursor-pointer group"
+              >
+                <div className="font-bold text-[10px] text-slate-800 group-hover:text-[#0B3B2C]">Caregiver</div>
+                <div className="text-[9px] text-slate-400 font-mono truncate">caregiver.azlan</div>
               </button>
             </div>
           </div>

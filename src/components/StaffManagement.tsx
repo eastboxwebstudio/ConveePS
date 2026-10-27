@@ -23,7 +23,7 @@ export const StaffManagement: React.FC = () => {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [newUsername, setNewUsername] = useState('');
   const [newFullName, setNewFullName] = useState('');
-  const [newRole, setNewRole] = useState<'admin' | 'staff_nurse'>('staff_nurse');
+  const [newRole, setNewRole] = useState<'admin' | 'staff_nurse' | 'caregiver'>('staff_nurse');
   const [newPasscode, setNewPasscode] = useState('Nurse@123');
 
   // Reset passcode modal state
@@ -149,14 +149,20 @@ export const StaffManagement: React.FC = () => {
                 <td className="py-3 px-4 text-slate-800 font-semibold">{s.full_name}</td>
                 <td className="py-3 px-4">
                   <span
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
                       s.role === 'admin'
                         ? 'bg-purple-50 text-purple-800 border border-purple-200'
+                        : s.role === 'caregiver'
+                        ? 'bg-amber-50 text-amber-900 border border-amber-200'
                         : 'bg-teal-50 text-teal-800 border border-teal-200'
                     }`}
                   >
                     <Shield className="w-3 h-3" />
-                    {s.role === 'admin' ? 'Admin' : 'Staff Nurse'}
+                    {s.role === 'admin'
+                      ? 'Admin'
+                      : s.role === 'caregiver'
+                      ? 'Caregiver (Penjaga)'
+                      : 'Staff Nurse'}
                   </span>
                 </td>
                 <td className="py-3 px-4">
@@ -255,6 +261,7 @@ export const StaffManagement: React.FC = () => {
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
                 >
                   <option value="staff_nurse">Staff Nurse (Jururawat)</option>
+                  <option value="caregiver">Caregiver (Penjaga Pesakit)</option>
                   <option value="admin">Admin (Pentadbir)</option>
                 </select>
               </div>

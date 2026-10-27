@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
     full_name TEXT NOT NULL,
-    role TEXT NOT NULL CHECK(role IN ('admin', 'staff_nurse')),
+    role TEXT NOT NULL CHECK(role IN ('admin', 'staff_nurse', 'caregiver')),
     passcode_hash TEXT NOT NULL,
     passcode_salt TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'inactive')),
@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS monitoring_records (
     staff_user_id TEXT NOT NULL,
     staff_name TEXT NOT NULL,
     timestamp TEXT NOT NULL DEFAULT (datetime('now')),
-    shift TEXT NOT NULL CHECK(shift IN ('AM (7:00-5:00)', 'PM (5:00-9:00)', 'Night (9:00pm-7:00am)')),
+    shift TEXT NOT NULL CHECK(shift IN ('Morning (7:00am-5:00pm)', 'Petang (2:00pm-12:00am)', 'Night (9:00pm-7:00am)', 'AM (7:00-5:00)', 'PM (5:00-9:00)')),
     
     -- Clinical Acuity
     clinical_status TEXT NOT NULL DEFAULT 'Stable' CHECK(clinical_status IN ('Stable', 'Red Alert')),

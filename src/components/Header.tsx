@@ -32,17 +32,17 @@ export const Header: React.FC<HeaderProps> = ({
   // Determine current active shift based on local hour
   const now = new Date();
   const hour = now.getHours();
-  let activeShiftName = 'Syif AM';
-  let activeShiftHours = '07:00 – 17:00';
+  let activeShiftName = 'Syif Morning';
+  let activeShiftHours = '7:00am – 5:00pm';
   let isVitalShift = true;
 
-  if (hour >= 17 && hour < 21) {
-    activeShiftName = 'Syif PM';
-    activeShiftHours = '17:00 – 21:00';
+  if (hour >= 14 && hour < 21) {
+    activeShiftName = 'Syif Petang';
+    activeShiftHours = '2:00pm – 12:00am';
     isVitalShift = false;
   } else if (hour >= 21 || hour < 7) {
     activeShiftName = 'Syif Night';
-    activeShiftHours = '21:00 – 07:00';
+    activeShiftHours = '9:00pm – 7:00am';
     isVitalShift = true;
   }
 

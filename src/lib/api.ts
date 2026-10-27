@@ -122,8 +122,35 @@ export async function apiUpdateKanbanStage(admissionId: string, kanban_stage: Ka
   });
 }
 
+export async function apiUpdateTcaSchedule(
+  admissionId: string,
+  payload: {
+    tca_date?: string;
+    tca_location?: string;
+    tca_remarks?: string;
+    set_stage_tca?: boolean;
+  }
+) {
+  return request<{ success: boolean; message: string }>(`/admissions/${admissionId}/tca`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
 // 4. Monitoring API (DAPUD)
-export async function apiCreateMonitoring(payload: Partial<MonitoringRecord>) {
+export async function apiCreateMonitoring(payload: Partial<MonitoringRecord> & {
+  diet_plan?: string | null;
+  tube_has_ngt?: boolean | number;
+  tube_has_cbd?: boolean | number;
+  tube_type?: string | null;
+  tube_material?: string | null;
+  tube_replacement_date?: string | null;
+  tube_size?: string | null;
+  patient_behavior?: string | null;
+  attachment_image?: string | null;
+  nurse_advice?: string | null;
+  urine_other?: string | null;
+}) {
   return request<{ success: boolean; message: string; monitoringId: string; clinicalStatus: string }>('/monitoring', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -151,7 +178,7 @@ export async function apiGetStaff() {
 export async function apiCreateStaff(payload: {
   username: string;
   full_name: string;
-  role: 'admin' | 'staff_nurse';
+  role: 'admin' | 'staff_nurse' | 'caregiver';
   temporary_passcode: string;
 }) {
   return request<{ success: boolean; message: string }>('/staff', {
@@ -218,6 +245,7 @@ export async function apiAddInventoryItem(data: {
   restock_date?: string;
   restock_qty?: string;
   remark?: string;
+  image_url?: string;
 }) {
   return request<{ success: boolean; item: PatientInventoryItem }>('/inventory/items', {
     method: 'POST',
@@ -274,3 +302,43 @@ export async function apiSaveWeeklyCheck(data: {
 export function getExportInventoryCsvUrl(patientId: string) {
   return `/api/inventory/export-csv/${patientId}`;
 }
+
+// 10. Storage & Cloudflare R2 API
+export async function uploadImageToR2(imageBase64: string, prefix = 'convee') {
+  return request<{
+    success: boolean;
+    url: string;
+    storageType: 'cloudflare_r2' | 'local_fallback';
+    key: string;
+    sizeBytes: number;
+  }>('/storage/upload', {
+    method: 'POST',
+    body: JSON.stringify({ imageBase64, prefix }),
+  });
+}
+
+export async function apiGetR2Status() {
+  return request<{
+    configured: boolean;
+    bucketName: string;
+    publicDomain: string;
+    hasAccountId: boolean;
+    hasAccessKey: boolean;
+    hasSecretKey: boolean;
+    provider: string;
+  }>('/storage/r2/status');
+}
+
+export async function apiTestR2Connection(credentials?: {
+  accountId?: string;
+  accessKeyId?: string;
+  secretAccessKey?: string;
+  bucketName?: string;
+  publicDomain?: string;
+}) {
+  return request<{ success: boolean; message: string }>('/storage/r2/test', {
+    method: 'POST',
+    body: JSON.stringify(credentials || {}),
+  });
+}
+

@@ -14,6 +14,7 @@ import {
   apiRestockInventory,
   apiSaveWeeklyCheck,
   getExportInventoryCsvUrl,
+  uploadImageToR2,
 } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.js';
 import {
@@ -37,6 +38,8 @@ import {
   Filter,
   ArrowUpDown,
   History,
+  Camera,
+  Image as ImageIcon,
 } from 'lucide-react';
 
 interface PatientInventoryModuleProps {
@@ -80,6 +83,12 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
   const [newItemBalance, setNewItemBalance] = useState('');
   const [newItemNecessity, setNewItemNecessity] = useState<'YES' | 'NO'>('NO');
   const [newItemRemark, setNewItemRemark] = useState('');
+  const [newItemImage, setNewItemImage] = useState<string | null>(null);
+
+  // Dedicated image attach/replace modal state
+  const [itemForImageUpload, setItemForImageUpload] = useState<PatientInventoryItem | null>(null);
+  const [activeImageUploadUrl, setActiveImageUploadUrl] = useState<string | null>(null);
+  const [lightboxImage, setLightboxImage] = useState<{ url: string; title: string; subtitle?: string } | null>(null);
 
   const [isWeeklyCheckModalOpen, setIsWeeklyCheckModalOpen] = useState(false);
   const [weeklyCheckDate, setWeeklyCheckDate] = useState(new Date().toISOString().split('T')[0]);
@@ -200,6 +209,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
         stock_balance: newItemBalance || '0',
         stock_necessity: newItemNecessity,
         remark: newItemRemark,
+        image_url: newItemImage || undefined,
       });
 
       setIsAddItemOpen(false);
@@ -207,9 +217,25 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
       setNewItemBalance('');
       setNewItemRemark('');
       setNewItemNecessity('NO');
+      setNewItemImage(null);
       await loadInventory(selectedPatientId);
     } catch (err) {
       console.error('Failed to add item:', err);
+    }
+  }
+
+  // Save Item Image (Update / replace image)
+  async function handleSaveItemImage() {
+    if (!itemForImageUpload) return;
+    try {
+      await apiUpdateInventoryItem(itemForImageUpload.id, {
+        image_url: activeImageUploadUrl || '',
+      });
+      await loadInventory(selectedPatientId);
+      setItemForImageUpload(null);
+      setActiveImageUploadUrl(null);
+    } catch (err) {
+      console.error('Failed to save item image:', err);
     }
   }
 
@@ -691,7 +717,49 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                                 </td>
 
                                 <td className="px-4 py-2 font-bold text-slate-900">
-                                  {item.item_name}
+                                  <div className="flex items-center gap-2">
+                                    {item.image_url ? (
+                                      <div className="relative group shrink-0">
+                                        <img
+                                          src={item.image_url}
+                                          alt={item.item_name}
+                                          onClick={() =>
+                                            setLightboxImage({
+                                              url: item.image_url!,
+                                              title: item.item_name,
+                                              subtitle: `Baki: ${item.stock_balance} · ${item.remark || 'Tiada catatan'}`,
+                                            })
+                                          }
+                                          className="w-7 h-7 rounded-lg object-cover border border-slate-300 cursor-pointer shadow-2xs hover:scale-105 transition-transform"
+                                          title="Klik untuk lihat gambar rujukan"
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setItemForImageUpload(item);
+                                            setActiveImageUploadUrl(item.image_url || null);
+                                          }}
+                                          className="absolute -top-1 -right-1 bg-white rounded-full p-0.5 border border-slate-300 shadow-2xs opacity-0 group-hover:opacity-100 transition-opacity"
+                                          title="Tukar gambar rujukan"
+                                        >
+                                          <Camera className="w-2.5 h-2.5 text-slate-700" />
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setItemForImageUpload(item);
+                                          setActiveImageUploadUrl(null);
+                                        }}
+                                        className="w-7 h-7 rounded-lg border border-dashed border-slate-300 hover:border-emerald-600 bg-slate-50 hover:bg-emerald-50 flex items-center justify-center text-slate-400 hover:text-emerald-700 transition-colors shrink-0"
+                                        title="Lampir gambar rujukan barang ini"
+                                      >
+                                        <Camera className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                    <span>{item.item_name}</span>
+                                  </div>
                                 </td>
 
                                 <td className="px-4 py-2">
@@ -895,9 +963,51 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                                   {idx + 1}
                                 </td>
 
-                                <td className="px-4 py-2 font-bold text-slate-900 flex items-center gap-2">
-                                  <Pill className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                                  <span>{med.item_name}</span>
+                                <td className="px-4 py-2 font-bold text-slate-900">
+                                  <div className="flex items-center gap-2">
+                                    {med.image_url ? (
+                                      <div className="relative group shrink-0">
+                                        <img
+                                          src={med.image_url}
+                                          alt={med.item_name}
+                                          onClick={() =>
+                                            setLightboxImage({
+                                              url: med.image_url!,
+                                              title: med.item_name,
+                                              subtitle: `Baki: ${med.stock_balance} · ${med.remark || 'Tiada catatan'}`,
+                                            })
+                                          }
+                                          className="w-7 h-7 rounded-lg object-cover border border-purple-300 cursor-pointer shadow-2xs hover:scale-105 transition-transform"
+                                          title="Klik untuk lihat gambar kotak ubat"
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setItemForImageUpload(med);
+                                            setActiveImageUploadUrl(med.image_url || null);
+                                          }}
+                                          className="absolute -top-1 -right-1 bg-white rounded-full p-0.5 border border-slate-300 shadow-2xs opacity-0 group-hover:opacity-100 transition-opacity"
+                                          title="Tukar gambar kotak ubat"
+                                        >
+                                          <Camera className="w-2.5 h-2.5 text-slate-700" />
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setItemForImageUpload(med);
+                                          setActiveImageUploadUrl(null);
+                                        }}
+                                        className="w-7 h-7 rounded-lg border border-dashed border-purple-200 hover:border-purple-600 bg-purple-50/50 hover:bg-purple-100 flex items-center justify-center text-purple-400 hover:text-purple-700 transition-colors shrink-0"
+                                        title="Lampirkan foto kotak ubat rujukan"
+                                      >
+                                        <Camera className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                    <Pill className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                                    <span>{med.item_name}</span>
+                                  </div>
                                 </td>
 
                                 <td className="px-4 py-2">
@@ -1313,6 +1423,50 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                 />
               </div>
 
+              {/* Image attachment in Add Item Modal */}
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">
+                  Lampiran Gambar Rujukan (Pilihan)
+                </label>
+                <div className="flex items-center gap-2">
+                  {newItemImage ? (
+                    <div className="relative border border-slate-200 rounded-xl p-2 bg-slate-50 flex items-center gap-2 w-full">
+                      <img
+                        src={newItemImage}
+                        alt="Preview"
+                        className="w-12 h-12 rounded-lg object-cover border border-slate-300"
+                      />
+                      <span className="text-[11px] text-slate-600 flex-1">Gambar dipilih</span>
+                      <button
+                        type="button"
+                        onClick={() => setNewItemImage(null)}
+                        className="text-rose-600 hover:text-rose-800 text-xs font-semibold px-2 py-1"
+                      >
+                        Padam
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex items-center justify-center gap-2 w-full py-2.5 px-3 border border-dashed border-slate-300 hover:border-emerald-700 rounded-xl bg-slate-50 hover:bg-emerald-50/30 cursor-pointer transition-colors text-slate-600">
+                      <Camera className="w-4 h-4 text-slate-500" />
+                      <span className="font-semibold text-xs">Pilih Foto Kotak / Barangan</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) {
+                            const reader = new FileReader();
+                            reader.onload = () => setNewItemImage(reader.result as string);
+                            reader.readAsDataURL(f);
+                          }
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+
               <div className="flex items-center justify-end gap-2 pt-2">
                 <button
                   type="button"
@@ -1555,6 +1709,158 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                 </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 6. MODAL: Attach or Change Item Reference Photo */}
+      {itemForImageUpload && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
+                  <Camera className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm">Gambar Rujukan Item</h3>
+                  <p className="text-[11px] text-slate-500 line-clamp-1">{itemForImageUpload.item_name}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setItemForImageUpload(null)}
+                className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="pt-4 space-y-3 text-xs">
+              <p className="text-slate-600 leading-relaxed text-[11px]">
+                Kepilkan foto produk, jenama, atau kotak ubat bagi memudahkan staf lain mengenal pasti barangan pesakit:
+              </p>
+
+              {activeImageUploadUrl ? (
+                <div className="space-y-2">
+                  <div className="relative border border-slate-200 rounded-2xl overflow-hidden bg-slate-50 max-h-56 flex items-center justify-center">
+                    <img
+                      src={activeImageUploadUrl}
+                      alt="Pratonton"
+                      className="max-h-48 w-full object-contain"
+                    />
+                  </div>
+                  <div className="flex justify-between items-center pt-1">
+                    <label className="text-[11px] text-emerald-700 hover:underline cursor-pointer font-bold">
+                      Tukar foto lain
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) {
+                            const reader = new FileReader();
+                            reader.onload = async () => {
+                              const raw = reader.result as string;
+                              try {
+                                const res = await uploadImageToR2(raw, 'inventory_item');
+                                setActiveImageUploadUrl(res.url);
+                              } catch {
+                                setActiveImageUploadUrl(raw);
+                              }
+                            };
+                            reader.readAsDataURL(f);
+                          }
+                        }}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setActiveImageUploadUrl(null)}
+                      className="text-[11px] text-rose-600 hover:underline font-semibold"
+                    >
+                      Padam foto
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-slate-300 hover:border-emerald-700 rounded-2xl bg-slate-50 hover:bg-emerald-50/30 cursor-pointer transition-colors text-slate-600">
+                  <div className="w-10 h-10 rounded-full bg-white shadow-2xs flex items-center justify-center text-slate-500">
+                    <Camera className="w-5 h-5" />
+                  </div>
+                  <span className="font-bold text-xs text-slate-800">Muat Naik Gambar / Foto Kamera (R2 Cloud)</span>
+                  <span className="text-[10px] text-slate-400">Format imej PNG, JPG (Muat naik automatik ke Cloudflare R2)</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) {
+                        const reader = new FileReader();
+                        reader.onload = async () => {
+                          const raw = reader.result as string;
+                          try {
+                            const res = await uploadImageToR2(raw, 'inventory_item');
+                            setActiveImageUploadUrl(res.url);
+                          } catch {
+                            setActiveImageUploadUrl(raw);
+                          }
+                        };
+                        reader.readAsDataURL(f);
+                      }
+                    }}
+                  />
+                </label>
+              )}
+
+              <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setItemForImageUpload(null)}
+                  className="px-3.5 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveItemImage}
+                  className="px-4 py-2 rounded-xl bg-[#0D382B] text-white hover:bg-[#07241B] font-bold shadow-xs"
+                >
+                  Simpan Gambar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 7. LIGHTBOX: Full Resolution Reference Photo Viewer */}
+      {lightboxImage && (
+        <div className="fixed inset-0 z-60 bg-black/80 flex items-center justify-center p-4 backdrop-blur-xs">
+          <div className="relative max-w-xl w-full bg-white rounded-3xl p-4 overflow-hidden shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div>
+                <span className="font-bold text-slate-900 text-sm block">{lightboxImage.title}</span>
+                {lightboxImage.subtitle && (
+                  <span className="text-xs text-slate-500">{lightboxImage.subtitle}</span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setLightboxImage(null)}
+                className="p-1.5 rounded-full hover:bg-slate-100 text-slate-500"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="pt-3 flex justify-center max-h-[75vh] overflow-auto">
+              <img
+                src={lightboxImage.url}
+                alt={lightboxImage.title}
+                className="max-h-[70vh] object-contain rounded-xl border border-slate-200"
+              />
+            </div>
           </div>
         </div>
       )}

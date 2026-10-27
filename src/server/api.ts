@@ -11,6 +11,12 @@ import {
   requireAdmin,
   logAudit,
 } from './auth.js';
+import {
+  getR2Config,
+  isR2Configured,
+  testR2Connection,
+  uploadBase64Image,
+} from './storage.js';
 
 export const apiRouter = Router();
 
@@ -38,7 +44,7 @@ apiRouter.post('/auth/login', async (req: Request, res: Response) => {
       id: string;
       username: string;
       full_name: string;
-      role: 'admin' | 'staff_nurse';
+      role: 'admin' | 'staff_nurse' | 'caregiver';
       passcode_hash: string;
       passcode_salt: string;
       status: string;
@@ -204,11 +210,11 @@ apiRouter.get('/dashboard/summary', requireAuth, async (req: Request, res: Respo
 
     // 6. Shift Updates Today
     const amUpdatesToday = await first<{ count: number }>(
-      "SELECT COUNT(*) as count FROM monitoring_records WHERE shift LIKE 'AM%' AND date(timestamp) = date('now')"
+      "SELECT COUNT(*) as count FROM monitoring_records WHERE (shift LIKE 'Morning%' OR shift LIKE 'AM%') AND date(timestamp) = date('now')"
     );
 
     const pmUpdatesToday = await first<{ count: number }>(
-      "SELECT COUNT(*) as count FROM monitoring_records WHERE shift LIKE 'PM%' AND date(timestamp) = date('now')"
+      "SELECT COUNT(*) as count FROM monitoring_records WHERE (shift LIKE 'Petang%' OR shift LIKE 'PM%') AND date(timestamp) = date('now')"
     );
 
     const nightUpdatesToday = await first<{ count: number }>(
@@ -270,6 +276,9 @@ apiRouter.get('/patients', requireAuth, async (req: Request, res: Response) => {
              a.admission_time,
              a.lifecycle_status,
              a.kanban_stage,
+             a.tca_date,
+             a.tca_location,
+             a.tca_remarks,
              CAST(julianday(COALESCE(d.discharge_date, 'now')) - julianday(a.admission_date) AS INTEGER) as length_of_stay,
              (SELECT clinical_status FROM monitoring_records WHERE patient_id = p.id ORDER BY timestamp DESC LIMIT 1) as latest_clinical_status,
              (SELECT blood_pressure FROM monitoring_records WHERE patient_id = p.id ORDER BY timestamp DESC LIMIT 1) as latest_bp,
@@ -278,7 +287,9 @@ apiRouter.get('/patients', requireAuth, async (req: Request, res: Response) => {
              (SELECT spo2 FROM monitoring_records WHERE patient_id = p.id ORDER BY timestamp DESC LIMIT 1) as latest_spo2,
              (SELECT appetite FROM monitoring_records WHERE patient_id = p.id ORDER BY timestamp DESC LIMIT 1) as latest_appetite,
              (SELECT medication_intake FROM monitoring_records WHERE patient_id = p.id ORDER BY timestamp DESC LIMIT 1) as latest_med_status,
-             (SELECT timestamp FROM monitoring_records WHERE patient_id = p.id ORDER BY timestamp DESC LIMIT 1) as latest_monitoring_time
+             (SELECT timestamp FROM monitoring_records WHERE patient_id = p.id ORDER BY timestamp DESC LIMIT 1) as latest_monitoring_time,
+             (SELECT nurse_advice FROM monitoring_records WHERE patient_id = p.id ORDER BY timestamp DESC LIMIT 1) as latest_nurse_advice,
+             (SELECT diet_plan FROM monitoring_records WHERE patient_id = p.id ORDER BY timestamp DESC LIMIT 1) as latest_diet_plan
       FROM patients p
       LEFT JOIN admissions a ON a.patient_id = p.id AND a.lifecycle_status = 'Active'
       LEFT JOIN discharge_records d ON d.admission_id = a.id
@@ -588,6 +599,47 @@ apiRouter.patch('/admissions/:id/stage', requireAuth, async (req: Request, res: 
   }
 });
 
+// Update TCA (To Come Again / Temujanji Hospital) details
+apiRouter.patch('/admissions/:id/tca', requireAuth, async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { tca_date, tca_location, tca_remarks, set_stage_tca } = req.body || {};
+
+  try {
+    const admission = await first<{ patient_id: string; kanban_stage: string }>(
+      'SELECT patient_id, kanban_stage FROM admissions WHERE id = ?',
+      [id]
+    );
+
+    if (!admission) {
+      return res.status(404).json({ error: 'Rekod kemasukan tidak dijumpai.' });
+    }
+
+    const updates: string[] = ['tca_date = ?', 'tca_location = ?', 'tca_remarks = ?'];
+    const params: any[] = [tca_date || null, tca_location || null, tca_remarks || null];
+
+    if (set_stage_tca) {
+      updates.push("kanban_stage = 'TCA'");
+    }
+    updates.push("updated_at = datetime('now')");
+    params.push(id);
+
+    await run(`UPDATE admissions SET ${updates.join(', ')} WHERE id = ?`, params);
+
+    await logAudit(
+      req.user!,
+      'UPDATE_TCA_SCHEDULE',
+      'admissions',
+      id,
+      `Mengemaskini jadual TCA: ${tca_date || 'Tiada tarikh'} di ${tca_location || 'Hospital'}.`
+    );
+
+    return res.json({ success: true, message: 'Maklumat temujanji TCA berjaya dikemaskini.' });
+  } catch (err: any) {
+    console.error('Error updating TCA details:', err);
+    return res.status(500).json({ error: 'Gagal mengemaskini maklumat temujanji TCA.' });
+  }
+});
+
 // ==========================================
 // 4. MONITORING RECORDS (DAPUD)
 // ==========================================
@@ -609,6 +661,7 @@ apiRouter.post('/monitoring', requireAuth, async (req: Request, res: Response) =
     mobility_status,
     appetite,
     urine_output,
+    urine_other,
     bowel_movement,
     medication_intake,
     hygiene_care,
@@ -619,6 +672,17 @@ apiRouter.post('/monitoring', requireAuth, async (req: Request, res: Response) =
     nursing_report,
     rehab_assessment,
     visitor_log,
+    // PDF Additions
+    diet_plan,
+    tube_has_ngt,
+    tube_has_cbd,
+    tube_type,
+    tube_material,
+    tube_replacement_date,
+    tube_size,
+    patient_behavior,
+    attachment_image,
+    nurse_advice,
   } = req.body || {};
 
   if (!patient_id || !shift) {
@@ -626,16 +690,24 @@ apiRouter.post('/monitoring', requireAuth, async (req: Request, res: Response) =
   }
 
   // Validate shift selection (3 shifts)
-  const validShifts = ['AM (7:00-5:00)', 'PM (5:00-9:00)', 'Night (9:00pm-7:00am)'];
+  const validShifts = [
+    'Morning (7:00am-5:00pm)',
+    'Petang (2:00pm-12:00am)',
+    'Night (9:00pm-7:00am)',
+    'AM (7:00-5:00)',
+    'PM (5:00-9:00)',
+  ];
   if (!validShifts.includes(shift)) {
-    return res.status(400).json({ error: 'Syif tidak sah. Pilihan: AM (7:00-5:00), PM (5:00-9:00), Night (9:00pm-7:00am).' });
+    return res.status(400).json({
+      error: 'Syif tidak sah. Pilihan: Morning (7:00am-5:00pm), Petang (2:00pm-12:00am), Night (9:00pm-7:00am).',
+    });
   }
 
-  // Mandatory Vitals on AM and Night shifts
-  const isVitalShift = shift.startsWith('AM') || shift.startsWith('Night');
+  // Mandatory Vitals on Morning/AM and Night shifts
+  const isVitalShift = shift.startsWith('AM') || shift.startsWith('Morning') || shift.startsWith('Night');
   if (isVitalShift && (!blood_pressure || !pulse_rate || !temperature || !spo2)) {
     return res.status(400).json({
-      error: 'Bagi syif AM dan Night, pemeriksaan tanda vital (BP, Nadi, Suhu, SpO2) adalah wajib.',
+      error: 'Bagi syif Morning dan Night, pemeriksaan tanda vital (BP, Nadi, Suhu, SpO2) adalah wajib.',
     });
   }
 
@@ -661,18 +733,25 @@ apiRouter.post('/monitoring', requireAuth, async (req: Request, res: Response) =
     if (spo2 && Number(spo2) < 92) evaluatedClinicalStatus = 'Red Alert';
     if (pulse_rate && (Number(pulse_rate) > 120 || Number(pulse_rate) < 50)) evaluatedClinicalStatus = 'Red Alert';
 
+    const normalizedAppetite = appetite ? String(appetite).toUpperCase() : 'GOOD';
+    const validAppetite = ['GOOD', 'FAIR', 'POOR'].includes(normalizedAppetite) ? normalizedAppetite : 'GOOD';
+
     await run(
       `INSERT INTO monitoring_records (
         id, admission_id, patient_id, staff_user_id, staff_name, timestamp, shift,
         clinical_status, blood_pressure, pulse_rate, temperature, spo2, blood_sugar, pain_level,
-        general_condition, consciousness, mobility_status, appetite, urine_output, bowel_movement,
+        general_condition, consciousness, mobility_status, appetite, urine_output, urine_other, bowel_movement,
         medication_intake, hygiene_care, feeding_care, wound_dressing, repositioning, mobilisation,
-        nursing_report, rehab_assessment, visitor_log, created_at
+        nursing_report, rehab_assessment, visitor_log,
+        diet_plan, tube_has_ngt, tube_has_cbd, tube_type, tube_material, tube_replacement_date, tube_size,
+        patient_behavior, attachment_image, nurse_advice, created_at
       ) VALUES (
         ?, ?, ?, ?, ?, datetime('now'), ?,
         ?, ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?, ?, ?,
         ?, ?, ?, ?, ?, ?,
-        ?, ?, ?, ?, ?, ?,
+        ?, ?, ?,
+        ?, ?, ?, ?, ?, ?, ?,
         ?, ?, ?, datetime('now')
       )`,
       [
@@ -689,11 +768,12 @@ apiRouter.post('/monitoring', requireAuth, async (req: Request, res: Response) =
         spo2 ? Number(spo2) : null,
         blood_sugar || '-',
         pain_level !== undefined ? Number(pain_level) : 0,
-        general_condition || 'STABLE',
-        consciousness || 'ALERT',
-        mobility_status || 'ABLE TO AMBULATE',
-        appetite || 'GOOD',
-        urine_output || 'NORMAL',
+        general_condition || 'Stable',
+        consciousness || 'Alert',
+        mobility_status || 'Independent',
+        validAppetite,
+        urine_output || 'Normal',
+        urine_other || null,
         bowel_movement !== undefined ? Number(bowel_movement) : 0,
         medication_intake || 'SERVED',
         hygiene_care || 'Normal shower',
@@ -704,6 +784,17 @@ apiRouter.post('/monitoring', requireAuth, async (req: Request, res: Response) =
         nursing_report || null,
         rehab_assessment || null,
         visitor_log || null,
+        // PDF Additions
+        diet_plan || null,
+        tube_has_ngt ? 1 : 0,
+        tube_has_cbd ? 1 : 0,
+        tube_type || null,
+        tube_material || null,
+        tube_replacement_date || null,
+        tube_size || null,
+        patient_behavior || null,
+        attachment_image || null,
+        nurse_advice || null,
       ]
     );
 
@@ -1294,7 +1385,7 @@ apiRouter.get('/inventory/patient/:patientId', requireAuth, async (req: Request,
 // 8.3 Update an inventory item
 apiRouter.put('/inventory/items/:itemId', requireAuth, async (req: Request, res: Response) => {
   const { itemId } = req.params;
-  const { stock_balance, stock_necessity, restock_date, restock_qty, remark, item_name } = req.body || {};
+  const { stock_balance, stock_necessity, restock_date, restock_qty, remark, item_name, image_url } = req.body || {};
 
   try {
     const existing = await first<any>('SELECT * FROM patient_inventory_items WHERE id = ?', [itemId]);
@@ -1310,6 +1401,7 @@ apiRouter.put('/inventory/items/:itemId', requireAuth, async (req: Request, res:
            restock_qty = COALESCE(?, restock_qty),
            remark = COALESCE(?, remark),
            item_name = COALESCE(?, item_name),
+           image_url = COALESCE(?, image_url),
            updated_at = datetime('now')
        WHERE id = ?`,
       [
@@ -1319,6 +1411,7 @@ apiRouter.put('/inventory/items/:itemId', requireAuth, async (req: Request, res:
         restock_qty !== undefined ? String(restock_qty) : null,
         remark !== undefined ? String(remark) : null,
         item_name || null,
+        image_url !== undefined ? image_url : null,
         itemId,
       ]
     );
@@ -1350,6 +1443,7 @@ apiRouter.post('/inventory/items', requireAuth, async (req: Request, res: Respon
     restock_date = '',
     restock_qty = '',
     remark = '',
+    image_url = null,
   } = req.body || {};
 
   if (!patient_id || !item_name || !category) {
@@ -1365,8 +1459,8 @@ apiRouter.post('/inventory/items', requireAuth, async (req: Request, res: Respon
     const itemOrder = (maxOrderRow?.max_order || 0) + 1;
 
     await run(
-      `INSERT INTO patient_inventory_items (id, patient_id, category, item_order, item_name, stock_balance, stock_necessity, restock_date, restock_qty, remark)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO patient_inventory_items (id, patient_id, category, item_order, item_name, stock_balance, stock_necessity, restock_date, restock_qty, remark, image_url)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         itemId,
         patient_id,
@@ -1378,6 +1472,7 @@ apiRouter.post('/inventory/items', requireAuth, async (req: Request, res: Respon
         String(restock_date || ''),
         String(restock_qty || ''),
         String(remark || ''),
+        image_url || null,
       ]
     );
 
@@ -1622,3 +1717,54 @@ apiRouter.get('/inventory/export-csv/:patientId', requireAuth, async (req: Reque
     return res.status(500).json({ error: 'Gagal mengeksport CSV inventori.' });
   }
 });
+
+// ==========================================
+// 9. CLOUDFLARE R2 STORAGE & FILE UPLOAD
+// ==========================================
+
+// 9.1 Upload Image (Base64 -> Cloudflare R2 / Local Fallback)
+apiRouter.post('/storage/upload', requireAuth, async (req: Request, res: Response) => {
+  const { imageBase64, prefix = 'convee' } = req.body || {};
+
+  if (!imageBase64) {
+    return res.status(400).json({ error: 'Sila sertakan data imej Base64.' });
+  }
+
+  try {
+    const uploadRes = await uploadBase64Image(imageBase64, prefix);
+    return res.json({
+      success: true,
+      url: uploadRes.url,
+      storageType: uploadRes.storageType,
+      key: uploadRes.key,
+      sizeBytes: uploadRes.sizeBytes,
+    });
+  } catch (err: any) {
+    console.error('Error uploading image to storage:', err);
+    return res.status(500).json({ error: `Gagal memuat naik gambar: ${err.message || 'Ralat storan'}` });
+  }
+});
+
+// 9.2 Get Cloudflare R2 Configuration Status
+apiRouter.get('/storage/r2/status', requireAuth, async (_req: Request, res: Response) => {
+  const cfg = getR2Config();
+  const configured = isR2Configured(cfg);
+
+  return res.json({
+    configured,
+    bucketName: cfg.bucketName || 'convee-carepulse-assets',
+    publicDomain: cfg.publicDomain || 'Standard R2 Public Subdomain',
+    hasAccountId: Boolean(cfg.accountId),
+    hasAccessKey: Boolean(cfg.accessKeyId),
+    hasSecretKey: Boolean(cfg.secretAccessKey),
+    provider: configured ? 'Cloudflare R2 Object Storage' : 'Local Fallback Storage (/uploads)',
+  });
+});
+
+// 9.3 Test Cloudflare R2 Connection
+apiRouter.post('/storage/r2/test', requireAdmin, async (req: Request, res: Response) => {
+  const customConfig = req.body || {};
+  const testRes = await testR2Connection(customConfig.accountId ? customConfig : undefined);
+  return res.json(testRes);
+});
+

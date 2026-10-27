@@ -71,7 +71,7 @@ function MainApp() {
       <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">
         <div className="flex flex-col items-center gap-3">
           <Activity className="w-8 h-8 text-teal-400 animate-spin" />
-          <span className="text-xs font-medium text-slate-400">Menyediakan Patient Monitoring System...</span>
+          <span className="text-xs font-medium text-slate-400">Menyediakan Convee CarePulse...</span>
         </div>
       </div>
     );
@@ -155,6 +155,7 @@ function MainApp() {
                   setIsMonitoringOpen(true);
                 }}
                 onOpenDischargeForPatient={(p) => setDischargeTarget(p)}
+                onRefresh={loadData}
               />
             )}
 

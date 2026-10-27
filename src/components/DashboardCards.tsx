@@ -224,7 +224,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
               <span className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight tabular-nums">
                 {stats.total_active_patients}
               </span>
-              <span className="text-xs font-semibold text-slate-400">/ 12 Katil</span>
+              <span className="text-xs font-semibold text-slate-400">/ 30 Katil</span>
             </div>
             <p className="text-xs text-slate-500 mt-2 font-medium">
               Zon Lelaki: <strong className="text-blue-900">{stats.male_zone_count}</strong> · Zon Perempuan:{' '}
@@ -448,43 +448,43 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
 
             {/* 3 Pastel Shift Schedule Cards (Amber, Cyan, Lavender) */}
             <div className="space-y-3">
-              {/* Card 1: Warm Amber/Yellow (AM Shift - Vital Check Required) */}
+              {/* Card 1: Warm Amber/Yellow (Morning Shift - Vital Check Required) */}
               <div className="p-3.5 rounded-2xl bg-[#FEF9C3] border border-[#FDE047]/60 text-amber-950 transition-all hover:shadow-2xs">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-amber-600" />
-                    <span className="text-xs font-bold">Syif AM (07:00 – 17:00)</span>
+                    <span className="text-xs font-bold">Syif Morning (07:00 – 17:00 / 7:00am – 5:00pm)</span>
                   </div>
                   <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-white/80 text-amber-900 border border-amber-300">
-                    Vital Sign 1x Selesai
+                    Vital Sign Wajib
                   </span>
                 </div>
                 <p className="text-[11px] text-amber-900/90 leading-tight">
-                  Semakan vital sign pagi untuk semua 6 pesakit Zon L & P selesai direkodkan.
+                  Semakan tanda vital pagi (BP, Nadi, Suhu, SpO2), sarapan dan ubat pagi untuk pesakit Zon L & P.
                 </p>
                 <div className="mt-2 flex items-center justify-between text-[10px] text-amber-800/80 font-medium">
                   <span>Jururawat: Shahdan / Hajar</span>
-                  <span className="font-semibold text-amber-950">6/6 Lengkap</span>
+                  <span className="font-semibold text-amber-950">Kapasiti: 30 Katil</span>
                 </div>
               </div>
 
-              {/* Card 2: Soft Cyan/Sky (PM Shift - ADL & Rehab) */}
+              {/* Card 2: Soft Cyan/Sky (Petang Shift - ADL & Care) */}
               <div className="p-3.5 rounded-2xl bg-[#E0F2FE] border border-[#BAE6FD]/60 text-sky-950 transition-all hover:shadow-2xs">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-sky-600" />
-                    <span className="text-xs font-bold">Syif PM (17:00 – 21:00)</span>
+                    <span className="text-xs font-bold">Syif Petang (14:00 – 00:00 / 2:00pm – 12:00am)</span>
                   </div>
                   <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-white/80 text-sky-900 border border-sky-300">
-                    Tugasan ADL
+                    Jagaan & Ubat
                   </span>
                 </div>
                 <p className="text-[11px] text-sky-900/90 leading-tight">
-                  Aktiviti pemulihan, makan malam, dan kebersihan diri pesakit.
+                  Pemberian ubat petang/malam, sesi pemulihan, makan malam, dressing luka, dan kebersihan diri pesakit.
                 </p>
                 <div className="mt-2 flex items-center justify-between text-[10px] text-sky-800/80 font-medium">
                   <span>Jururawat: Shahdan</span>
-                  <span className="italic">Tanpa semakan vital mandatori</span>
+                  <span className="font-semibold text-sky-950">Tugasan ADL & Rawatan</span>
                 </div>
               </div>
 
@@ -493,18 +493,18 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-rose-600" />
-                    <span className="text-xs font-bold">Syif Night (21:00 – 07:00)</span>
+                    <span className="text-xs font-bold">Syif Night (21:00 – 07:00 / 9:00pm – 7:00am)</span>
                   </div>
                   <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-white/80 text-rose-900 border border-rose-300">
-                    Vital Sign 2x
+                    Vital Sign Wajib
                   </span>
                 </div>
                 <p className="text-[11px] text-rose-900/90 leading-tight">
-                  Pemeriksaan berkala tanda vital waktu malam dan pengawasan rehat.
+                  Pemeriksaan tanda vital waktu malam (22:00 & 04:00), pengawasan tidur/rehat, dan kesiapsiagaan kecemasan.
                 </p>
                 <div className="mt-2 flex items-center justify-between text-[10px] text-rose-800/80 font-medium">
                   <span>Jururawat: Hajar</span>
-                  <span className="font-semibold text-rose-950">Dijadualkan 22:00</span>
+                  <span className="font-semibold text-rose-950">Rondaan Berkala</span>
                 </div>
               </div>
             </div>

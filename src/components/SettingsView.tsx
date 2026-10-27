@@ -161,23 +161,53 @@ export const SettingsView: React.FC = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-slate-600 pt-1">
           <div className="p-4 bg-[#F8FAF8] rounded-2xl border border-emerald-950/5">
-            <div className="font-bold text-slate-900 mb-1.5">Zon Rawatan:</div>
+            <div className="font-bold text-slate-900 mb-1.5">Kapasiti & Zon Rawatan (30 Katil):</div>
             <ul className="list-disc list-inside space-y-1 text-slate-500">
-              <li><strong className="text-slate-800">Zon Lelaki</strong>: Katil L-01 hingga L-06</li>
-              <li><strong className="text-slate-800">Zon Perempuan</strong>: Katil P-01 hingga P-06</li>
+              <li><strong className="text-slate-800">Zon Lelaki</strong>: 15 Katil (Katil L-01 hingga L-15)</li>
+              <li><strong className="text-slate-800">Zon Perempuan</strong>: 15 Katil (Katil P-01 hingga P-15)</li>
             </ul>
           </div>
 
           <div className="p-4 bg-[#F8FAF8] rounded-2xl border border-emerald-950/5">
             <div className="font-bold text-slate-900 mb-1.5">Jadual Syif:</div>
             <ul className="list-disc list-inside space-y-1 text-slate-500">
-              <li><strong className="text-slate-800">Syif AM</strong> (7:00am - 5:00pm) [Vital Sign]</li>
-              <li><strong className="text-slate-800">Syif PM</strong> (5:00pm - 9:00pm) [Jagaan]</li>
-              <li><strong className="text-slate-800">Syif Night</strong> (9:00pm - 7:00am) [Vital Sign]</li>
+              <li><strong className="text-slate-800">Morning</strong>: 7:00am – 5:00pm [Vital Sign Wajib]</li>
+              <li><strong className="text-slate-800">Petang</strong>: 2:00pm – 12:00am [Jagaan & Ubat]</li>
+              <li><strong className="text-slate-800">Night</strong>: 9:00pm – 7:00am [Vital Sign Wajib]</li>
             </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Cloudflare R2 Storage Integration Info */}
+      <div className="p-6 bg-white rounded-3xl border border-emerald-950/5 shadow-xs space-y-4 text-xs">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+            Cloudflare R2 Object Storage (Imej Inventori & Pemantauan DAPUD)
+          </h3>
+          <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold uppercase">
+            R2 Active Ready
+          </span>
+        </div>
+
+        <p className="text-slate-600 leading-relaxed">
+          Semua fail gambar yang dikepilkan (gambar rujukan barang inventori, ubatan pesakit, dan foto luka/ruam pemantauan DAPUD) disimpan secara automatik dalam Cloudflare R2 Storage untuk prestasi tinggi tanpa sebarang kos muat turun.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80">
+            <span className="text-slate-400 block text-[10px] uppercase font-bold">Bucket Name:</span>
+            <span className="font-mono font-bold text-slate-800 text-xs block mt-0.5">convee-carepulse-assets</span>
+          </div>
+
+          <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80">
+            <span className="text-slate-400 block text-[10px] uppercase font-bold">Status Storan:</span>
+            <span className="font-bold text-emerald-700 text-xs block mt-0.5">Cloudflare R2 Ready / Local Fallback Active</span>
           </div>
         </div>
       </div>
     </div>
   );
 };
+

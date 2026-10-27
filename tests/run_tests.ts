@@ -531,6 +531,226 @@ async function runAllTests() {
     }
   });
 
+  // 20. DAPUD Enhancements (Condition, Diet Plan, Tube, Behavior, Wound Photo, Nurse Advice)
+  await runTest('20. Rekod DAPUD Lengkap (Patient Condition, Diet, Tube, Behavior & Nurse Advice)', async () => {
+    const patientsRes = await request('/patients?status=Active', { method: 'GET' }, adminToken);
+    const testPatient = patientsRes.data.patients[0];
+
+    const dapuRes = await request(
+      '/monitoring',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          patient_id: testPatient.id,
+          shift: 'AM (7:00-5:00)',
+          blood_pressure: '125/82',
+          pulse_rate: 74,
+          temperature: 36.7,
+          spo2: 98,
+          general_condition: 'Stable',
+          consciousness: 'Alert',
+          mobility_status: 'Independent',
+          appetite: 'Good',
+          urine_output: 'Normal',
+          bowel_movement: 1,
+          diet_plan: 'Makan bubur ayam lumat',
+          tube_has_ngt: 1,
+          tube_type: 'NGT tube',
+          tube_material: 'silicone',
+          tube_size: 'Fr 16',
+          tube_replacement_date: '2026-11-15',
+          patient_behavior: 'Calm & Cooperative, Attention-Seeking',
+          attachment_image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+          nurse_advice: 'Pastikan pantau tiub NGT selepas suapan susu dan tukar dressing luka esok pagi.',
+        }),
+      },
+      nurseToken
+    );
+
+    if (!dapuRes.ok || !dapuRes.data.monitoringId) {
+      throw new Error(`Failed to create enhanced DAPUD record: ${JSON.stringify(dapuRes.data)}`);
+    }
+
+    // Verify detail
+    const details = await request(`/patients/${testPatient.id}`, { method: 'GET' }, adminToken);
+    const latestRec = details.data.monitoring[0];
+    if (
+      latestRec.diet_plan !== 'Makan bubur ayam lumat' ||
+      latestRec.tube_material !== 'silicone' ||
+      !latestRec.nurse_advice
+    ) {
+      throw new Error('Saved DAPUD record did not persist expected enhanced fields');
+    }
+  });
+
+  // 21. TCA Schedule & 1-Day Alert Integration
+  await runTest('21. Pengurusan Jadual Temujanji TCA (To Come Again) & Alert Sehari Awal', async () => {
+    const patientsRes = await request('/patients?status=Active', { method: 'GET' }, adminToken);
+    const testPatient = patientsRes.data.patients[0];
+
+    const tomorrowStr = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    const tcaRes = await request(
+      `/admissions/${testPatient.admission_id}/tca`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({
+          tca_date: tomorrowStr,
+          tca_location: 'Hospital Selayang (Klinik Geriatrik)',
+          tca_remarks: 'Pemeriksaan darah berkala dan semakan ubat darah tinggi.',
+          set_stage_tca: true,
+        }),
+      },
+      nurseToken
+    );
+
+    if (!tcaRes.ok) {
+      throw new Error(`Failed to update TCA schedule: ${JSON.stringify(tcaRes.data)}`);
+    }
+
+    // Check patients list returns tca_date
+    const checkPatient = await request('/patients?status=Active', { method: 'GET' }, adminToken);
+    const updated = checkPatient.data.patients.find((p: any) => p.id === testPatient.id);
+    if (updated.tca_date !== tomorrowStr || updated.kanban_stage !== 'TCA') {
+      throw new Error('Patient record does not reflect updated TCA date and stage');
+    }
+  });
+
+  // 22. Inventory Image Attachment
+  await runTest('22. Lampiran Gambar Rujukan Inventori Barangan & Ubatan Pesakit', async () => {
+    const patientsRes = await request('/patients?status=Active', { method: 'GET' }, adminToken);
+    const testPatient = patientsRes.data.patients[0];
+    const invRes = await request(`/inventory/patient/${testPatient.id}`, { method: 'GET' }, adminToken);
+    const testItem = invRes.data.personal_items[0];
+
+    const dummyImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
+    const updateRes = await request(
+      `/inventory/items/${testItem.id}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          image_url: dummyImage,
+        }),
+      },
+      nurseToken
+    );
+
+    if (!updateRes.ok || updateRes.data.item.image_url !== dummyImage) {
+      throw new Error('Failed to attach image to inventory item');
+    }
+  });
+
+  // 23. Pengesahan Syif Baharu (Morning, Petang, Night) & Kapasiti 30 Katil
+  await runTest('23. Jadual Syif (Morning, Petang, Night) & Kapasiti 30 Katil', async () => {
+    const activeRes = await request('/patients?status=Active', { method: 'GET' }, adminToken);
+    const activePatientId = activeRes.data.patients[0]?.id || createdPatientId;
+
+    // Test recording with Morning shift (requires vitals)
+    const morningRes = await request(
+      '/monitoring',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          patient_id: activePatientId,
+          shift: 'Morning (7:00am-5:00pm)',
+          clinical_status: 'Stable',
+          blood_pressure: '120/80',
+          pulse_rate: 76,
+          temperature: 36.6,
+          spo2: 98,
+          appetite: 'GOOD',
+          medication_intake: 'SERVED',
+          nursing_report: 'Semakan syif morning rutin.',
+        }),
+      },
+      nurseToken
+    );
+
+    if (!morningRes.ok) {
+      throw new Error(`Morning shift record failed: ${JSON.stringify(morningRes.data)}`);
+    }
+
+    // Test recording with Petang shift (ADL & ubat, non-vital mandatory)
+    const petangRes = await request(
+      '/monitoring',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          patient_id: activePatientId,
+          shift: 'Petang (2:00pm-12:00am)',
+          appetite: 'GOOD',
+          medication_intake: 'SERVED',
+          nursing_report: 'Syif petang: pesakit selesai makan malam dan rehat.',
+        }),
+      },
+      nurseToken
+    );
+
+    if (!petangRes.ok) {
+      throw new Error(`Petang shift record failed: ${JSON.stringify(petangRes.data)}`);
+    }
+
+    // Test dashboard summary updates_today includes the new shifts
+    const statsRes = await request('/dashboard/summary', { method: 'GET' }, adminToken);
+    if (!statsRes.ok || statsRes.data.updates_today.am_shift < 1 || statsRes.data.updates_today.pm_shift < 1) {
+      throw new Error(`Dashboard stats did not aggregate morning/petang shift updates: ${JSON.stringify(statsRes.data)}`);
+    }
+  });
+
+  // 24. Storage Cloudflare R2 Upload & Status
+  await runTest('24. Integrasi Storan Cloudflare R2 (Upload & Status Check)', async () => {
+    // 1. Check R2 Status
+    const statusRes = await request('/storage/r2/status', { method: 'GET' }, adminToken);
+    if (!statusRes.ok || !statusRes.data.provider) {
+      throw new Error(`Failed to fetch R2 status: ${JSON.stringify(statusRes.data)}`);
+    }
+
+    // 2. Upload sample image to storage endpoint
+    const dummyImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const uploadRes = await request(
+      '/storage/upload',
+      {
+        method: 'POST',
+        body: JSON.stringify({ imageBase64: dummyImage, prefix: 'test_r2' }),
+      },
+      nurseToken
+    );
+
+    if (!uploadRes.ok || !uploadRes.data.url) {
+      throw new Error(`Failed to upload image to R2 storage: ${JSON.stringify(uploadRes.data)}`);
+    }
+  });
+
+  // 25. Peranan Baharu Caregiver (Login & Kebenaran Akses)
+  await runTest('25. Peranan Baharu Caregiver (Log Masuk & Pengesahan Kebenaran Akses)', async () => {
+    // 1. Log in with caregiver credentials
+    const cgLogin = await request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username: 'caregiver.azlan', passcode: 'Nurse@123' }),
+    });
+
+    if (!cgLogin.ok || !cgLogin.data.token || cgLogin.data.user.role !== 'caregiver') {
+      throw new Error(`Caregiver login failed or unexpected role: ${JSON.stringify(cgLogin.data)}`);
+    }
+
+    const caregiverToken = cgLogin.data.token;
+
+    // 2. Caregiver should be able to view patient list & inventory
+    const patientsRes = await request('/patients?status=Active', { method: 'GET' }, caregiverToken);
+    if (!patientsRes.ok || !Array.isArray(patientsRes.data.patients)) {
+      throw new Error(`Caregiver failed to access active patients list`);
+    }
+
+    // 3. Caregiver should be blocked from admin-only routes (403 Forbidden)
+    const staffRes = await request('/staff', { method: 'GET' }, caregiverToken);
+    if (staffRes.status !== 403) {
+      throw new Error(`Expected 403 Forbidden for caregiver accessing staff list, got ${staffRes.status}`);
+    }
+  });
+
+
+
   // Summary
   console.log('\n======================================================');
   const passedCount = results.filter((r) => r.passed).length;

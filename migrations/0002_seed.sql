@@ -15,7 +15,7 @@ VALUES (
     datetime('now')
 );
 
--- 2. Staff Nurses (Username: nurse.hajar / nurse.shahdan | Passcode: Nurse@123)
+-- 2. Staff Nurses & Caregivers (Username: nurse.hajar / caregiver.azlan | Passcode: Nurse@123)
 INSERT OR IGNORE INTO users (id, username, full_name, role, passcode_hash, passcode_salt, status, must_change_passcode, created_at)
 VALUES (
     'usr_nurse_01',
@@ -33,6 +33,17 @@ VALUES (
     'nurse.shahdan',
     'Jururawat Shahdan Budiman',
     'staff_nurse',
+    '8525d17cc8036a1d4e05f022988faebf445232db1f142990728ee89645aebd42',
+    'f4967282e1badf6a17f2d35a20c32ed1',
+    'active',
+    0,
+    datetime('now')
+),
+(
+    'usr_caregiver_01',
+    'caregiver.azlan',
+    'Penjaga Azlan Shah (Caregiver)',
+    'caregiver',
     '8525d17cc8036a1d4e05f022988faebf445232db1f142990728ee89645aebd42',
     'f4967282e1badf6a17f2d35a20c32ed1',
     'active',

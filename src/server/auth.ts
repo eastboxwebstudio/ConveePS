@@ -6,7 +6,7 @@ export interface AuthUser {
   id: string;
   username: string;
   full_name: string;
-  role: 'admin' | 'staff_nurse';
+  role: 'admin' | 'staff_nurse' | 'caregiver';
   status: 'active' | 'inactive';
   must_change_passcode: number;
 }

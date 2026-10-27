@@ -170,21 +170,25 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({
               >
                 {zone === 'Zon Lelaki' ? (
                   <>
-                    <option value="Katil L-01">Katil L-01</option>
-                    <option value="Katil L-02">Katil L-02</option>
-                    <option value="Katil L-03">Katil L-03</option>
-                    <option value="Katil L-04">Katil L-04</option>
-                    <option value="Katil L-05">Katil L-05</option>
-                    <option value="Katil L-06">Katil L-06</option>
+                    {Array.from({ length: 15 }, (_, i) => {
+                      const bedNum = String(i + 1).padStart(2, '0');
+                      return (
+                        <option key={`L-${bedNum}`} value={`Katil L-${bedNum}`}>
+                          Katil L-{bedNum}
+                        </option>
+                      );
+                    })}
                   </>
                 ) : (
                   <>
-                    <option value="Katil P-01">Katil P-01</option>
-                    <option value="Katil P-02">Katil P-02</option>
-                    <option value="Katil P-03">Katil P-03</option>
-                    <option value="Katil P-04">Katil P-04</option>
-                    <option value="Katil P-05">Katil P-05</option>
-                    <option value="Katil P-06">Katil P-06</option>
+                    {Array.from({ length: 15 }, (_, i) => {
+                      const bedNum = String(i + 1).padStart(2, '0');
+                      return (
+                        <option key={`P-${bedNum}`} value={`Katil P-${bedNum}`}>
+                          Katil P-{bedNum}
+                        </option>
+                      );
+                    })}
                   </>
                 )}
               </select>

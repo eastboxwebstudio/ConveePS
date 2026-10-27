@@ -13,6 +13,7 @@ import {
   Activity,
   Phone,
   ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
 import { Patient, Admission, MonitoringRecord, DischargeRecord } from '../types/index.js';
 import { apiGetPatientDetails } from '../lib/api.js';
@@ -240,7 +241,7 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
                           </div>
 
                           {/* Vital Signs Grid */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100 font-mono text-xs">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100 font-mono text-xs">
                             <div>
                               <span className="text-slate-400 text-[10px] block">Tekanan Darah:</span>
                               <strong className="text-slate-800">{rec.blood_pressure || '-'}</strong>
@@ -259,16 +260,99 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
                             </div>
                           </div>
 
-                          {/* ADL & Nursing note */}
+                          {/* Patient Condition & Diet Plan */}
+                          <div className="mt-2.5 grid grid-cols-2 sm:grid-cols-3 gap-2 bg-[#F8FAF8] p-2.5 rounded-xl border border-emerald-950/5 text-[11px]">
+                            <div>
+                              <span className="text-slate-400 text-[10px] block">Keadaan Umum:</span>
+                              <strong className="text-slate-800">{rec.general_condition || 'Stable'}</strong>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 text-[10px] block">Kesedaran:</span>
+                              <strong className="text-slate-800">{rec.consciousness || 'Alert'}</strong>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 text-[10px] block">Mobiliti:</span>
+                              <strong className="text-slate-800">{rec.mobility_status || 'Independent'}</strong>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 text-[10px] block">Pelan Diet:</span>
+                              <strong className="text-emerald-900">{rec.diet_plan || 'Makan bubur'}</strong>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 text-[10px] block">Urin:</span>
+                              <strong className="text-slate-800">{rec.urine_output || 'Normal'}{rec.urine_other ? ` (${rec.urine_other})` : ''}</strong>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 text-[10px] block">Najis:</span>
+                              <strong className="text-slate-800">{rec.bowel_movement ? 'Normal' : 'No bowel'}</strong>
+                            </div>
+                          </div>
+
+                          {/* Tube info if present */}
+                          {(rec.tube_has_ngt || rec.tube_has_cbd || rec.tube_type) && rec.tube_type !== 'None' && (
+                            <div className="mt-2 p-2 rounded-xl bg-blue-50/60 border border-blue-200 text-blue-900 text-xs flex flex-wrap items-center gap-3">
+                              <span className="font-bold">Tiub Pesakit:</span>
+                              <span>{rec.tube_type}</span>
+                              {rec.tube_material && <span>({rec.tube_material})</span>}
+                              {rec.tube_size && <span>Saiz: {rec.tube_size}</span>}
+                              {rec.tube_replacement_date && (
+                                <span className="text-[11px] text-blue-700">
+                                  Tarikh Ganti: {rec.tube_replacement_date}
+                                </span>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Patient Behavior Badges */}
+                          {rec.patient_behavior && (
+                            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                              <span className="text-[10px] font-bold text-slate-500 uppercase">Tingkah Laku:</span>
+                              {rec.patient_behavior.split(', ').map((b, idx) => (
+                                <span
+                                  key={idx}
+                                  className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200"
+                                >
+                                  {b}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Image Attachment (Luka dsb) */}
+                          {rec.attachment_image && (
+                            <div className="mt-2 flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-200">
+                              <img
+                                src={rec.attachment_image}
+                                alt="Lampiran klinikal"
+                                className="w-14 h-14 object-cover rounded-lg border border-slate-300"
+                              />
+                              <div className="text-xs">
+                                <span className="font-bold text-slate-800 block">Lampiran Gambar Pemerhatian</span>
+                                <span className="text-[11px] text-slate-500">Contoh: Rekod gambar luka pesakit</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Nurse Advice Column */}
+                          {rec.nurse_advice && (
+                            <div className="mt-2 p-2.5 rounded-xl bg-[#EAF5DC]/70 border border-[#0B3B2C]/20 text-[#0B3B2C] text-xs">
+                              <div className="font-bold flex items-center gap-1.5 text-[11px] mb-0.5">
+                                <Sparkles className="w-3.5 h-3.5 text-emerald-800" />
+                                Nasihat & Arahan Jururawat (Nurse Advice):
+                              </div>
+                              <p className="leading-relaxed font-medium">{rec.nurse_advice}</p>
+                            </div>
+                          )}
+
+                          {/* ADL & Nursing report note */}
                           <div className="mt-2 text-[11px] text-slate-600 flex flex-wrap items-center gap-3">
                             <span>Ubat: <strong className={rec.medication_intake === 'REFUSE' ? 'text-rose-700' : 'text-slate-800'}>{rec.medication_intake}</strong></span>
-                            <span>Selera: <strong className={rec.appetite === 'POOR' ? 'text-amber-700' : 'text-slate-800'}>{rec.appetite}</strong></span>
                             <span>Mandi: <strong className="text-slate-800">{rec.hygiene_care}</strong></span>
                             <span>Dressing: <strong className="text-slate-800">{rec.wound_dressing}</strong></span>
                           </div>
 
                           {rec.nursing_report && (
-                            <div className="mt-2 p-2 rounded bg-slate-50 border border-slate-100 text-slate-700 text-xs italic">
+                            <div className="mt-2 p-2 rounded-xl bg-slate-50 border border-slate-100 text-slate-700 text-xs italic">
                               "{rec.nursing_report}"
                             </div>
                           )}
