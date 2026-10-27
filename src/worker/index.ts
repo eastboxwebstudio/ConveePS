@@ -3,6 +3,8 @@ import crypto from 'node:crypto';
 export interface Env {
   DB: any;
   ASSETS: { fetch: (request: Request) => Promise<Response> };
+  R2_BUCKET?: any;
+  'convee-carepulse-assets'?: any;
   ENVIRONMENT: string;
   FACILITY_NAME: string;
   TIMEZONE: string;
@@ -10,6 +12,23 @@ export interface Env {
 
 function hashPasscode(passcode: string, salt: string): string {
   return crypto.pbkdf2Sync(passcode, salt, 10000, 32, 'sha256').toString('hex');
+}
+
+async function getAuthUser(request: Request, env: Env): Promise<any> {
+  try {
+    const cookie = request.headers.get('cookie') || '';
+    const token = (cookie.match(/convee_session=([^;]+)/) || [])[1] || request.headers.get('authorization')?.replace(/^Bearer\s+/, '');
+    if (!token) return null;
+    const session: any = await env.DB.prepare(
+      "SELECT user_id FROM sessions WHERE token = ? AND datetime(expires_at) > datetime('now')"
+    ).bind(token).first();
+    if (!session) return null;
+    return await env.DB.prepare(
+      'SELECT id, username, full_name, role, status FROM users WHERE id = ?'
+    ).bind(session.user_id).first();
+  } catch {
+    return null;
+  }
 }
 
 export default {
@@ -226,6 +245,225 @@ export default {
 
         const { results: patients } = await env.DB.prepare(query).bind(...params).all();
         return new Response(JSON.stringify({ patients: patients || [] }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+
+    // ==========================================
+    // 5.1 API: CREATE PATIENT & ADMISSION (POST /api/patients)
+    // ==========================================
+    if (url.pathname === '/api/patients' && request.method === 'POST') {
+      try {
+        const body: any = await request.json().catch(() => ({}));
+        const {
+          full_name,
+          gender,
+          age,
+          date_of_birth,
+          zone,
+          room_bed,
+          primary_diagnosis,
+          prescribed_medications,
+          follow_up_facility,
+          emergency_contact_name,
+          emergency_contact_phone,
+          care_level,
+          baseline_mobility,
+          feeding_method,
+          admission_date,
+          admission_time,
+          admission_remarks,
+        } = body;
+
+        if (!full_name || !gender || !zone || !primary_diagnosis) {
+          return new Response(JSON.stringify({ error: 'Sila lengkapkan nama pesakit, jantina, zon (lelaki/perempuan) dan diagnosis utama.' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        // Generate auto MRN
+        let nextSeq = 1;
+        try {
+          const countRecord = await env.DB.prepare('SELECT COUNT(*) as count FROM patients').first();
+          nextSeq = ((countRecord?.count as number) || 0) + 1;
+        } catch {}
+
+        const mrn = `PT-${String(nextSeq).padStart(3, '0')}`;
+        const patientId = 'pt_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+        const admissionId = 'adm_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+        const admNumber = `ADM-${new Date().getFullYear()}-${String(nextSeq).padStart(3, '0')}`;
+
+        const admDate = admission_date || new Date().toISOString().split('T')[0];
+        const admTime = admission_time || new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+        const user = await getAuthUser(request, env);
+        const staffId = user?.id || 'system';
+
+        // 1. Insert patient record
+        await env.DB.prepare(`
+          INSERT INTO patients (
+            id, mrn, full_name, gender, age, date_of_birth, zone, room_bed,
+            primary_diagnosis, prescribed_medications, follow_up_facility,
+            emergency_contact_name, emergency_contact_phone, care_level,
+            baseline_mobility, feeding_method, status, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', datetime('now'), datetime('now'))
+        `).bind(
+          patientId,
+          mrn,
+          full_name.trim(),
+          gender,
+          Number(age) || 0,
+          date_of_birth || null,
+          zone,
+          room_bed || null,
+          primary_diagnosis.trim(),
+          prescribed_medications || null,
+          follow_up_facility || null,
+          emergency_contact_name || null,
+          emergency_contact_phone || null,
+          care_level || 'Partial Assist',
+          baseline_mobility || 'Able to ambulate',
+          feeding_method || 'Oral normal diet',
+        ).run();
+
+        // 2. Insert admission record
+        try {
+          await env.DB.prepare(`
+            INSERT INTO admissions (
+              id, patient_id, admission_number, admission_date, admission_time, zone, room_bed,
+              admitted_by, lifecycle_status, kanban_stage, admission_remarks, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Active', 'New Admission', ?, datetime('now'), datetime('now'))
+          `).bind(
+            admissionId,
+            patientId,
+            admNumber,
+            admDate,
+            admTime,
+            zone,
+            room_bed || null,
+            staffId,
+            admission_remarks || 'Pendaftaran kemasukan pesakit baru.'
+          ).run();
+        } catch (admErr: any) {
+          console.warn('Fallback admission insert:', admErr);
+          await env.DB.prepare(`
+            INSERT INTO admissions (
+              id, patient_id, admission_number, admission_date, admission_time, zone, room_bed,
+              lifecycle_status, kanban_stage, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'Active', 'New Admission', datetime('now'), datetime('now'))
+          `).bind(
+            admissionId,
+            patientId,
+            admNumber,
+            admDate,
+            admTime,
+            zone,
+            room_bed || null
+          ).run();
+        }
+
+        // 3. Auto-seed standard personal items
+        const standardItems = [
+          'Ubat Gigi & Berus Gigi',
+          'Sabun Mandi / Shower Gel',
+          'Tuala Mandi',
+          'Pakaian / Kain Pelekat / Batik',
+          'Lampin Pakai Buang (Diapers / Pants)',
+          'Tisu Basah (Wet Wipes)',
+          'Minyak Urut / Losyen Pelembap',
+          'Sikat & Pengetip Kuku',
+          'Selipar Getah Anti-Licin',
+        ];
+
+        for (let i = 0; i < standardItems.length; i++) {
+          try {
+            const itemId = 'inv_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 6);
+            await env.DB.prepare(`
+              INSERT INTO patient_inventory_items (
+                id, patient_id, category, item_order, item_name, stock_balance, stock_necessity,
+                restock_date, restock_qty, remark, created_at, updated_at
+              ) VALUES (?, ?, 'personal', ?, ?, 'Cukup', 'NO', '', '', '', datetime('now'), datetime('now'))
+            `).bind(itemId, patientId, i + 1, standardItems[i]).run();
+          } catch {}
+        }
+
+        // 4. Auto-seed prescribed medications if provided
+        if (prescribed_medications) {
+          const medList = String(prescribed_medications)
+            .split(/[,;\n]+/)
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0);
+
+          for (let i = 0; i < medList.length; i++) {
+            try {
+              const medId = 'inv_m_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 6);
+              await env.DB.prepare(`
+                INSERT INTO patient_inventory_items (
+                  id, patient_id, category, item_order, item_name, stock_balance, stock_necessity,
+                  restock_date, restock_qty, remark, created_at, updated_at
+                ) VALUES (?, ?, 'medication', ?, ?, '14 tab', 'NO', '', '', 'Mencukupi', datetime('now'), datetime('now'))
+              `).bind(medId, patientId, i + 1, medList[i]).run();
+            } catch {}
+          }
+        }
+
+        // Audit log
+        try {
+          const logId = 'log_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+          await env.DB.prepare(`
+            INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, details, created_at)
+            VALUES (?, ?, 'CREATE_PATIENT', 'patients', ?, ?, datetime('now'))
+          `).bind(logId, staffId, patientId, `Mendaftarkan pesakit ${full_name} (${mrn}) di ${zone} - ${room_bed || 'Tanpa Katil'}.`).run();
+        } catch {}
+
+        return new Response(JSON.stringify({
+          success: true,
+          message: 'Pesakit berjaya didaftarkan.',
+          patientId,
+          mrn,
+        }), {
+          status: 201,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ error: err.message || 'Gagal mendaftarkan pesakit baru.' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    // ==========================================
+    // 5.2 API: UPDATE PATIENT (PATCH /api/patients/:id)
+    // ==========================================
+    if (url.pathname.startsWith('/api/patients/') && request.method === 'PATCH') {
+      try {
+        const id = url.pathname.split('/')[3];
+        const body: any = await request.json().catch(() => ({}));
+        const allowed = [
+          'full_name', 'gender', 'age', 'date_of_birth', 'zone', 'room_bed',
+          'primary_diagnosis', 'prescribed_medications', 'follow_up_facility',
+          'emergency_contact_name', 'emergency_contact_phone', 'care_level',
+          'baseline_mobility', 'feeding_method'
+        ];
+        const sets: string[] = [];
+        const vals: any[] = [];
+        for (const k of allowed) {
+          if (body[k] !== undefined) {
+            sets.push(`${k} = ?`);
+            vals.push(k === 'age' ? Number(body[k]) : body[k]);
+          }
+        }
+        if (sets.length > 0) {
+          sets.push("updated_at = datetime('now')");
+          vals.push(id);
+          await env.DB.prepare(`UPDATE patients SET ${sets.join(', ')} WHERE id = ?`).bind(...vals).run();
+        }
+        return new Response(JSON.stringify({ success: true, message: 'Maklumat pesakit berjaya dikemaskini.' }), {
           headers: { 'Content-Type': 'application/json' },
         });
       } catch (err: any) {
@@ -513,6 +751,198 @@ export default {
       } catch (err: any) {
         return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
       }
+    }
+
+    // ==========================================
+    // 9.4 API: ADD INVENTORY ITEM (POST /api/inventory/items)
+    // ==========================================
+    if (url.pathname === '/api/inventory/items' && request.method === 'POST') {
+      try {
+        const body: any = await request.json();
+        const { patient_id, category = 'personal', item_name, stock_balance = '0', stock_necessity = 'NO', restock_date = '', restock_qty = '', remark = '', image_url = null } = body;
+        if (!patient_id || !item_name) {
+          return new Response(JSON.stringify({ error: 'Sila lengkapkan nama item dan pesakit.' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+        }
+        const itemId = 'inv_' + (category === 'medication' ? 'm_' : '') + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 6);
+        const count = await env.DB.prepare('SELECT COUNT(*) as cnt FROM patient_inventory_items WHERE patient_id = ? AND category = ?').bind(patient_id, category).first();
+        const order = ((count?.cnt as number) || 0) + 1;
+
+        try {
+          await env.DB.prepare(`
+            INSERT INTO patient_inventory_items (
+              id, patient_id, category, item_order, item_name, stock_balance, stock_necessity,
+              restock_date, restock_qty, remark, image_url, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+          `).bind(itemId, patient_id, category, order, item_name.trim(), String(stock_balance), stock_necessity, String(restock_date), String(restock_qty), String(remark), image_url).run();
+        } catch {
+          await env.DB.prepare(`
+            INSERT INTO patient_inventory_items (
+              id, patient_id, category, item_order, item_name, stock_balance, stock_necessity,
+              restock_date, restock_qty, remark, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+          `).bind(itemId, patient_id, category, order, item_name.trim(), String(stock_balance), stock_necessity, String(restock_date), String(restock_qty), String(remark)).run();
+        }
+
+        const created = await env.DB.prepare('SELECT * FROM patient_inventory_items WHERE id = ?').bind(itemId).first();
+        return new Response(JSON.stringify({ success: true, item: created }), { status: 201, headers: { 'Content-Type': 'application/json' } });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+
+    // ==========================================
+    // 9.5 API: DELETE INVENTORY ITEM (DELETE /api/inventory/items/:id)
+    // ==========================================
+    if (url.pathname.startsWith('/api/inventory/items/') && request.method === 'DELETE') {
+      try {
+        const itemId = url.pathname.split('/')[4];
+        await env.DB.prepare('DELETE FROM patient_inventory_items WHERE id = ?').bind(itemId).run();
+        return new Response(JSON.stringify({ success: true, message: 'Item berjaya dipadam.' }), { headers: { 'Content-Type': 'application/json' } });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+
+    // ==========================================
+    // 10. API: DISCHARGE PATIENT (POST /api/admissions/:id/discharge)
+    // ==========================================
+    if (url.pathname.startsWith('/api/admissions/') && url.pathname.endsWith('/discharge') && request.method === 'POST') {
+      try {
+        const admissionId = url.pathname.split('/')[3];
+        const body: any = await request.json().catch(() => ({}));
+        const admission = await env.DB.prepare('SELECT * FROM admissions WHERE id = ?').bind(admissionId).first();
+        if (!admission) {
+          return new Response(JSON.stringify({ error: 'Rekod kemasukan tidak dijumpai.' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
+        }
+
+        const todayDate = new Date().toISOString().split('T')[0];
+        const nowTime = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        const user = await getAuthUser(request, env);
+        const staffId = user?.id || 'system';
+
+        await env.DB.prepare(`
+          UPDATE admissions
+          SET lifecycle_status = 'Discharged',
+              kanban_stage = 'Discharged',
+              discharge_date = ?,
+              discharge_destination = ?,
+              discharge_summary = ?,
+              updated_at = datetime('now')
+          WHERE id = ?
+        `).bind(todayDate, body.discharge_destination || 'Rumah', body.discharge_summary || '', admissionId).run();
+
+        await env.DB.prepare("UPDATE patients SET status = 'Discharged', updated_at = datetime('now') WHERE id = ?").bind(admission.patient_id).run();
+
+        const dischargeId = 'dis_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+        await env.DB.prepare(`
+          INSERT INTO discharges (
+            id, admission_id, patient_id, discharge_date, discharge_time,
+            discharge_destination, discharge_summary, emergency_contact_notified,
+            discharged_by_staff_id, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        `).bind(
+          dischargeId, admissionId, admission.patient_id, todayDate, nowTime,
+          body.discharge_destination || 'Rumah', body.discharge_summary || '',
+          body.emergency_contact_notified ? 1 : 0, staffId
+        ).run();
+
+        return new Response(JSON.stringify({ success: true, message: 'Pesakit berjaya didiscaj.' }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+
+    // ==========================================
+    // 11. API: UPDATE TCA (PATCH /api/admissions/:id/tca)
+    // ==========================================
+    if (url.pathname.startsWith('/api/admissions/') && url.pathname.endsWith('/tca') && request.method === 'PATCH') {
+      try {
+        const admissionId = url.pathname.split('/')[3];
+        const body: any = await request.json();
+        const { tca_date, tca_location, tca_remarks } = body;
+        await env.DB.prepare(`
+          UPDATE admissions
+          SET tca_date = ?, tca_location = ?, tca_remarks = ?, updated_at = datetime('now')
+          WHERE id = ?
+        `).bind(tca_date || null, tca_location || null, tca_remarks || null, admissionId).run();
+        return new Response(JSON.stringify({ success: true, message: 'Temujanji TCA berjaya dikemaskini.' }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+
+    // ==========================================
+    // 12. API: CLOUDFLARE R2 STORAGE
+    // ==========================================
+    if (url.pathname === '/api/storage/upload' && request.method === 'POST') {
+      try {
+        const body: any = await request.json().catch(() => ({}));
+        const { imageBase64, prefix = 'convee' } = body;
+        if (!imageBase64) {
+          return new Response(JSON.stringify({ error: 'Sila sertakan data imej Base64.' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+        }
+
+        const matches = imageBase64.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
+        const mimeType = matches ? matches[1] : 'image/jpeg';
+        const base64Data = matches ? matches[2] : imageBase64;
+        const ext = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg';
+        const key = `${prefix}/${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
+
+        const r2 = env.R2_BUCKET || env['convee-carepulse-assets'] || (env as any).BUCKET;
+        if (r2 && typeof r2.put === 'function') {
+          const binary = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+          await r2.put(key, binary, { httpMetadata: { contentType: mimeType } });
+          return new Response(JSON.stringify({
+            success: true,
+            url: `/api/storage/file/${key}`,
+            key,
+            storageType: 'cloudflare_r2',
+            sizeBytes: binary.length,
+          }), { headers: { 'Content-Type': 'application/json' } });
+        }
+
+        // Safe fallback
+        return new Response(JSON.stringify({
+          success: true,
+          url: imageBase64,
+          key,
+          storageType: 'base64_fallback',
+          sizeBytes: imageBase64.length,
+        }), { headers: { 'Content-Type': 'application/json' } });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+
+    if (url.pathname.startsWith('/api/storage/file/') && request.method === 'GET') {
+      try {
+        const key = url.pathname.replace('/api/storage/file/', '');
+        const r2 = env.R2_BUCKET || env['convee-carepulse-assets'] || (env as any).BUCKET;
+        if (r2 && typeof r2.get === 'function') {
+          const object = await r2.get(key);
+          if (!object) return new Response('File not found', { status: 404 });
+          const headers = new Headers();
+          object.writeHttpMetadata(headers);
+          headers.set('etag', object.httpEtag);
+          return new Response(object.body, { headers });
+        }
+        return new Response('R2 not available', { status: 404 });
+      } catch (err: any) {
+        return new Response(err.message, { status: 500 });
+      }
+    }
+
+    if (url.pathname === '/api/storage/r2/status' && request.method === 'GET') {
+      const r2 = env.R2_BUCKET || env['convee-carepulse-assets'] || (env as any).BUCKET;
+      return new Response(JSON.stringify({
+        configured: Boolean(r2),
+        bucketName: 'convee-carepulse-assets',
+        storageType: r2 ? 'cloudflare_r2' : 'base64_fallback',
+      }), { headers: { 'Content-Type': 'application/json' } });
     }
 
     // Static Assets fallback (Frontend UI)
