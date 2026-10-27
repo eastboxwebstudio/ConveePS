@@ -529,7 +529,7 @@ export default {
             body.blood_pressure || null, body.pulse_rate || null, body.temperature || null,
             body.spo2 || null, body.blood_sugar || '-', body.pain_level || 0,
             body.general_condition || 'Stable', body.consciousness || 'Alert', body.mobility_status || 'Independent',
-            body.appetite || 'Good', body.urine_output || 'Normal', body.urine_other || null, body.bowel_movement || 0,
+            (body.appetite || 'Good').toUpperCase(), body.urine_output || 'Normal', body.urine_other || null, body.bowel_movement || 0,
             body.medication_intake || 'SERVED', body.hygiene_care || 'Normal shower', body.feeding_care || 'DONE',
             body.wound_dressing || 'N/A', body.repositioning || 'N/A', body.mobilisation || '1',
             body.nursing_report || null,
@@ -553,7 +553,7 @@ export default {
             body.blood_pressure || null, body.pulse_rate || null, body.temperature || null,
             body.spo2 || null, body.blood_sugar || '-', body.pain_level || 0,
             body.general_condition || 'Stable', body.consciousness || 'Alert', body.mobility_status || 'Independent',
-            body.appetite || 'Good', body.urine_output || 'Normal', body.bowel_movement || 0,
+            (body.appetite || 'Good').toUpperCase(), body.urine_output || 'Normal', body.bowel_movement || 0,
             body.medication_intake || 'SERVED', body.hygiene_care || 'Normal shower', body.feeding_care || 'DONE',
             body.wound_dressing || 'N/A', body.repositioning || 'N/A', body.mobilisation || '1',
             body.nursing_report || null
