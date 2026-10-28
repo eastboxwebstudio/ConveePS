@@ -298,3 +298,47 @@ export interface InventoryStats {
     remark?: string;
   }[];
 }
+
+export type AppointmentStatus =
+  | 'Scheduled'
+  | 'Checked-In'
+  | 'Completed'
+  | 'Cancelled'
+  | 'No-Show';
+
+export interface Appointment {
+  id: string;
+  patient_id?: string | null;
+  visitor_name: string;
+  visitor_ic_passport?: string | null;
+  visitor_phone: string;
+  relationship: string;
+  purpose: string;
+  scheduled_date: string;
+  scheduled_time: string;
+  duration_minutes: number;
+  pax_count: number;
+  status: AppointmentStatus;
+  check_in_time?: string | null;
+  check_out_time?: string | null;
+  health_declaration: number;
+  temperature?: number | null;
+  notes?: string | null;
+  staff_user_id?: string | null;
+  created_at?: string;
+  updated_at?: string;
+
+  // Joined fields
+  patient_name?: string | null;
+  patient_mrn?: string | null;
+  patient_zone?: ZoneType | null;
+  room_bed?: string | null;
+  staff_name?: string | null;
+}
+
+export interface AppointmentStats {
+  today_total: number;
+  currently_checked_in: number;
+  upcoming_scheduled: number;
+  completed_today: number;
+}

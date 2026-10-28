@@ -10,6 +10,7 @@ const DB_FILE = path.join(DATA_DIR, 'local.d1.sqlite');
 const MIGRATION_1 = path.resolve(process.cwd(), 'migrations/0001_initial.sql');
 const MIGRATION_2 = path.resolve(process.cwd(), 'migrations/0002_seed.sql');
 const MIGRATION_3 = path.resolve(process.cwd(), 'migrations/0003_patient_inventory.sql');
+const MIGRATION_5 = path.resolve(process.cwd(), 'migrations/0005_appointments_visitors.sql');
 
 function persistDb() {
   if (!dbInstance) return;
@@ -77,6 +78,18 @@ export async function getDb(): Promise<Database> {
         dbInstance.run(sql3);
         persistDb();
         console.log('Patient inventory tables created and seeded.');
+      }
+    }
+
+    const aptCheck = dbInstance.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='appointments'");
+    const hasAptTable = aptCheck.length > 0 && aptCheck[0].values.length > 0;
+    if (!hasAptTable) {
+      console.log('Running D1 appointments migration (0005_appointments_visitors.sql)...');
+      if (fs.existsSync(MIGRATION_5)) {
+        const sql5 = fs.readFileSync(MIGRATION_5, 'utf-8');
+        dbInstance.run(sql5);
+        persistDb();
+        console.log('Appointments & visitors tables created and seeded.');
       }
     }
 

@@ -976,6 +976,281 @@ export default {
       }), { headers: { 'Content-Type': 'application/json' } });
     }
 
+    // ==========================================
+    // 13. API: APPOINTMENTS & VISITORS
+    // ==========================================
+    if (url.pathname === '/api/appointments' && request.method === 'GET') {
+      try {
+        const user = await getAuthUser(request, env);
+        if (!user) return new Response(JSON.stringify({ error: 'Tidak dibenarkan.' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+
+        const date = url.searchParams.get('date');
+        const status = url.searchParams.get('status');
+        const search = url.searchParams.get('search');
+        const patient_id = url.searchParams.get('patient_id');
+
+        let query = `
+          SELECT a.*,
+                 p.full_name as patient_name,
+                 p.mrn as patient_mrn,
+                 p.zone as patient_zone,
+                 p.room_bed,
+                 u.full_name as staff_name
+          FROM appointments a
+          LEFT JOIN patients p ON a.patient_id = p.id
+          LEFT JOIN users u ON a.staff_user_id = u.id
+          WHERE 1=1
+        `;
+        const binds: any[] = [];
+
+        if (patient_id) {
+          query += ' AND a.patient_id = ?';
+          binds.push(patient_id);
+        }
+
+        if (status && status !== 'all') {
+          query += ' AND a.status = ?';
+          binds.push(status);
+        }
+
+        if (date === 'today') {
+          query += " AND date(a.scheduled_date) = date('now')";
+        } else if (date === 'upcoming') {
+          query += " AND (date(a.scheduled_date) >= date('now') OR a.status = 'Checked-In')";
+        } else if (date && date !== 'all') {
+          query += ' AND date(a.scheduled_date) = date(?)';
+          binds.push(date);
+        }
+
+        if (search) {
+          const term = `%${search.trim()}%`;
+          query += ' AND (a.visitor_name LIKE ? OR a.visitor_phone LIKE ? OR a.visitor_ic_passport LIKE ? OR p.full_name LIKE ? OR p.mrn LIKE ?)';
+          binds.push(term, term, term, term, term);
+        }
+
+        query += `
+          ORDER BY
+            CASE
+              WHEN a.status = 'Checked-In' THEN 1
+              WHEN a.status = 'Scheduled' THEN 2
+              WHEN a.status = 'Completed' THEN 3
+              ELSE 4
+            END,
+            a.scheduled_date ASC,
+            a.scheduled_time ASC
+        `;
+
+        let stmt = env.DB.prepare(query);
+        if (binds.length > 0) stmt = stmt.bind(...binds);
+        const appointments = (await stmt.all())?.results || [];
+
+        const statsQuery = `
+          SELECT
+            SUM(CASE WHEN date(scheduled_date) = date('now') THEN 1 ELSE 0 END) as today_total,
+            SUM(CASE WHEN status = 'Checked-In' THEN 1 ELSE 0 END) as currently_checked_in,
+            SUM(CASE WHEN status = 'Scheduled' AND date(scheduled_date) >= date('now') THEN 1 ELSE 0 END) as upcoming_scheduled,
+            SUM(CASE WHEN status = 'Completed' AND date(scheduled_date) = date('now') THEN 1 ELSE 0 END) as completed_today
+          FROM appointments
+        `;
+        const stats: any = (await env.DB.prepare(statsQuery).first()) || {};
+
+        return new Response(JSON.stringify({
+          appointments,
+          stats: {
+            today_total: Number(stats.today_total || 0),
+            currently_checked_in: Number(stats.currently_checked_in || 0),
+            upcoming_scheduled: Number(stats.upcoming_scheduled || 0),
+            completed_today: Number(stats.completed_today || 0),
+          },
+        }), { headers: { 'Content-Type': 'application/json' } });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+
+    if (url.pathname === '/api/appointments' && request.method === 'POST') {
+      try {
+        const user = await getAuthUser(request, env);
+        if (!user) return new Response(JSON.stringify({ error: 'Tidak dibenarkan.' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+
+        const body: any = await request.json().catch(() => ({}));
+        const {
+          patient_id,
+          visitor_name,
+          visitor_ic_passport,
+          visitor_phone,
+          relationship,
+          purpose,
+          scheduled_date,
+          scheduled_time,
+          duration_minutes = 45,
+          pax_count = 1,
+          notes,
+          health_declaration = 1,
+          temperature,
+          is_walk_in = false,
+        } = body;
+
+        if (!visitor_name || !visitor_phone || !relationship || !purpose) {
+          return new Response(JSON.stringify({ error: 'Sila lengkapkan maklumat wajib pelawat.' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+        }
+
+        const todayDate = new Date().toISOString().split('T')[0];
+        const finalDate = scheduled_date || todayDate;
+        const finalTime = scheduled_time || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        const id = `apt_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+        const status = is_walk_in ? 'Checked-In' : 'Scheduled';
+        const checkInTime = is_walk_in ? new Date().toISOString() : null;
+
+        await env.DB.prepare(`
+          INSERT INTO appointments (
+            id, patient_id, visitor_name, visitor_ic_passport, visitor_phone,
+            relationship, purpose, scheduled_date, scheduled_time, duration_minutes,
+            pax_count, status, check_in_time, check_out_time, health_declaration,
+            temperature, notes, staff_user_id
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?)
+        `).bind(
+          id,
+          patient_id || null,
+          visitor_name.trim(),
+          visitor_ic_passport ? visitor_ic_passport.trim() : null,
+          visitor_phone.trim(),
+          relationship.trim(),
+          purpose.trim(),
+          finalDate,
+          finalTime,
+          Number(duration_minutes) || 45,
+          Number(pax_count) || 1,
+          status,
+          checkInTime,
+          Number(health_declaration) ? 1 : 0,
+          temperature ? Number(temperature) : null,
+          notes ? notes.trim() : null,
+          user.id,
+        ).run();
+
+        const created = await env.DB.prepare(`
+          SELECT a.*,
+                 p.full_name as patient_name,
+                 p.mrn as patient_mrn,
+                 p.zone as patient_zone,
+                 p.room_bed,
+                 u.full_name as staff_name
+          FROM appointments a
+          LEFT JOIN patients p ON a.patient_id = p.id
+          LEFT JOIN users u ON a.staff_user_id = u.id
+          WHERE a.id = ?
+        `).bind(id).first();
+
+        return new Response(JSON.stringify({
+          success: true,
+          message: is_walk_in ? 'Pelawat berjaya didaftarkan masuk terus (Walk-in).' : 'Temujanji berjaya dijadualkan.',
+          appointment: created,
+        }), { status: 201, headers: { 'Content-Type': 'application/json' } });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+
+    if (url.pathname.match(/^\/api\/appointments\/[^/]+\/check-in$/) && request.method === 'PATCH') {
+      try {
+        const user = await getAuthUser(request, env);
+        if (!user) return new Response(JSON.stringify({ error: 'Tidak dibenarkan.' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+
+        const id = url.pathname.split('/')[3];
+        const body: any = await request.json().catch(() => ({}));
+        const { temperature, health_declaration = 1 } = body;
+
+        const checkInTime = new Date().toISOString();
+        await env.DB.prepare(`
+          UPDATE appointments
+          SET status = 'Checked-In',
+              check_in_time = ?,
+              temperature = COALESCE(?, temperature),
+              health_declaration = ?,
+              staff_user_id = ?,
+              updated_at = datetime('now')
+          WHERE id = ?
+        `).bind(
+          checkInTime,
+          temperature ? Number(temperature) : null,
+          Number(health_declaration) ? 1 : 0,
+          user.id,
+          id,
+        ).run();
+
+        return new Response(JSON.stringify({ success: true, message: 'Pelawat berjaya didaftarkan masuk.' }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+
+    if (url.pathname.match(/^\/api\/appointments\/[^/]+\/check-out$/) && request.method === 'PATCH') {
+      try {
+        const user = await getAuthUser(request, env);
+        if (!user) return new Response(JSON.stringify({ error: 'Tidak dibenarkan.' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+
+        const id = url.pathname.split('/')[3];
+        const checkOutTime = new Date().toISOString();
+
+        await env.DB.prepare(`
+          UPDATE appointments
+          SET status = 'Completed',
+              check_out_time = ?,
+              updated_at = datetime('now')
+          WHERE id = ?
+        `).bind(checkOutTime, id).run();
+
+        return new Response(JSON.stringify({ success: true, message: 'Pelawat berjaya didaftarkan keluar.' }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+
+    if (url.pathname.match(/^\/api\/appointments\/[^/]+\/status$/) && request.method === 'PATCH') {
+      try {
+        const user = await getAuthUser(request, env);
+        if (!user) return new Response(JSON.stringify({ error: 'Tidak dibenarkan.' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+
+        const id = url.pathname.split('/')[3];
+        const body: any = await request.json().catch(() => ({}));
+        const { status } = body;
+
+        await env.DB.prepare(`
+          UPDATE appointments
+          SET status = ?,
+              updated_at = datetime('now')
+          WHERE id = ?
+        `).bind(status, id).run();
+
+        return new Response(JSON.stringify({ success: true, message: 'Status temujanji berjaya dikemaskini.' }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+
+    if (url.pathname.match(/^\/api\/appointments\/[^/]+$/) && request.method === 'DELETE') {
+      try {
+        const user = await getAuthUser(request, env);
+        if (!user) return new Response(JSON.stringify({ error: 'Tidak dibenarkan.' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+
+        const id = url.pathname.split('/')[3];
+        await env.DB.prepare('DELETE FROM appointments WHERE id = ?').bind(id).run();
+
+        return new Response(JSON.stringify({ success: true, message: 'Temujanji berjaya dipadam.' }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+
     // Static Assets fallback (Frontend UI)
     return env.ASSETS.fetch(request);
   },

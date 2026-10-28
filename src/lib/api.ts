@@ -11,12 +11,15 @@ import {
   PatientInventoryItem,
   PatientInventoryCheck,
   InventoryStats,
+  Appointment,
+  AppointmentStats,
+  AppointmentStatus,
 } from '../types/index.js';
 
 const BASE_URL = '/api';
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const token = localStorage.getItem('convee_token');
+  const token = typeof localStorage !== 'undefined' ? localStorage.getItem('convee_token') : null;
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
@@ -46,7 +49,7 @@ export async function apiLogin(username: string, passcode: string) {
     method: 'POST',
     body: JSON.stringify({ username, passcode }),
   });
-  if (data.token) {
+  if (data.token && typeof localStorage !== 'undefined') {
     localStorage.setItem('convee_token', data.token);
   }
   return data;
@@ -56,7 +59,9 @@ export async function apiLogout() {
   try {
     await request('/auth/logout', { method: 'POST' });
   } finally {
-    localStorage.removeItem('convee_token');
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('convee_token');
+    }
   }
 }
 
@@ -363,6 +368,81 @@ export async function apiSaveR2Config(credentials: {
   }>('/storage/r2/save', {
     method: 'POST',
     body: JSON.stringify(credentials),
+  });
+}
+
+// 13. Appointments & Visitors API
+export async function apiGetAppointments(params?: {
+  date?: string;
+  status?: string;
+  search?: string;
+  patient_id?: string;
+}) {
+  const query = new URLSearchParams();
+  if (params?.date) query.set('date', params.date);
+  if (params?.status) query.set('status', params.status);
+  if (params?.search) query.set('search', params.search);
+  if (params?.patient_id) query.set('patient_id', params.patient_id);
+
+  const qs = query.toString();
+  return request<{
+    appointments: Appointment[];
+    stats: AppointmentStats;
+  }>(`/appointments${qs ? `?${qs}` : ''}`);
+}
+
+export async function apiCreateAppointment(payload: {
+  patient_id?: string | null;
+  visitor_name: string;
+  visitor_ic_passport?: string | null;
+  visitor_phone: string;
+  relationship: string;
+  purpose: string;
+  scheduled_date?: string;
+  scheduled_time?: string;
+  duration_minutes?: number;
+  pax_count?: number;
+  notes?: string;
+  health_declaration?: number;
+  temperature?: number | null;
+  is_walk_in?: boolean;
+}) {
+  return request<{
+    success: boolean;
+    message: string;
+    appointment: Appointment;
+  }>('/appointments', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function apiCheckInAppointment(
+  id: string,
+  payload?: { temperature?: number | null; health_declaration?: number }
+) {
+  return request<{ success: boolean; message: string }>(`/appointments/${id}/check-in`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload || {}),
+  });
+}
+
+export async function apiCheckOutAppointment(id: string) {
+  return request<{ success: boolean; message: string }>(`/appointments/${id}/check-out`, {
+    method: 'PATCH',
+  });
+}
+
+export async function apiUpdateAppointmentStatus(id: string, status: AppointmentStatus) {
+  return request<{ success: boolean; message: string }>(`/appointments/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
+}
+
+export async function apiDeleteAppointment(id: string) {
+  return request<{ success: boolean; message: string }>(`/appointments/${id}`, {
+    method: 'DELETE',
   });
 }
 

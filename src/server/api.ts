@@ -1810,4 +1810,318 @@ apiRouter.post('/storage/r2/save', requireAdmin, async (req: Request, res: Respo
   }
 });
 
+// ==========================================
+// 8. APPOINTMENTS & VISITORS ENDPOINTS
+// ==========================================
+
+apiRouter.get('/appointments', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { date, status, search, patient_id } = req.query;
+
+    let query = `
+      SELECT a.*,
+             p.full_name as patient_name,
+             p.mrn as patient_mrn,
+             p.zone as patient_zone,
+             p.room_bed,
+             u.full_name as staff_name
+      FROM appointments a
+      LEFT JOIN patients p ON a.patient_id = p.id
+      LEFT JOIN users u ON a.staff_user_id = u.id
+      WHERE 1=1
+    `;
+    const params: any[] = [];
+
+    if (patient_id) {
+      query += ' AND a.patient_id = ?';
+      params.push(patient_id);
+    }
+
+    if (status && status !== 'all') {
+      query += ' AND a.status = ?';
+      params.push(status);
+    }
+
+    if (date === 'today') {
+      query += " AND date(a.scheduled_date) = date('now')";
+    } else if (date === 'upcoming') {
+      query += " AND (date(a.scheduled_date) >= date('now') OR a.status = 'Checked-In')";
+    } else if (date && date !== 'all') {
+      query += ' AND date(a.scheduled_date) = date(?)';
+      params.push(date);
+    }
+
+    if (search) {
+      const term = `%${String(search).trim()}%`;
+      query += ' AND (a.visitor_name LIKE ? OR a.visitor_phone LIKE ? OR a.visitor_ic_passport LIKE ? OR p.full_name LIKE ? OR p.mrn LIKE ?)';
+      params.push(term, term, term, term, term);
+    }
+
+    query += `
+      ORDER BY
+        CASE
+          WHEN a.status = 'Checked-In' THEN 1
+          WHEN a.status = 'Scheduled' THEN 2
+          WHEN a.status = 'Completed' THEN 3
+          ELSE 4
+        END,
+        a.scheduled_date ASC,
+        a.scheduled_time ASC
+    `;
+
+    const appointments = await all(query, params);
+
+    // Compute Appointment Stats
+    const todayStats = await first<{ today_total: number; currently_checked_in: number; upcoming_scheduled: number; completed_today: number }>(`
+      SELECT
+        SUM(CASE WHEN date(scheduled_date) = date('now') THEN 1 ELSE 0 END) as today_total,
+        SUM(CASE WHEN status = 'Checked-In' THEN 1 ELSE 0 END) as currently_checked_in,
+        SUM(CASE WHEN status = 'Scheduled' AND date(scheduled_date) >= date('now') THEN 1 ELSE 0 END) as upcoming_scheduled,
+        SUM(CASE WHEN status = 'Completed' AND date(scheduled_date) = date('now') THEN 1 ELSE 0 END) as completed_today
+      FROM appointments
+    `);
+
+    return res.json({
+      appointments: appointments || [],
+      stats: {
+        today_total: Number(todayStats?.today_total || 0),
+        currently_checked_in: Number(todayStats?.currently_checked_in || 0),
+        upcoming_scheduled: Number(todayStats?.upcoming_scheduled || 0),
+        completed_today: Number(todayStats?.completed_today || 0),
+      },
+    });
+  } catch (err: any) {
+    console.error('Failed to get appointments:', err);
+    return res.status(500).json({ error: 'Gagal memuat senarai temujanji dan pelawat.' });
+  }
+});
+
+apiRouter.post('/appointments', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const {
+      patient_id,
+      visitor_name,
+      visitor_ic_passport,
+      visitor_phone,
+      relationship,
+      purpose,
+      scheduled_date,
+      scheduled_time,
+      duration_minutes = 45,
+      pax_count = 1,
+      notes,
+      health_declaration = 1,
+      temperature,
+      is_walk_in = false,
+    } = req.body || {};
+
+    if (!visitor_name || !visitor_phone || !relationship || !purpose) {
+      return res.status(400).json({ error: 'Sila lengkapkan maklumat wajib pelawat (Nama, No Telefon, Hubungan, dan Tujuan Lawatan).' });
+    }
+
+    const todayDate = new Date().toISOString().split('T')[0];
+    const finalDate = scheduled_date || todayDate;
+    const finalTime = scheduled_time || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const id = `apt_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const status = is_walk_in ? 'Checked-In' : 'Scheduled';
+    const checkInTime = is_walk_in ? new Date().toISOString() : null;
+
+    await run(`
+      INSERT INTO appointments (
+        id, patient_id, visitor_name, visitor_ic_passport, visitor_phone,
+        relationship, purpose, scheduled_date, scheduled_time, duration_minutes,
+        pax_count, status, check_in_time, check_out_time, health_declaration,
+        temperature, notes, staff_user_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?)
+    `, [
+      id,
+      patient_id || null,
+      visitor_name.trim(),
+      visitor_ic_passport ? visitor_ic_passport.trim() : null,
+      visitor_phone.trim(),
+      relationship.trim(),
+      purpose.trim(),
+      finalDate,
+      finalTime,
+      Number(duration_minutes) || 45,
+      Number(pax_count) || 1,
+      status,
+      checkInTime,
+      Number(health_declaration) ? 1 : 0,
+      temperature ? Number(temperature) : null,
+      notes ? notes.trim() : null,
+      req.user?.id || null,
+    ]);
+
+    await logAudit(
+      req.user!,
+      is_walk_in ? 'WALKIN_VISITOR_CHECK_IN' : 'CREATE_APPOINTMENT',
+      'appointments',
+      id,
+      `${is_walk_in ? 'Daftar masuk walk-in pelawat' : 'Mendaftar temujanji pelawat'}: "${visitor_name.trim()}" (${relationship.trim()}) untuk tujuan "${purpose.trim()}".`
+    );
+
+    const created = await first(`
+      SELECT a.*,
+             p.full_name as patient_name,
+             p.mrn as patient_mrn,
+             p.zone as patient_zone,
+             p.room_bed,
+             u.full_name as staff_name
+      FROM appointments a
+      LEFT JOIN patients p ON a.patient_id = p.id
+      LEFT JOIN users u ON a.staff_user_id = u.id
+      WHERE a.id = ?
+    `, [id]);
+
+    return res.status(201).json({
+      success: true,
+      message: is_walk_in ? 'Pelawat berjaya didaftarkan masuk terus (Walk-in).' : 'Temujanji berjaya dijadualkan.',
+      appointment: created,
+    });
+  } catch (err: any) {
+    console.error('Failed to create appointment:', err);
+    return res.status(500).json({ error: 'Gagal merekodkan temujanji / pelawat: ' + err.message });
+  }
+});
+
+apiRouter.patch('/appointments/:id/check-in', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { temperature, health_declaration = 1 } = req.body || {};
+
+    const appointment = await first<any>('SELECT * FROM appointments WHERE id = ?', [id]);
+    if (!appointment) {
+      return res.status(404).json({ error: 'Rekod temujanji tidak ditemui.' });
+    }
+
+    const checkInTime = new Date().toISOString();
+    await run(`
+      UPDATE appointments
+      SET status = 'Checked-In',
+          check_in_time = ?,
+          temperature = COALESCE(?, temperature),
+          health_declaration = ?,
+          staff_user_id = ?,
+          updated_at = datetime('now')
+      WHERE id = ?
+    `, [
+      checkInTime,
+      temperature ? Number(temperature) : null,
+      Number(health_declaration) ? 1 : 0,
+      req.user?.id || null,
+      id,
+    ]);
+
+    await logAudit(
+      req.user!,
+      'VISITOR_CHECK_IN',
+      'appointments',
+      id,
+      `Daftar masuk pelawat "${appointment.visitor_name}" pada ${checkInTime}.`
+    );
+
+    return res.json({
+      success: true,
+      message: `Pelawat "${appointment.visitor_name}" berjaya didaftarkan masuk.`,
+    });
+  } catch (err: any) {
+    console.error('Failed to check-in appointment:', err);
+    return res.status(500).json({ error: 'Gagal mendaftar masuk pelawat: ' + err.message });
+  }
+});
+
+apiRouter.patch('/appointments/:id/check-out', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const appointment = await first<any>('SELECT * FROM appointments WHERE id = ?', [id]);
+    if (!appointment) {
+      return res.status(404).json({ error: 'Rekod temujanji tidak ditemui.' });
+    }
+
+    const checkOutTime = new Date().toISOString();
+    await run(`
+      UPDATE appointments
+      SET status = 'Completed',
+          check_out_time = ?,
+          updated_at = datetime('now')
+      WHERE id = ?
+    `, [checkOutTime, id]);
+
+    await logAudit(
+      req.user!,
+      'VISITOR_CHECK_OUT',
+      'appointments',
+      id,
+      `Daftar keluar pelawat "${appointment.visitor_name}" pada ${checkOutTime}. Lawatan selesai.`
+    );
+
+    return res.json({
+      success: true,
+      message: `Pelawat "${appointment.visitor_name}" berjaya didaftarkan keluar.`,
+    });
+  } catch (err: any) {
+    console.error('Failed to check-out appointment:', err);
+    return res.status(500).json({ error: 'Gagal mendaftar keluar pelawat: ' + err.message });
+  }
+});
+
+apiRouter.patch('/appointments/:id/status', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body || {};
+
+    const validStatuses = ['Scheduled', 'Checked-In', 'Completed', 'Cancelled', 'No-Show'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Status temujanji tidak sah.' });
+    }
+
+    await run(`
+      UPDATE appointments
+      SET status = ?,
+          updated_at = datetime('now')
+      WHERE id = ?
+    `, [status, id]);
+
+    await logAudit(
+      req.user!,
+      'UPDATE_APPOINTMENT_STATUS',
+      'appointments',
+      id,
+      `Mengemas kini status temujanji kepada "${status}".`
+    );
+
+    return res.json({ success: true, message: `Status berjaya dikemaskini kepada "${status}".` });
+  } catch (err: any) {
+    console.error('Failed to update appointment status:', err);
+    return res.status(500).json({ error: 'Gagal mengemas kini status temujanji.' });
+  }
+});
+
+apiRouter.delete('/appointments/:id', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const appointment = await first<any>('SELECT * FROM appointments WHERE id = ?', [id]);
+    if (!appointment) {
+      return res.status(404).json({ error: 'Rekod temujanji tidak ditemui.' });
+    }
+
+    await run('DELETE FROM appointments WHERE id = ?', [id]);
+
+    await logAudit(
+      req.user!,
+      'DELETE_APPOINTMENT',
+      'appointments',
+      id,
+      `Memadam rekod temujanji pelawat "${appointment.visitor_name}".`
+    );
+
+    return res.json({ success: true, message: 'Rekod temujanji berjaya dipadam.' });
+  } catch (err: any) {
+    console.error('Failed to delete appointment:', err);
+    return res.status(500).json({ error: 'Gagal memadam rekod temujanji.' });
+  }
+});
+
 

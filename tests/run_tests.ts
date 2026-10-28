@@ -749,6 +749,102 @@ async function runAllTests() {
     }
   });
 
+  // 26. Modul Temujanji & Pelawat: Dapatkan Senarai & Statistik
+  await runTest('26. Modul Temujanji & Pelawat: Dapatkan Senarai & Statistik (Appointments & Visitors Query)', async () => {
+    const res = await request('/appointments?date=all', { method: 'GET' }, adminToken);
+    if (!res.ok) {
+      throw new Error(`Failed fetching appointments: ${JSON.stringify(res.data)}`);
+    }
+    if (!Array.isArray(res.data.appointments) || res.data.appointments.length === 0) {
+      throw new Error('Expected at least seeded appointments to be returned');
+    }
+    if (!res.data.stats || typeof res.data.stats.currently_checked_in !== 'number') {
+      throw new Error(`Expected valid appointment stats, got: ${JSON.stringify(res.data.stats)}`);
+    }
+  });
+
+  // 27. Pendaftaran Temujanji Baharu & Walk-In Visitor
+  let createdAptId = '';
+  await runTest('27. Pendaftaran Temujanji Baharu & Walk-In Visitor (Create Appointment & Walk-In)', async () => {
+    // 1. Create a scheduled appointment
+    const createRes = await request('/appointments', {
+      method: 'POST',
+      body: JSON.stringify({
+        patient_id: 'pt_001',
+        visitor_name: 'Puan Siti Rahmah',
+        visitor_ic_passport: '850102-10-5522',
+        visitor_phone: '019-2233445',
+        relationship: 'Anak',
+        purpose: 'Lawatan Pesakit',
+        scheduled_date: new Date().toISOString().split('T')[0],
+        scheduled_time: '03:00 PM',
+        duration_minutes: 45,
+        pax_count: 2,
+        notes: 'Membawa pakaian bersih',
+        health_declaration: 1,
+        is_walk_in: false,
+      }),
+    }, nurseToken);
+
+    if (!createRes.ok || !createRes.data.appointment || !createRes.data.appointment.id) {
+      throw new Error(`Failed creating appointment: ${JSON.stringify(createRes.data)}`);
+    }
+    createdAptId = createRes.data.appointment.id;
+    if (createRes.data.appointment.status !== 'Scheduled') {
+      throw new Error(`Expected status Scheduled, got ${createRes.data.appointment.status}`);
+    }
+
+    // 2. Perform Check-In on the scheduled appointment
+    const checkInRes = await request(`/appointments/${createdAptId}/check-in`, {
+      method: 'PATCH',
+      body: JSON.stringify({ temperature: 36.6, health_declaration: 1 }),
+    }, nurseToken);
+
+    if (!checkInRes.ok) {
+      throw new Error(`Failed checking in visitor: ${JSON.stringify(checkInRes.data)}`);
+    }
+
+    // 3. Verify status changed to Checked-In
+    const verifyRes = await request('/appointments?date=all', { method: 'GET' }, adminToken);
+    const target = verifyRes.data.appointments.find((a: any) => a.id === createdAptId);
+    if (!target || target.status !== 'Checked-In' || !target.check_in_time) {
+      throw new Error(`Expected appointment to be Checked-In with check_in_time, got: ${JSON.stringify(target)}`);
+    }
+  });
+
+  // 28. Daftar Keluar Pelawat & Audit Trail Temujanji
+  await runTest('28. Daftar Keluar Pelawat & Audit Trail (Check-Out & Audit Trail)', async () => {
+    if (!createdAptId) {
+      throw new Error('No appointment ID to check out');
+    }
+
+    // Check-out
+    const checkOutRes = await request(`/appointments/${createdAptId}/check-out`, {
+      method: 'PATCH',
+    }, nurseToken);
+
+    if (!checkOutRes.ok) {
+      throw new Error(`Failed checking out visitor: ${JSON.stringify(checkOutRes.data)}`);
+    }
+
+    // Verify completed status
+    const verifyRes = await request('/appointments?date=all', { method: 'GET' }, adminToken);
+    const target = verifyRes.data.appointments.find((a: any) => a.id === createdAptId);
+    if (!target || target.status !== 'Completed' || !target.check_out_time) {
+      throw new Error(`Expected appointment to be Completed with check_out_time, got: ${JSON.stringify(target)}`);
+    }
+
+    // Verify audit logs captured the action
+    const auditRes = await request('/audit-logs?entity=appointments', { method: 'GET' }, adminToken);
+    if (!auditRes.ok || !Array.isArray(auditRes.data.logs)) {
+      throw new Error('Failed to retrieve audit logs for appointments');
+    }
+    const hasLog = auditRes.data.logs.some((l: any) => l.target_id === createdAptId);
+    if (!hasLog) {
+      throw new Error('Expected audit log entry for the created/checked-out appointment');
+    }
+  });
+
 
 
   // Summary

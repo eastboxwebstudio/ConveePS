@@ -16,6 +16,7 @@ import { ReportsView } from './components/ReportsView.js';
 import { SettingsView } from './components/SettingsView.js';
 import { LoginView } from './components/LoginView.js';
 import { PatientInventoryModule } from './components/PatientInventoryModule.js';
+import { AppointmentsView } from './components/AppointmentsView.js';
 import { Patient, DashboardStats, ZoneType, KanbanStage } from './types/index.js';
 import {
   apiGetPatients,
@@ -136,6 +137,13 @@ function MainApp() {
                 onOpenAdmission={() => setIsAdmissionOpen(true)}
                 currentZone={currentZone}
                 onZoneChange={(zone) => setCurrentZone(zone)}
+              />
+            )}
+
+            {currentTab === 'appointments' && (
+              <AppointmentsView
+                patients={patients}
+                onSelectPatientId={(id) => setDetailPatientId(id)}
               />
             )}
 
