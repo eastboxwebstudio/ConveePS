@@ -25,13 +25,13 @@ interface ClinicalKanbanProps {
 }
 
 const STAGES: { id: KanbanStage; label: string }[] = [
-  { id: 'New Admission', label: 'Kemasukan Baru' },
-  { id: 'Hospitalisation', label: 'Wad / Jagaan' },
+  { id: 'New Admission', label: 'New Admission' },
+  { id: 'Hospitalisation', label: 'Ward / Inpatient' },
   { id: 'Red Alert', label: 'Red Alert' },
-  { id: 'TCA', label: 'TCA (Susulan Hospital)' },
-  { id: 'Home Leave', label: 'Cuti Rumah' },
-  { id: 'Refuse Medication', label: 'Tolak Ubat' },
-  { id: 'Discharged', label: 'Discaj' },
+  { id: 'TCA', label: 'TCA (Hospital Follow-Up)' },
+  { id: 'Home Leave', label: 'Home Leave' },
+  { id: 'Refuse Medication', label: 'Refused Medication' },
+  { id: 'Discharged', label: 'Discharged' },
 ];
 
 export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
@@ -112,19 +112,19 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
     setTcaModalPatient(p);
     setTcaDateInput(p.tca_date || tomorrowStr);
     setTcaLocationInput(p.tca_location || p.follow_up_facility || 'Hospital Selayang');
-    setTcaRemarksInput(p.tca_remarks || 'Sediakan buku rekod DAPUD, laporan tanda vital & bekalan ubat.');
+    setTcaRemarksInput(p.tca_remarks || 'Prepare DAPUD records, latest vital signs summary & medication supply.');
     setTcaError(null);
   }
 
   async function handleSaveTca(e: React.FormEvent) {
     e.preventDefault();
     if (!tcaModalPatient || !tcaModalPatient.admission_id) {
-      setTcaError('Rekod kemasukan pesakit tidak sah.');
+      setTcaError('Invalid resident admission record.');
       return;
     }
 
     if (!tcaDateInput) {
-      setTcaError('Sila pilih tarikh temujanji TCA.');
+      setTcaError('Please select a TCA appointment date.');
       return;
     }
 
@@ -147,7 +147,7 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
 
       setTcaModalPatient(null);
     } catch (err: any) {
-      setTcaError(err.message || 'Gagal menyimpan maklumat TCA.');
+      setTcaError(err.message || 'Failed to save TCA appointment details.');
     } finally {
       setTcaSaving(false);
     }
@@ -155,9 +155,9 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* 1-DAY AHEAD TCA ALERT BANNER (Prompt Requirement 2) */}
+      {/* 1-DAY AHEAD TCA ALERT BANNER */}
       {tomorrowAlerts.length > 0 && (
-        <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 rounded-3xl p-4 text-white shadow-lg animate-pulse-subtle border border-amber-400/40">
+        <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 rounded-3xl p-4 text-white shadow-lg border border-amber-400/40">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0 mt-0.5 shadow-inner">
@@ -166,14 +166,14 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-extrabold text-sm uppercase tracking-wider bg-white text-orange-700 px-2.5 py-0.5 rounded-full shadow-2xs text-[10px]">
-                    🚨 PERINGATAN TCA: TEMUJANJI ESOK (1 HARI LAGI)
+                    🚨 TCA ALERT: APPOINTMENT TOMORROW (1 DAY LEFT)
                   </span>
                   <span className="text-xs font-semibold text-amber-100">
-                    {tomorrowAlerts.length} Pesakit Memerlukan Persediaan
+                    {tomorrowAlerts.length} Resident(s) Require Preparation
                   </span>
                 </div>
                 <p className="text-xs text-amber-50 mt-1 leading-relaxed">
-                  Sila maklumkan kepada jururawat syif bertugas untuk menyediakan dokumen rujukan, rekod DAPUD, fail ubat & kenderaan pengangkutan ke hospital agar tidak terlepas pandang:
+                  Please notify the duty nurse shift to prepare referral documents, DAPUD logs, medication files, and hospital transport:
                 </p>
 
                 <div className="mt-2.5 flex flex-wrap gap-2">
@@ -208,14 +208,14 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-[10px] uppercase tracking-wider bg-white text-rose-700 px-2 py-0.5 rounded-full">
-                  🔴 TEMUJANJI TCA HARI INI
+                  🔴 TODAY'S TCA APPOINTMENT
                 </span>
                 <span className="text-xs text-rose-100 font-semibold">
-                  Tindakan Segera Diperlukan
+                  Immediate Action Required
                 </span>
               </div>
               <p className="text-xs text-rose-100 mt-1">
-                Pesakit berikut mempunyai temujanji klinikal pada hari ini:
+                The following resident(s) have hospital/clinic appointments scheduled for today:
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {todayAlerts.map(({ patient }) => (
@@ -241,21 +241,21 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
       <div className="bg-white p-5 rounded-3xl border border-emerald-950/5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            Papan Kanban Klinikal (7 Fasa)
+            Clinical Kanban Board (7 Stages)
             {tomorrowAlerts.length > 0 && (
               <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 flex items-center gap-1 border border-amber-200">
                 <BellRing className="w-3 h-3 text-amber-700" />
-                {tomorrowAlerts.length} TCA Esok
+                {tomorrowAlerts.length} TCA Tomorrow
               </span>
             )}
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Fasa perjalanan pesakit merangkumi amaran klinikal Red Alert dan susulan hospital (TCA).
+            Care journey tracking including Red Alert emergencies and hospital follow-up (TCA) scheduling.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#EAF5DC] text-[#0B3B2C]">
-            7 Peringkat Aliran
+            7 Flow Stages
           </span>
         </div>
       </div>
@@ -298,7 +298,7 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
               <div className="p-3 space-y-3 overflow-y-auto flex-1">
                 {stagePatients.length === 0 ? (
                   <div className="py-12 text-center text-xs text-slate-400">
-                    Tiada pesakit
+                    No residents
                   </div>
                 ) : (
                   stagePatients.map((patient) => {
@@ -325,7 +325,7 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
                             {patient.mrn}
                           </span>
                           <span className="text-[11px] font-semibold text-[#0B3B2C] bg-[#EAF5DC] px-2 py-0.5 rounded-md">
-                            {patient.room_bed || patient.zone}
+                            {patient.room_bed || (patient.zone === 'Zon Lelaki' ? 'Male Ward' : patient.zone === 'Zon Perempuan' ? 'Female Ward' : patient.zone)}
                           </span>
                         </div>
 
@@ -339,9 +339,9 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
 
                         {/* Unboxed Metadata */}
                         <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-1.5">
-                          <span>{patient.age} thn</span>
+                          <span>{patient.age} yrs</span>
                           <span className="text-slate-300">·</span>
-                          <span>{patient.gender === 'Male' ? 'Lelaki' : 'Perempuan'}</span>
+                          <span>{patient.gender === 'Male' || (patient.gender as string) === 'Lelaki' ? 'Male' : 'Female'}</span>
                         </div>
 
                         {/* Primary Diagnosis */}
@@ -365,10 +365,10 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
                               <div className="flex items-center justify-between">
                                 <span className="font-bold">
                                   {isTcaTomorrow
-                                    ? '🔔 TCA ESOK (1 HARI)!'
+                                    ? '🔔 TCA TOMORROW (1 DAY)!'
                                     : isTcaToday
-                                    ? '🚨 TCA HARI INI!'
-                                    : 'Temujanji TCA:'}
+                                    ? '🚨 TCA TODAY!'
+                                    : 'TCA Appointment:'}
                                 </span>
                                 <button
                                   type="button"
@@ -378,14 +378,14 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
                                   }}
                                   className="text-[10px] text-amber-800 hover:underline font-bold"
                                 >
-                                  Ubah
+                                  Edit
                                 </button>
                               </div>
                               <div className="font-mono text-[10px] mt-0.5">
-                                {patient.tca_date ? patient.tca_date : 'Tarikh belum ditetapkan'}
+                                {patient.tca_date ? patient.tca_date : 'Date not set'}
                               </div>
                               <div className="text-[10px] text-slate-600 line-clamp-1">
-                                {patient.tca_location || patient.follow_up_facility || 'Fasiliti belum diisi'}
+                                {patient.tca_location || patient.follow_up_facility || 'Facility not specified'}
                               </div>
                             </div>
                           </div>
@@ -403,7 +403,7 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
                         {/* Latest Diet Plan & Nurse Advice Badge */}
                         {patient.latest_nurse_advice && (
                           <div className="mt-2 p-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-[10px] text-emerald-900 line-clamp-1">
-                            <span className="font-bold">Nasihat: </span>
+                            <span className="font-bold">Advice: </span>
                             {patient.latest_nurse_advice}
                           </div>
                         )}
@@ -412,7 +412,7 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
                         <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
                           <span className="text-[11px] text-slate-400 flex items-center gap-1">
                             <Clock className="w-3 h-3 text-slate-400" />
-                            {patient.length_of_stay !== undefined ? `${patient.length_of_stay} hari` : 'Hari 1'}
+                            {patient.length_of_stay !== undefined ? `${patient.length_of_stay} days` : 'Day 1'}
                           </span>
 
                           <div className="flex items-center gap-1">
@@ -421,7 +421,7 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
                                 type="button"
                                 onClick={() => openTcaModal(patient)}
                                 className="px-2 py-1 rounded-xl text-[10px] font-bold bg-amber-100 text-amber-900 hover:bg-amber-200 transition-colors"
-                                title="Kemas kini jadual TCA"
+                                title="Update TCA schedule"
                               >
                                 📅 TCA
                               </button>
@@ -431,7 +431,7 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
                               onClick={() => onOpenMonitoringForPatient(patient)}
                               className="px-2 py-1 rounded-xl text-[11px] font-semibold text-slate-700 hover:text-[#0B3B2C] hover:bg-[#EAF5DC] transition-colors"
                             >
-                              Catat
+                              Log
                             </button>
 
                             <select
@@ -449,7 +449,7 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
                                   }
                                 }
                               }}
-                              aria-label={`Ubah fasa pesakit ${patient.full_name}`}
+                              aria-label={`Change stage for ${patient.full_name}`}
                               className="px-2 py-1 rounded-xl border border-slate-200 bg-[#F8FAF8] text-slate-700 text-[10px] font-bold cursor-pointer focus:outline-hidden"
                             >
                               {STAGES.map((s) => (
@@ -480,8 +480,8 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
                   <Calendar className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-sm">Tetapkan Temujanji TCA Hospital</h3>
-                  <p className="text-[11px] text-slate-500">Notifikasi alert sehari awal akan diaktifkan automatik.</p>
+                  <h3 className="font-bold text-slate-900 text-sm">Schedule Hospital TCA Appointment</h3>
+                  <p className="text-[11px] text-slate-500">1-day ahead notification alert will be triggered automatically.</p>
                 </div>
               </div>
               <button
@@ -502,12 +502,12 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
                 <span className="font-bold text-slate-900">{tcaModalPatient.full_name}</span>
                 <span className="text-slate-500 block text-[11px] font-mono">
-                  {tcaModalPatient.mrn} · {tcaModalPatient.room_bed || tcaModalPatient.zone}
+                  {tcaModalPatient.mrn} · {tcaModalPatient.room_bed || (tcaModalPatient.zone === 'Zon Lelaki' ? 'Male Ward' : 'Female Ward')}
                 </span>
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-slate-700">Tarikh Temujanji TCA *</label>
+                <label className="font-bold text-slate-700">TCA Appointment Date *</label>
                 <input
                   type="date"
                   required
@@ -518,9 +518,9 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-slate-700">Hospital / Fasiliti Rujukan *</label>
+                <label className="font-bold text-slate-700">Hospital / Referral Facility *</label>
                 <div className="flex flex-wrap gap-1 mb-1.5">
-                  {['Hospital Selayang', 'HKL', 'HUKM', 'Hospital Ampang', 'Klinik Kesihatan'].map((hosp) => (
+                  {['Hospital Selayang', 'HKL', 'HUKM', 'Hospital Ampang', 'Health Clinic (KK)'].map((hosp) => (
                     <button
                       type="button"
                       key={hosp}
@@ -537,7 +537,7 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
                 </div>
                 <input
                   type="text"
-                  placeholder="Contoh: Hospital Selayang (Klinik Pakar Geriatrik)"
+                  placeholder="e.g. Hospital Selayang (Geriatric Specialist Clinic)"
                   required
                   value={tcaLocationInput}
                   onChange={(e) => setTcaLocationInput(e.target.value)}
@@ -546,10 +546,10 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-slate-700">Catatan Persediaan Temujanji</label>
+                <label className="font-bold text-slate-700">Appointment Preparation Notes</label>
                 <textarea
                   rows={2}
-                  placeholder="Contoh: Sedia rekod tanda vital, bekalan ubat sedia ada, bawa surat rujukan..."
+                  placeholder="e.g. Prepare vital signs log, current medication packs, bring referral letter..."
                   value={tcaRemarksInput}
                   onChange={(e) => setTcaRemarksInput(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
@@ -559,7 +559,7 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
               <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] flex items-start gap-2">
                 <BellRing className="w-4 h-4 shrink-0 text-amber-700 mt-0.5" />
                 <span>
-                  Sistem akan memaparkan notifikasi amaran kuning sehari sebelum tarikh TCA di bahagian atas Kanban agar staf tidak terlepas pandang.
+                  The system will display an alert banner 1 day prior to the TCA date at the top of the Kanban to ensure staff do not miss it.
                 </span>
               </div>
 
@@ -570,7 +570,7 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
                   disabled={tcaSaving}
                   className="px-3.5 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   type="submit"
@@ -578,7 +578,7 @@ export const ClinicalKanban: React.FC<ClinicalKanbanProps> = ({
                   className="px-4 py-2 rounded-xl bg-[#0B3B2C] text-white hover:bg-[#07281E] font-bold transition-colors flex items-center gap-1.5"
                 >
                   <CheckCircle2 className="w-4 h-4 text-[#C5E875]" />
-                  <span>{tcaSaving ? 'Menyimpan...' : 'Simpan & Aktifkan Fasa TCA'}</span>
+                  <span>{tcaSaving ? 'Saving...' : 'Save & Activate TCA Stage'}</span>
                 </button>
               </div>
             </form>

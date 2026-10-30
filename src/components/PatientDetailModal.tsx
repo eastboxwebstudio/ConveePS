@@ -62,7 +62,7 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
         setData(res);
         setError(null);
       })
-      .catch((err) => setError(err.message || 'Gagal memuat butiran pesakit.'))
+      .catch((err) => setError(err.message || 'Failed to load resident details.'))
       .finally(() => setLoading(false));
   }, [patientId]);
 
@@ -80,7 +80,7 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-bold text-slate-900 tracking-tight">
-                  {data?.patient ? data.patient.full_name : 'Profil Pesakit'}
+                  {data?.patient ? data.patient.full_name : 'Resident Profile'}
                 </h2>
                 {data?.patient && (
                   <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#EAF5DC] text-[#0B3B2C]">
@@ -89,7 +89,7 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
                 )}
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                {data?.patient ? `${data.patient.zone} • ${data.patient.room_bed || 'Tanpa Katil'}` : 'Memuat data...'}
+                {data?.patient ? `${data.patient.zone} • ${data.patient.room_bed || 'No Bed Assigned'}` : 'Loading...'}
               </p>
             </div>
           </div>
@@ -103,7 +103,7 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
           {loading && (
             <div className="py-16 text-center text-slate-500">
               <Activity className="w-6 h-6 animate-spin mx-auto mb-2 text-teal-600" />
-              <span>Memuat maklumat klinikal pesakit...</span>
+              <span>Loading resident clinical information...</span>
             </div>
           )}
 
@@ -118,21 +118,21 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
               {/* Clinical Card Summary */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                 <div>
-                  <span className="text-slate-500 text-[11px]">Umur & Jantina</span>
+                  <span className="text-slate-500 text-[11px]">Age & Gender</span>
                   <div className="font-bold text-slate-800 text-xs mt-0.5">
-                    {data.patient.age} tahun ({data.patient.gender === 'Male' ? 'Lelaki' : 'Perempuan'})
+                    {data.patient.age} years ({data.patient.gender === 'Male' ? 'Male' : 'Female'})
                   </div>
                 </div>
 
                 <div>
-                  <span className="text-slate-500 text-[11px]">Tahap Kebergantungan</span>
+                  <span className="text-slate-500 text-[11px]">Care Level (Dependency)</span>
                   <div className="font-bold text-slate-800 text-xs mt-0.5">
                     {data.patient.care_level}
                   </div>
                 </div>
 
                 <div>
-                  <span className="text-slate-500 text-[11px]">Status Kitaran</span>
+                  <span className="text-slate-500 text-[11px]">Lifecycle Status</span>
                   <div className="mt-0.5">
                     <span
                       className={`inline-flex px-2 py-0.5 rounded-md text-[11px] font-bold ${
@@ -147,7 +147,7 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
                 </div>
 
                 <div className="sm:col-span-3 pt-2 border-t border-slate-200">
-                  <span className="text-slate-500 text-[11px]">Diagnosis Utama:</span>
+                  <span className="text-slate-500 text-[11px]">Primary Diagnosis:</span>
                   <div className="font-semibold text-slate-800 mt-0.5">
                     {data.patient.primary_diagnosis}
                   </div>
@@ -155,7 +155,7 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
 
                 {data.patient.prescribed_medications && (
                   <div className="sm:col-span-3 pt-2 border-t border-slate-200">
-                    <span className="text-slate-500 text-[11px]">Preskripsi Ubat Berjadual:</span>
+                    <span className="text-slate-500 text-[11px]">Prescribed Scheduled Medications:</span>
                     <div className="text-slate-700 font-mono text-[11px] whitespace-pre-line mt-0.5 bg-white p-2 rounded border border-slate-200">
                       {data.patient.prescribed_medications}
                     </div>
@@ -165,7 +165,7 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
                 {data.patient.follow_up_facility && (
                   <div className="sm:col-span-3 pt-2 border-t border-slate-200 flex items-center gap-1.5 text-slate-600">
                     <MapPin className="w-3.5 h-3.5 text-teal-600" />
-                    <span>Fasiliti Temujanji Susulan (TCA): <strong>{data.patient.follow_up_facility}</strong></span>
+                    <span>Follow-up Facility (TCA): <strong>{data.patient.follow_up_facility}</strong></span>
                   </div>
                 )}
 
@@ -173,7 +173,7 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
                   <div className="sm:col-span-3 pt-2 border-t border-slate-200 flex items-center gap-2 text-slate-600">
                     <Phone className="w-3.5 h-3.5 text-slate-400" />
                     <span>
-                      Waris Kecemasan: <strong>{data.patient.emergency_contact_name}</strong> ({data.patient.emergency_contact_phone || 'Tiada nombor'})
+                      Emergency Contact: <strong>{data.patient.emergency_contact_name}</strong> ({data.patient.emergency_contact_phone || 'No phone number'})
                     </span>
                   </div>
                 )}
@@ -184,10 +184,10 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
                 <div className="p-3.5 rounded-xl bg-slate-100 border border-slate-300">
                   <div className="font-bold text-slate-900 flex items-center gap-2 mb-1">
                     <LogOut className="w-4 h-4 text-slate-700" />
-                    Pesakit Telah Didiscaj
+                    Resident Has Been Discharged
                   </div>
                   <div className="text-slate-600 text-xs">
-                    Tarikh: <strong>{data.discharge.discharge_date}</strong> pada <strong>{data.discharge.discharge_time}</strong> ke <strong>{data.discharge.discharge_destination}</strong>.
+                    Date: <strong>{data.discharge.discharge_date}</strong> at <strong>{data.discharge.discharge_time}</strong> to <strong>{data.discharge.discharge_destination}</strong>.
                   </div>
                   {data.discharge.discharge_summary && (
                     <div className="mt-1 text-slate-500 italic">
@@ -202,16 +202,16 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
                 <div className="flex items-center justify-between border-b border-slate-200 pb-2">
                   <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-2">
                     <Clock className="w-4 h-4 text-teal-700" />
-                    Garis Masa Sejarah Pemantauan (DAPUD Log)
+                    Clinical Monitoring Timeline (DAPUD Log)
                   </h3>
                   <span className="text-slate-500 text-[11px]">
-                    {data.monitoring.length} Rekod Tersimpan
+                    {data.monitoring.length} Saved Records
                   </span>
                 </div>
 
                 {data.monitoring.length === 0 ? (
                   <div className="py-8 text-center text-slate-400 italic">
-                    Belum ada rekod pemantauan dimasukkan untuk pesakit ini.
+                    No monitoring records logged yet for this resident.
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -254,15 +254,15 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
                           {/* Vital Signs Grid */}
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100 font-mono text-xs">
                             <div>
-                              <span className="text-slate-400 text-[10px] block">Tekanan Darah:</span>
+                              <span className="text-slate-400 text-[10px] block">Blood Pressure:</span>
                               <strong className="text-slate-800">{rec.blood_pressure || '-'}</strong>
                             </div>
                             <div>
-                              <span className="text-slate-400 text-[10px] block">Nadi:</span>
+                              <span className="text-slate-400 text-[10px] block">Pulse Rate:</span>
                               <strong className="text-slate-800">{rec.pulse_rate ? `${rec.pulse_rate} bpm` : '-'}</strong>
                             </div>
                             <div>
-                              <span className="text-slate-400 text-[10px] block">Suhu:</span>
+                              <span className="text-slate-400 text-[10px] block">Temperature:</span>
                               <strong className="text-slate-800">{rec.temperature ? `${rec.temperature}°C` : '-'}</strong>
                             </div>
                             <div>
@@ -274,27 +274,27 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
                           {/* Patient Condition & Diet Plan */}
                           <div className="mt-2.5 grid grid-cols-2 sm:grid-cols-3 gap-2 bg-[#F8FAF8] p-2.5 rounded-xl border border-emerald-950/5 text-[11px]">
                             <div>
-                              <span className="text-slate-400 text-[10px] block">Keadaan Umum:</span>
+                              <span className="text-slate-400 text-[10px] block">General Condition:</span>
                               <strong className="text-slate-800">{rec.general_condition || 'Stable'}</strong>
                             </div>
                             <div>
-                              <span className="text-slate-400 text-[10px] block">Kesedaran:</span>
+                              <span className="text-slate-400 text-[10px] block">Consciousness:</span>
                               <strong className="text-slate-800">{rec.consciousness || 'Alert'}</strong>
                             </div>
                             <div>
-                              <span className="text-slate-400 text-[10px] block">Mobiliti:</span>
+                              <span className="text-slate-400 text-[10px] block">Mobility:</span>
                               <strong className="text-slate-800">{rec.mobility_status || 'Independent'}</strong>
                             </div>
                             <div>
-                              <span className="text-slate-400 text-[10px] block">Pelan Diet:</span>
-                              <strong className="text-emerald-900">{rec.diet_plan || 'Makan bubur'}</strong>
+                              <span className="text-slate-400 text-[10px] block">Diet Plan:</span>
+                              <strong className="text-emerald-900">{rec.diet_plan || 'Normal diet'}</strong>
                             </div>
                             <div>
-                              <span className="text-slate-400 text-[10px] block">Urin:</span>
+                              <span className="text-slate-400 text-[10px] block">Urine:</span>
                               <strong className="text-slate-800">{rec.urine_output || 'Normal'}{rec.urine_other ? ` (${rec.urine_other})` : ''}</strong>
                             </div>
                             <div>
-                              <span className="text-slate-400 text-[10px] block">Najis:</span>
+                              <span className="text-slate-400 text-[10px] block">Bowel:</span>
                               <strong className="text-slate-800">{rec.bowel_movement ? 'Normal' : 'No bowel'}</strong>
                             </div>
                           </div>
@@ -302,13 +302,13 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
                           {/* Tube info if present */}
                           {(rec.tube_has_ngt || rec.tube_has_cbd || rec.tube_type) && rec.tube_type !== 'None' && (
                             <div className="mt-2 p-2 rounded-xl bg-blue-50/60 border border-blue-200 text-blue-900 text-xs flex flex-wrap items-center gap-3">
-                              <span className="font-bold">Tiub Pesakit:</span>
+                              <span className="font-bold">Resident Tubes:</span>
                               <span>{rec.tube_type}</span>
                               {rec.tube_material && <span>({rec.tube_material})</span>}
-                              {rec.tube_size && <span>Saiz: {rec.tube_size}</span>}
+                              {rec.tube_size && <span>Size: {rec.tube_size}</span>}
                               {rec.tube_replacement_date && (
                                 <span className="text-[11px] text-blue-700">
-                                  Tarikh Ganti: {rec.tube_replacement_date}
+                                  Due Date: {rec.tube_replacement_date}
                                 </span>
                               )}
                             </div>
@@ -317,7 +317,7 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
                           {/* Patient Behavior Badges */}
                           {rec.patient_behavior && (
                             <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                              <span className="text-[10px] font-bold text-slate-500 uppercase">Tingkah Laku:</span>
+                              <span className="text-[10px] font-bold text-slate-500 uppercase">Behavior:</span>
                               {rec.patient_behavior.split(', ').map((b, idx) => (
                                 <span
                                   key={idx}
@@ -334,12 +334,12 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
                             <div className="mt-2 flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-200">
                               <img
                                 src={rec.attachment_image}
-                                alt="Lampiran klinikal"
+                                alt="Clinical attachment"
                                 className="w-14 h-14 object-cover rounded-lg border border-slate-300"
                               />
                               <div className="text-xs">
-                                <span className="font-bold text-slate-800 block">Lampiran Gambar Pemerhatian</span>
-                                <span className="text-[11px] text-slate-500">Contoh: Rekod gambar luka pesakit</span>
+                                <span className="font-bold text-slate-800 block">Clinical Observation Photo</span>
+                                <span className="text-[11px] text-slate-500">Documented resident condition / wound</span>
                               </div>
                             </div>
                           )}
@@ -349,7 +349,7 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
                             <div className="mt-2 p-2.5 rounded-xl bg-[#EAF5DC]/70 border border-[#0B3B2C]/20 text-[#0B3B2C] text-xs">
                               <div className="font-bold flex items-center gap-1.5 text-[11px] mb-0.5">
                                 <Sparkles className="w-3.5 h-3.5 text-emerald-800" />
-                                Nasihat & Arahan Jururawat (Nurse Advice):
+                                Nurse Advice & Instructions:
                               </div>
                               <p className="leading-relaxed font-medium">{rec.nurse_advice}</p>
                             </div>
@@ -357,8 +357,8 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
 
                           {/* ADL & Nursing report note */}
                           <div className="mt-2 text-[11px] text-slate-600 flex flex-wrap items-center gap-3">
-                            <span>Ubat: <strong className={rec.medication_intake === 'REFUSE' ? 'text-rose-700' : 'text-slate-800'}>{rec.medication_intake}</strong></span>
-                            <span>Mandi: <strong className="text-slate-800">{rec.hygiene_care}</strong></span>
+                            <span>Medication: <strong className={rec.medication_intake === 'REFUSE' ? 'text-rose-700' : 'text-slate-800'}>{rec.medication_intake}</strong></span>
+                            <span>Bathing: <strong className="text-slate-800">{rec.hygiene_care}</strong></span>
                             <span>Dressing: <strong className="text-slate-800">{rec.wound_dressing}</strong></span>
                           </div>
 
@@ -369,7 +369,7 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
                           )}
 
                           <div className="mt-2 text-right text-[10px] text-slate-400">
-                            Direkod oleh: <span className="font-semibold text-slate-600">{rec.staff_name}</span>
+                            Logged by: <span className="font-semibold text-slate-600">{rec.staff_name}</span>
                           </div>
                         </div>
                       );
@@ -387,7 +387,7 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-100 font-semibold text-slate-700 text-xs transition-colors"
           >
-            Tutup
+            Close
           </button>
 
           {data?.patient && data.patient.status === 'Active' && (
@@ -400,7 +400,7 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
                 className="px-4 py-2.5 rounded-2xl bg-[#0B3B2C] hover:bg-[#07281E] text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-xs"
               >
                 <ClipboardList className="w-4 h-4 text-[#C5E875]" />
-                <span>+ Catat Pemantauan</span>
+                <span>+ Record Vitals (DAPUD)</span>
               </button>
 
               <button
@@ -411,7 +411,7 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
                 className="px-4 py-2.5 rounded-2xl border border-rose-300 hover:bg-rose-50 text-rose-700 font-semibold text-xs transition-colors flex items-center gap-1.5"
               >
                 <LogOut className="w-4 h-4" />
-                <span>Discaj Pesakit</span>
+                <span>Discharge Resident</span>
               </button>
             </div>
           )}

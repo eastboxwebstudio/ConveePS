@@ -32,16 +32,16 @@ export const Header: React.FC<HeaderProps> = ({
   // Determine current active shift based on local hour
   const now = new Date();
   const hour = now.getHours();
-  let activeShiftName = 'Syif Morning';
+  let activeShiftName = 'Morning Shift';
   let activeShiftHours = '7:00am – 5:00pm';
   let isVitalShift = true;
 
   if (hour >= 14 && hour < 21) {
-    activeShiftName = 'Syif Petang';
+    activeShiftName = 'Evening Shift';
     activeShiftHours = '2:00pm – 12:00am';
     isVitalShift = false;
   } else if (hour >= 21 || hour < 7) {
-    activeShiftName = 'Syif Night';
+    activeShiftName = 'Night Shift';
     activeShiftHours = '9:00pm – 7:00am';
     isVitalShift = true;
   }
@@ -73,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
           <input
             type="text"
-            placeholder="Cari pesakit, rekod, atau katil..."
+            placeholder="Search residents, records, or beds..."
             className="w-full pl-9 pr-14 py-2.5 bg-white rounded-2xl border border-emerald-950/5 text-xs focus:outline-hidden focus:ring-1 focus:ring-[#0B3B2C] shadow-2xs transition-all"
           />
           <div className="absolute right-3 top-2.5 flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-[#F4F8F4] text-[10px] font-mono font-semibold text-slate-500 border border-emerald-950/5">
@@ -94,7 +94,7 @@ export const Header: React.FC<HeaderProps> = ({
                 : 'text-slate-600 hover:text-slate-950'
             }`}
           >
-            Semua Zon
+            All Wards
           </button>
           <button
             onClick={() => onZoneChange('Zon Lelaki')}
@@ -104,7 +104,7 @@ export const Header: React.FC<HeaderProps> = ({
                 : 'text-slate-600 hover:text-blue-900'
             }`}
           >
-            Zon Lelaki
+            Male Ward
           </button>
           <button
             onClick={() => onZoneChange('Zon Perempuan')}
@@ -114,7 +114,7 @@ export const Header: React.FC<HeaderProps> = ({
                 : 'text-slate-600 hover:text-rose-900'
             }`}
           >
-            Zon Perempuan
+            Female Ward
           </button>
         </div>
       </div>
@@ -144,7 +144,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
           <button
             onClick={() => logout()}
-            title="Log keluar sistem"
+            title="Log out of system"
             className="p-1 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors ml-1"
           >
             <LogOut className="w-3.5 h-3.5" />
@@ -157,7 +157,7 @@ export const Header: React.FC<HeaderProps> = ({
           className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-[#0B3B2C] hover:bg-[#07281E] text-white text-xs font-semibold transition-all shadow-xs shrink-0"
         >
           <Plus className="w-3.5 h-3.5 text-[#C5E875]" />
-          <span>Daftar Pesakit</span>
+          <span>Admit Resident</span>
         </button>
       </div>
     </header>

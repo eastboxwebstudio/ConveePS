@@ -58,7 +58,7 @@ export const PatientList: React.FC<PatientListProps> = ({
             <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
             <input
               type="text"
-              placeholder="Cari nama pesakit, MRN, katil, atau diagnosis..."
+              placeholder="Search resident name, MRN, bed, or diagnosis..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-3 py-2 text-xs rounded-2xl border border-emerald-950/10 focus:outline-hidden focus:ring-1 focus:ring-[#0B3B2C] transition-all bg-[#F8FAF8]"
@@ -71,9 +71,9 @@ export const PatientList: React.FC<PatientListProps> = ({
             onChange={(e) => setStatusFilter(e.target.value as any)}
             className="px-3.5 py-2 text-xs rounded-2xl border border-emerald-950/10 bg-[#F8FAF8] text-slate-700 font-semibold focus:outline-hidden"
           >
-            <option value="Active">Status: Aktif</option>
-            <option value="Discharged">Status: Telah Discaj</option>
-            <option value="All">Status: Semua</option>
+            <option value="Active">Status: Active</option>
+            <option value="Discharged">Status: Discharged</option>
+            <option value="All">Status: All</option>
           </select>
         </div>
 
@@ -82,7 +82,7 @@ export const PatientList: React.FC<PatientListProps> = ({
           className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-2xl bg-[#0B3B2C] hover:bg-[#07281E] text-white text-xs font-semibold shadow-xs transition-colors shrink-0"
         >
           <Plus className="w-3.5 h-3.5 text-[#C5E875]" />
-          <span>Daftar Pesakit Baru</span>
+          <span>New Resident Admission</span>
         </button>
       </div>
 
@@ -92,22 +92,22 @@ export const PatientList: React.FC<PatientListProps> = ({
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-[#F8FAF8] border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
-                <th className="py-3.5 px-5">No. MRN</th>
-                <th className="py-3.5 px-5">Nama Pesakit</th>
-                <th className="py-3.5 px-5">Umur & Jantina</th>
-                <th className="py-3.5 px-5">Zon & Katil</th>
-                <th className="py-3.5 px-5">Diagnosis Utama</th>
-                <th className="py-3.5 px-5">Fasa Semasa</th>
-                <th className="py-3.5 px-5">Tanda Vital Terkini</th>
-                <th className="py-3.5 px-5">Tempoh</th>
-                <th className="py-3.5 px-5 text-right">Tindakan</th>
+                <th className="py-3.5 px-5">MRN No.</th>
+                <th className="py-3.5 px-5">Resident Name</th>
+                <th className="py-3.5 px-5">Age & Gender</th>
+                <th className="py-3.5 px-5">Ward & Bed</th>
+                <th className="py-3.5 px-5">Primary Diagnosis</th>
+                <th className="py-3.5 px-5">Care Stage</th>
+                <th className="py-3.5 px-5">Latest Vitals</th>
+                <th className="py-3.5 px-5">Stay</th>
+                <th className="py-3.5 px-5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="py-12 text-center text-slate-400">
-                    Tiada rekod pesakit yang sepadan dengan carian.
+                    No resident records matching the current filter.
                   </td>
                 </tr>
               ) : (
@@ -133,13 +133,13 @@ export const PatientList: React.FC<PatientListProps> = ({
                         </div>
                         {patient.follow_up_facility && (
                           <div className="text-[10px] text-slate-400 truncate max-w-xs mt-0.5">
-                            Susulan: {patient.follow_up_facility}
+                            Follow-up: {patient.follow_up_facility}
                           </div>
                         )}
                       </td>
 
                       <td className="py-3.5 px-5 text-slate-600 tabular-nums">
-                        {patient.age} thn · {patient.gender === 'Male' ? 'L' : 'P'}
+                        {patient.age} yrs · {patient.gender === 'Male' ? 'M' : 'F'}
                       </td>
 
                       <td className="py-3.5 px-5 font-semibold text-slate-700">
@@ -177,19 +177,19 @@ export const PatientList: React.FC<PatientListProps> = ({
                             </span>
                           </div>
                         ) : (
-                          <span className="text-slate-400 italic">Belum disemak</span>
+                          <span className="text-slate-400 italic">Not checked yet</span>
                         )}
                       </td>
 
                       <td className="py-3.5 px-5 text-slate-600 font-mono tabular-nums">
-                        {patient.length_of_stay !== undefined ? `${patient.length_of_stay} hari` : 'Hari 1'}
+                        {patient.length_of_stay !== undefined ? `${patient.length_of_stay} days` : 'Day 1'}
                       </td>
 
                       <td className="py-3.5 px-5 text-right">
                         <div className="inline-flex items-center gap-1">
                           <button
                             onClick={() => onSelectPatient(patient.id)}
-                            title="Lihat profil pesakit"
+                            title="View resident profile"
                             className="p-1.5 rounded-xl hover:bg-[#EAF5DC] text-slate-500 hover:text-[#0B3B2C] transition-colors"
                           >
                             <Eye className="w-4 h-4" />
@@ -197,7 +197,7 @@ export const PatientList: React.FC<PatientListProps> = ({
 
                           <button
                             onClick={() => onOpenMonitoringForPatient(patient)}
-                            title="Catat pemerhatian syif"
+                            title="Log shift DAPUD observation"
                             className="p-1.5 rounded-xl hover:bg-[#EAF5DC] text-slate-500 hover:text-[#0B3B2C] transition-colors"
                           >
                             <ClipboardPenLine className="w-4 h-4" />
@@ -206,7 +206,7 @@ export const PatientList: React.FC<PatientListProps> = ({
                           {patient.status === 'Active' && (
                             <button
                               onClick={() => onOpenDischargeForPatient(patient)}
-                              title="Proses discaj pesakit"
+                              title="Process resident discharge"
                               className="p-1.5 rounded-xl hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors"
                             >
                               <LogOut className="w-4 h-4" />

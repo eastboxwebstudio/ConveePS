@@ -73,7 +73,7 @@ function MainApp() {
       <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">
         <div className="flex flex-col items-center gap-3">
           <Activity className="w-8 h-8 text-teal-400 animate-spin" />
-          <span className="text-xs font-medium text-slate-400">Menyediakan Convee CarePulse...</span>
+          <span className="text-xs font-medium text-slate-400">Loading Convee CarePulse...</span>
         </div>
       </div>
     );
@@ -214,7 +214,7 @@ function MainApp() {
       />
 
       <ErrorBoundary
-        fallbackTitle="Ralat Membuka Modul Pemantauan DAPUD"
+        fallbackTitle="Error Opening DAPUD Monitoring Module"
         onReset={() => {
           setIsMonitoringOpen(false);
           setSelectedPatientForMonitoring(null);
@@ -233,7 +233,7 @@ function MainApp() {
       </ErrorBoundary>
 
       <ErrorBoundary
-        fallbackTitle="Ralat Membuka Profil Pesakit"
+        fallbackTitle="Error Opening Resident Profile"
         onReset={() => setDetailPatientId(null)}
       >
         <PatientDetailModal
@@ -259,7 +259,7 @@ function MainApp() {
 
 export default function App() {
   return (
-    <ErrorBoundary fallbackTitle="Convee CarePulse menghadapi ralat tidak dijangka">
+    <ErrorBoundary fallbackTitle="Convee CarePulse encountered an unexpected error">
       <AuthProvider>
         <MainApp />
       </AuthProvider>

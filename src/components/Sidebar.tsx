@@ -48,20 +48,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const isAdmin = user?.role === 'admin';
 
   const clinicalItems: { id: NavTab; label: string; icon: React.FC<{ className?: string }> }[] = [
-    { id: 'dashboard', label: 'Papan Pemuka', icon: LayoutDashboard },
-    { id: 'patients', label: 'Direktori Pesakit', icon: Users },
-    { id: 'appointments', label: 'Temujanji & Pelawat', icon: CalendarDays },
-    { id: 'inventory', label: 'Inventori & Ubatan', icon: PackageCheck },
-    { id: 'kanban', label: 'Aliran Kanban', icon: Kanban },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'patients', label: 'Resident Directory', icon: Users },
+    { id: 'appointments', label: 'Appointments & Visitors', icon: CalendarDays },
+    { id: 'inventory', label: 'Inventory & Meds', icon: PackageCheck },
+    { id: 'kanban', label: 'Kanban Journey', icon: Kanban },
     { id: 'care_board', label: 'Care Board (ADL)', icon: CheckSquare },
-    { id: 'monitoring', label: 'Log DAPUD', icon: FileSpreadsheet },
+    { id: 'monitoring', label: 'DAPUD Shift Logs', icon: FileSpreadsheet },
   ];
 
   const adminItems: { id: NavTab; label: string; icon: React.FC<{ className?: string }>; adminOnly?: boolean }[] = [
-    { id: 'reports', label: 'Laporan & Eksport', icon: FileText },
-    { id: 'staff', label: 'Pengurusan Staf', icon: UserCog, adminOnly: true },
-    { id: 'audit', label: 'Log Keselamatan', icon: ShieldCheck, adminOnly: true },
-    { id: 'settings', label: 'Tetapan Sistem', icon: Settings },
+    { id: 'reports', label: 'Reports & Export', icon: FileText },
+    { id: 'staff', label: 'Staff Management', icon: UserCog, adminOnly: true },
+    { id: 'audit', label: 'Security & Audit Logs', icon: ShieldCheck, adminOnly: true },
+    { id: 'settings', label: 'System Settings', icon: Settings },
   ];
 
   return (
@@ -110,10 +110,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           {/* Navigation Items */}
           <nav className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-270px)]">
-            {/* Section 1: Operasi Klinikal */}
+            {/* Section 1: Clinical Operations */}
             <div>
               <div className="px-3 pt-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Operasi Klinikal
+                Clinical Operations
               </div>
               <div className="space-y-1">
                 {clinicalItems.map((item) => {
@@ -140,10 +140,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             </div>
 
-            {/* Section 2: Pentadbiran & Laporan */}
+            {/* Section 2: Administration & Records */}
             <div>
               <div className="px-3 pt-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Pentadbiran & Rekod
+                Administration & Records
               </div>
               <div className="space-y-1">
                 {adminItems
@@ -180,7 +180,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex items-center justify-between text-xs font-bold mb-1.5">
               <span className="flex items-center gap-1.5 text-[#0B3B2C]">
                 <Bed className="w-3.5 h-3.5" />
-                Kapasiti Katil
+                Bed Capacity
               </span>
               <span className="text-[11px] font-mono text-emerald-800 font-extrabold">6 / 12</span>
             </div>
@@ -189,7 +189,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div className="h-full bg-[#0B3B2C] rounded-full" style={{ width: '50%' }} />
             </div>
             <p className="text-[10px] text-slate-500 mt-2 font-medium">
-              Zon Lelaki: 3/6 · Zon Perempuan: 3/6
+              Male Ward: 3/6 · Female Ward: 3/6
             </p>
           </div>
         </div>

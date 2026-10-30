@@ -35,10 +35,10 @@ export class ErrorBoundary extends Component<Props, State> {
           </div>
           <div>
             <h3 className="text-base font-bold text-slate-900">
-              {this.props.fallbackTitle || 'Ralat Memaparkan Komponen'}
+              {this.props.fallbackTitle || 'Component Rendering Error'}
             </h3>
             <p className="text-xs text-slate-500 mt-1">
-              {this.state.error?.message || 'Ralat JavaScript berlaku semasa memproses data komponen.'}
+              {this.state.error?.message || 'A JavaScript exception occurred while rendering this component.'}
             </p>
           </div>
           <div className="flex justify-center gap-2 pt-2">
@@ -51,14 +51,14 @@ export class ErrorBoundary extends Component<Props, State> {
               className="px-4 py-2 rounded-xl bg-[#0B3B2C] hover:bg-[#07281E] text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              <span>Cuba Semula</span>
+              <span>Retry</span>
             </button>
             <button
               type="button"
               onClick={() => window.location.reload()}
               className="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors"
             >
-              Muat Semula Halaman
+              Reload Page
             </button>
           </div>
         </div>

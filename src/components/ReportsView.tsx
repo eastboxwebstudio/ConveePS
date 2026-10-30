@@ -21,8 +21,8 @@ export const ReportsView: React.FC = () => {
             <FileSpreadsheet className="w-5 h-5 stroke-[2.5]" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-slate-900 tracking-tight">Pusat Laporan & Eksport Data (Reports & Analytics)</h2>
-            <p className="text-xs text-slate-500 mt-0.5">Jana dan muat turun laporan rasmi berstruktur CSV bagi tujuan dokumentasi dan audit fasiliti.</p>
+            <h2 className="text-base font-bold text-slate-900 tracking-tight">Reports & Data Export Center</h2>
+            <p className="text-xs text-slate-500 mt-0.5">Generate and download structured CSV reports for facility audits, record-keeping, and clinical governance.</p>
           </div>
         </div>
       </div>
@@ -36,23 +36,23 @@ export const ReportsView: React.FC = () => {
                 <FileSpreadsheet className="w-4 h-4" />
               </span>
               <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-900 border border-blue-200">
-                Format CSV (DAPUD)
+                CSV Format (DAPUD)
               </span>
             </div>
 
-            <h3 className="font-bold text-slate-900 text-sm">Laporan Pemantauan Klinikal Harian (DAPUD)</h3>
+            <h3 className="font-bold text-slate-900 text-sm">Daily Clinical Monitoring Report (DAPUD)</h3>
             <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-              Merangkumi semua catatan syif (AM, PM, Night), tanda vital (BP, Nadi, Suhu, SpO2, Gula), status amaran (Red Alert), pematuhan ubat, tugasan kejururawatan harian (mandi, suapan, dressing, reposisi) dan nota pertukaran syif.
+              Includes all shift logs (Morning, Evening, Night), vital signs (BP, Pulse, Temp, SpO2, Blood Glucose), clinical alert status (Red Alert), medication compliance, daily nursing tasks (bath, feeding, dressing, repositioning), and shift handover notes.
             </p>
 
             <ul className="mt-4 space-y-1.5 text-xs text-slate-500">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                <span>Format lajur sepadan 100% dengan lembaran DAPUD Convee CC</span>
+                <span>Column format matches standard Convee Care Centre DAPUD sheets</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                <span>Termasuk nama jururawat dan masa tepat pemerhatian</span>
+                <span>Includes duty nurse name and precise observation timestamps</span>
               </li>
             </ul>
           </div>
@@ -62,7 +62,7 @@ export const ReportsView: React.FC = () => {
             className="w-full py-3 px-4 rounded-2xl bg-[#0B3B2C] hover:bg-[#07281E] text-white font-semibold text-xs flex items-center justify-center gap-2 transition-colors shadow-xs"
           >
             <Download className="w-4 h-4 text-[#C5E875]" />
-            <span>Muat Turun CSV Rekod Pemantauan</span>
+            <span>Download DAPUD Monitoring CSV</span>
           </button>
         </div>
 
@@ -74,23 +74,23 @@ export const ReportsView: React.FC = () => {
                 <FileText className="w-4 h-4" />
               </span>
               <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#EAF5DC] text-[#0B3B2C] border border-[#C5E875]">
-                Format CSV (Master Index)
+                CSV Format (Master Index)
               </span>
             </div>
 
-            <h3 className="font-bold text-slate-900 text-sm">Laporan Pendaftaran & Kemasukan Pesakit</h3>
+            <h3 className="font-bold text-slate-900 text-sm">Resident Registry & Admissions Report</h3>
             <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-              Senarai lengkap pesakit aktif dan discaj, zon (Lelaki / Perempuan), nombor katil, diagnosis klinikal, senarai ubat berjadual, hospital temujanji susulan (TCA), dan tempoh tinggal (*Length of Stay*).
+              Complete list of active and discharged residents, ward (Male / Female), bed number, clinical diagnoses, prescribed medications, follow-up hospital (TCA), and calculated Length of Stay (LOS).
             </p>
 
             <ul className="mt-4 space-y-1.5 text-xs text-slate-500">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                <span>Mengandungi pengiraan automatik bilangan hari tinggal (LOS)</span>
+                <span>Contains automated computation of active Length of Stay (LOS)</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                <span>Termasuk maklumat waris dan rekod pelepasan discaj</span>
+                <span>Includes next-of-kin emergency contact details and discharge history</span>
               </li>
             </ul>
           </div>
@@ -100,7 +100,7 @@ export const ReportsView: React.FC = () => {
             className="w-full py-3 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-colors shadow-xs"
           >
             <Download className="w-4 h-4" />
-            <span>Muat Turun CSV Profil & Kemasukan</span>
+            <span>Download Resident Registry CSV</span>
           </button>
         </div>
       </div>
@@ -111,9 +111,9 @@ export const ReportsView: React.FC = () => {
           <ShieldAlert className="w-4 h-4" />
         </div>
         <div>
-          <div className="font-bold text-slate-900 mb-0.5">Nota Privasi & Keselamatan Data Klinikal:</div>
+          <div className="font-bold text-slate-900 mb-0.5">Clinical Data Privacy & Governance Notice:</div>
           <p className="leading-relaxed text-slate-500">
-            Fail eksport mengandungi maklumat rawatan pesakit. Akses fail ini dihadkan mengikut peranan pengguna berdaftar dan setiap kali aktiviti eksport dimuat turun, rekod log audit akan dicatatkan secara automatik dalam pangkalan data.
+            Exported files contain protected resident healthcare information. Access to exported files is restricted according to authenticated role permissions, and every export action is recorded in the security audit trail.
           </p>
         </div>
       </div>

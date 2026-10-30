@@ -37,7 +37,7 @@ export const StaffManagement: React.FC = () => {
       setStaffList(res.staff);
       setError(null);
     } catch (err: any) {
-      setError(err.message || 'Gagal memuat senarai staf.');
+      setError(err.message || 'Failed to load staff list.');
     } finally {
       setLoading(false);
     }
@@ -56,13 +56,13 @@ export const StaffManagement: React.FC = () => {
         role: newRole,
         temporary_passcode: newPasscode,
       });
-      setSuccessMsg('Akaun staf berjaya ditambah.');
+      setSuccessMsg('Staff account created successfully.');
       setIsAddOpen(false);
       setNewUsername('');
       setNewFullName('');
       loadStaff();
     } catch (err: any) {
-      setError(err.message || 'Gagal menambah staf.');
+      setError(err.message || 'Failed to add staff account.');
     }
   }
 
@@ -71,10 +71,10 @@ export const StaffManagement: React.FC = () => {
     if (!resetTarget) return;
     try {
       await apiResetStaffPasscode(resetTarget.id, resetPasscodeVal);
-      setSuccessMsg(`Kata laluan bagi ${resetTarget.username} berjaya ditetapkan semula.`);
+      setSuccessMsg(`Passcode for ${resetTarget.username} has been reset successfully.`);
       setResetTarget(null);
     } catch (err: any) {
-      setError(err.message || 'Gagal menetapkan semula kata laluan.');
+      setError(err.message || 'Failed to reset passcode.');
     }
   }
 
@@ -84,7 +84,7 @@ export const StaffManagement: React.FC = () => {
       setSuccessMsg(res.message);
       loadStaff();
     } catch (err: any) {
-      setError(err.message || 'Gagal menukar status staf.');
+      setError(err.message || 'Failed to update staff status.');
     }
   }
 
@@ -97,8 +97,8 @@ export const StaffManagement: React.FC = () => {
             <UserCog className="w-5 h-5 stroke-[2.5]" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-slate-900 tracking-tight">Pengurusan Akaun Staf & Jururawat</h2>
-            <p className="text-xs text-slate-500 mt-0.5">Kawalan akses peranan Admin dan Staff Nurse serta pengurusan kata laluan.</p>
+            <h2 className="text-base font-bold text-slate-900 tracking-tight">Staff & Nurse Account Management</h2>
+            <p className="text-xs text-slate-500 mt-0.5">Role-based access control for Admins, Staff Nurses, and Caregivers.</p>
           </div>
         </div>
 
@@ -107,7 +107,7 @@ export const StaffManagement: React.FC = () => {
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#0B3B2C] hover:bg-[#07281E] text-white text-xs font-semibold shadow-xs transition-colors shrink-0"
         >
           <UserPlus className="w-4 h-4 text-[#C5E875]" />
-          <span>Tambah Staf Baru</span>
+          <span>Add New Staff</span>
         </button>
       </div>
 
@@ -134,12 +134,12 @@ export const StaffManagement: React.FC = () => {
         <table className="w-full text-left border-collapse text-xs">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-              <th className="py-3 px-4">Nama Pengguna</th>
-              <th className="py-3 px-4">Nama Penuh</th>
-              <th className="py-3 px-4">Peranan</th>
+              <th className="py-3 px-4">Username</th>
+              <th className="py-3 px-4">Full Name</th>
+              <th className="py-3 px-4">Role</th>
               <th className="py-3 px-4">Status</th>
-              <th className="py-3 px-4">Log Masuk Terakhir</th>
-              <th className="py-3 px-4 text-right">Tindakan</th>
+              <th className="py-3 px-4">Last Login</th>
+              <th className="py-3 px-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -161,7 +161,7 @@ export const StaffManagement: React.FC = () => {
                     {s.role === 'admin'
                       ? 'Admin'
                       : s.role === 'caregiver'
-                      ? 'Caregiver (Penjaga)'
+                      ? 'Caregiver'
                       : 'Staff Nurse'}
                   </span>
                 </td>
@@ -178,7 +178,7 @@ export const StaffManagement: React.FC = () => {
                     ) : (
                       <XCircle className="w-3 h-3" />
                     )}
-                    {s.status === 'active' ? 'Aktif' : 'Nyahaktif'}
+                    {s.status === 'active' ? 'Active' : 'Inactive'}
                   </span>
                 </td>
                 <td className="py-3 px-4 font-mono text-[11px] text-slate-500">
@@ -187,7 +187,7 @@ export const StaffManagement: React.FC = () => {
                         dateStyle: 'short',
                         timeStyle: 'short',
                       })
-                    : 'Belum log masuk'}
+                    : 'Never logged in'}
                 </td>
                 <td className="py-3 px-4 text-right">
                   <div className="inline-flex items-center gap-2">
@@ -207,7 +207,7 @@ export const StaffManagement: React.FC = () => {
                           : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
                       }`}
                     >
-                      {s.status === 'active' ? 'Nyahaktifkan' : 'Aktifkan'}
+                      {s.status === 'active' ? 'Deactivate' : 'Activate'}
                     </button>
                   </div>
                 </td>
@@ -222,7 +222,7 @@ export const StaffManagement: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-md w-full p-5 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="font-bold text-slate-900 text-sm">Tambah Akaun Staf Baru</h3>
+              <h3 className="font-bold text-slate-900 text-sm">Add New Staff Account</h3>
               <button onClick={() => setIsAddOpen(false)}>
                 <X className="w-4 h-4 text-slate-400" />
               </button>
@@ -230,11 +230,11 @@ export const StaffManagement: React.FC = () => {
 
             <form onSubmit={handleAddStaff} className="space-y-3 text-xs">
               <div className="space-y-1">
-                <label className="font-semibold text-slate-700">Nama Pengguna (Username) *</label>
+                <label className="font-semibold text-slate-700">Username *</label>
                 <input
                   type="text"
                   required
-                  placeholder="cth: nurse.farah"
+                  placeholder="e.g. nurse.farah"
                   value={newUsername}
                   onChange={(e) => setNewUsername(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200"
@@ -242,11 +242,11 @@ export const StaffManagement: React.FC = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="font-semibold text-slate-700">Nama Penuh *</label>
+                <label className="font-semibold text-slate-700">Full Name *</label>
                 <input
                   type="text"
                   required
-                  placeholder="cth: Farah Nabilah binti Razak"
+                  placeholder="e.g. Farah Nabilah binti Razak"
                   value={newFullName}
                   onChange={(e) => setNewFullName(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200"
@@ -254,20 +254,20 @@ export const StaffManagement: React.FC = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="font-semibold text-slate-700">Peranan *</label>
+                <label className="font-semibold text-slate-700">Role *</label>
                 <select
                   value={newRole}
                   onChange={(e) => setNewRole(e.target.value as any)}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
                 >
-                  <option value="staff_nurse">Staff Nurse (Jururawat)</option>
-                  <option value="caregiver">Caregiver (Penjaga Pesakit)</option>
-                  <option value="admin">Admin (Pentadbir)</option>
+                  <option value="staff_nurse">Staff Nurse</option>
+                  <option value="caregiver">Caregiver</option>
+                  <option value="admin">Administrator (Admin)</option>
                 </select>
               </div>
 
               <div className="space-y-1">
-                <label className="font-semibold text-slate-700">Kata Laluan Sementara (Passcode) *</label>
+                <label className="font-semibold text-slate-700">Temporary Passcode *</label>
                 <input
                   type="text"
                   required
@@ -283,13 +283,13 @@ export const StaffManagement: React.FC = () => {
                   onClick={() => setIsAddOpen(false)}
                   className="px-3 py-1.5 rounded-lg border border-slate-200 font-semibold text-slate-600"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-1.5 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold"
                 >
-                  Cipta Akaun
+                  Create Account
                 </button>
               </div>
             </form>
@@ -302,7 +302,7 @@ export const StaffManagement: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-sm w-full p-5 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="font-bold text-slate-900 text-sm">Tetapkan Semula Kata Laluan</h3>
+              <h3 className="font-bold text-slate-900 text-sm">Reset Passcode</h3>
               <button onClick={() => setResetTarget(null)}>
                 <X className="w-4 h-4 text-slate-400" />
               </button>
@@ -310,11 +310,11 @@ export const StaffManagement: React.FC = () => {
 
             <form onSubmit={handleResetPasscode} className="space-y-3 text-xs">
               <p className="text-slate-600">
-                Menetapkan semula passcode untuk <strong>{resetTarget.username}</strong> ({resetTarget.full_name}). Sesi semasa mereka akan dibatalkan serta-merta.
+                Resetting passcode for <strong>{resetTarget.username}</strong> ({resetTarget.full_name}). Their active session will be revoked immediately.
               </p>
 
               <div className="space-y-1">
-                <label className="font-semibold text-slate-700">Kata Laluan Baru *</label>
+                <label className="font-semibold text-slate-700">New Passcode *</label>
                 <input
                   type="text"
                   required
@@ -330,13 +330,13 @@ export const StaffManagement: React.FC = () => {
                   onClick={() => setResetTarget(null)}
                   className="px-3 py-1.5 rounded-lg border border-slate-200 font-semibold text-slate-600"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-1.5 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-semibold"
                 >
-                  Sahkan Reset
+                  Confirm Reset
                 </button>
               </div>
             </form>

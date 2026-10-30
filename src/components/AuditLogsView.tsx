@@ -40,8 +40,8 @@ export const AuditLogsView: React.FC = () => {
             <ShieldCheck className="w-5 h-5 stroke-[2.5]" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-slate-900 tracking-tight">Log Audit Keselamatan & Akauntabiliti</h2>
-            <p className="text-xs text-slate-500 mt-0.5">Rekod lengkap tindakan pengguna yang tidak boleh diubah (Immutable Audit Trail).</p>
+            <h2 className="text-base font-bold text-slate-900 tracking-tight">Security & Accountability Audit Log</h2>
+            <p className="text-xs text-slate-500 mt-0.5">Complete and immutable record of all clinical and user actions (Immutable Audit Trail).</p>
           </div>
         </div>
 
@@ -50,7 +50,7 @@ export const AuditLogsView: React.FC = () => {
             <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
             <input
               type="text"
-              placeholder="Cari log aktiviti..."
+              placeholder="Search activity logs..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 pr-3 py-2 text-xs rounded-2xl border border-emerald-950/10 focus:outline-hidden focus:ring-1 focus:ring-[#0B3B2C] bg-[#F8FAF8]"
@@ -61,7 +61,7 @@ export const AuditLogsView: React.FC = () => {
             onClick={loadLogs}
             disabled={loading}
             className="p-2.5 rounded-2xl border border-emerald-950/10 hover:bg-[#F2F6F2] text-slate-600 transition-colors"
-            title="Muat semula"
+            title="Reload"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-[#0B3B2C]' : ''}`} />
           </button>
@@ -73,18 +73,18 @@ export const AuditLogsView: React.FC = () => {
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-[#F8FAF8] border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
-                <th className="py-3.5 px-5">Masa & Tarikh</th>
-                <th className="py-3.5 px-5">Pengguna</th>
-                <th className="py-3.5 px-5">Peranan</th>
-                <th className="py-3.5 px-5">Tindakan</th>
-                <th className="py-3.5 px-5">Butiran Aktiviti</th>
+                <th className="py-3.5 px-5">Date & Time</th>
+                <th className="py-3.5 px-5">Staff / User</th>
+                <th className="py-3.5 px-5">Role</th>
+                <th className="py-3.5 px-5">Action</th>
+                <th className="py-3.5 px-5">Activity Details</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-slate-400 font-sans">
-                    Tiada log aktiviti dijumpai.
+                    No activity logs found.
                   </td>
                 </tr>
               ) : (

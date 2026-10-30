@@ -45,7 +45,7 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({
     setError(null);
 
     if (!fullName.trim() || !primaryDiagnosis.trim() || !age) {
-      setError('Sila lengkapkan nama pesakit, umur, dan diagnosis utama.');
+      setError('Please provide the resident full name, age, and primary diagnosis.');
       return;
     }
 
@@ -74,7 +74,7 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Gagal mendaftar pesakit.');
+      setError(err.message || 'Failed to register resident.');
     } finally {
       setLoading(false);
     }
@@ -102,8 +102,8 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({
               <UserPlus className="w-5 h-5 stroke-[2.5]" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900 tracking-tight">Pendaftaran Kemasukan Pesakit Baru</h2>
-              <p className="text-xs text-slate-500">Nombor MRN (cth: PT-007) akan dijana secara automatik.</p>
+              <h2 className="text-base font-bold text-slate-900 tracking-tight">New Resident Admission</h2>
+              <p className="text-xs text-slate-500">MRN number (e.g. PT-007) will be automatically generated.</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 rounded-2xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors">
@@ -119,14 +119,14 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({
             </div>
           )}
 
-          {/* Section 1: Profil Asas & Zon */}
+          {/* Section 1: Basic Profile & Ward */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="sm:col-span-2 space-y-1">
-              <label className="font-semibold text-slate-700">Nama Penuh Pesakit *</label>
+              <label className="font-semibold text-slate-700">Resident Full Name *</label>
               <input
                 type="text"
                 required
-                placeholder="cth: Zainal bin Abidin"
+                placeholder="e.g. Zainal bin Abidin"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-teal-600 focus:outline-hidden"
@@ -134,13 +134,13 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Umur *</label>
+              <label className="font-semibold text-slate-700">Age *</label>
               <input
                 type="number"
                 required
                 min={1}
                 max={120}
-                placeholder="cth: 68"
+                placeholder="e.g. 68"
                 value={age}
                 onChange={(e) => setAge(e.target.value ? Number(e.target.value) : '')}
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-teal-600 focus:outline-hidden"
@@ -150,19 +150,19 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Zon Rawatan *</label>
+              <label className="font-semibold text-slate-700">Care Ward *</label>
               <select
                 value={zone}
                 onChange={(e) => handleZoneChange(e.target.value as ZoneType)}
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
               >
-                <option value="Zon Lelaki">Zon Lelaki</option>
-                <option value="Zon Perempuan">Zon Perempuan</option>
+                <option value="Zon Lelaki">Male Ward</option>
+                <option value="Zon Perempuan">Female Ward</option>
               </select>
             </div>
 
             <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Nombor Katil / Bilik</label>
+              <label className="font-semibold text-slate-700">Bed / Room Number</label>
               <select
                 value={roomBed}
                 onChange={(e) => setRoomBed(e.target.value)}
@@ -174,7 +174,7 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({
                       const bedNum = String(i + 1).padStart(2, '0');
                       return (
                         <option key={`L-${bedNum}`} value={`Katil L-${bedNum}`}>
-                          Katil L-{bedNum}
+                          Bed L-{bedNum}
                         </option>
                       );
                     })}
@@ -185,7 +185,7 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({
                       const bedNum = String(i + 1).padStart(2, '0');
                       return (
                         <option key={`P-${bedNum}`} value={`Katil P-${bedNum}`}>
-                          Katil P-{bedNum}
+                          Bed P-{bedNum}
                         </option>
                       );
                     })}
@@ -195,25 +195,25 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Jantina</label>
+              <label className="font-semibold text-slate-700">Gender</label>
               <select
                 value={gender}
                 onChange={(e) => setGender(e.target.value as any)}
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
               >
-                <option value="Male">Lelaki</option>
-                <option value="Female">Perempuan</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
               </select>
             </div>
           </div>
 
-          {/* Section 2: Diagnosis & Perubatan */}
+          {/* Section 2: Diagnosis & Medications */}
           <div className="space-y-1">
-            <label className="font-semibold text-slate-700">Diagnosis Utama / Keadaan Penyakit *</label>
+            <label className="font-semibold text-slate-700">Primary Diagnosis / Medical Condition *</label>
             <textarea
               required
               rows={2}
-              placeholder="cth: Stroke Ischemic, Hipertensi, Diabetes Mellitus"
+              placeholder="e.g. Ischemic Stroke, Hypertension, Type 2 Diabetes"
               value={primaryDiagnosis}
               onChange={(e) => setPrimaryDiagnosis(e.target.value)}
               className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-teal-600 focus:outline-hidden"
@@ -221,10 +221,10 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({
           </div>
 
           <div className="space-y-1">
-            <label className="font-semibold text-slate-700">Senarai Ubat Berjadual & Dos</label>
+            <label className="font-semibold text-slate-700">Prescribed Scheduled Medications & Dosages</label>
             <textarea
               rows={2}
-              placeholder="cth: Amlodipine 10mg OD (Pagi), Simvastatin 20mg ON (Malam)"
+              placeholder="e.g. Amlodipine 10mg OD (Morning), Simvastatin 20mg ON (Night)"
               value={medications}
               onChange={(e) => setMedications(e.target.value)}
               className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-teal-600 focus:outline-hidden"
@@ -233,10 +233,10 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Fasiliti Temujanji Susulan (TCA)</label>
+              <label className="font-semibold text-slate-700">Follow-up Facility (TCA)</label>
               <input
                 type="text"
-                placeholder="cth: Hospital Canselor Tuanku Muhriz (HUKM)"
+                placeholder="e.g. Hospital Canselor Tuanku Muhriz (HUKM)"
                 value={followUpFacility}
                 onChange={(e) => setFollowUpFacility(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-teal-600 focus:outline-hidden"
@@ -244,26 +244,26 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Tahap Kebergantungan (Care Level)</label>
+              <label className="font-semibold text-slate-700">Care Level (Dependency Level)</label>
               <select
                 value={careLevel}
                 onChange={(e) => setCareLevel(e.target.value as CareLevel)}
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
               >
-                <option value="Independent">Independent (Berdikari)</option>
-                <option value="Partial Assist">Partial Assist (Bantuan Separa)</option>
-                <option value="Total Assist">Total Assist (Bantuan Penuh)</option>
+                <option value="Independent">Independent</option>
+                <option value="Partial Assist">Partial Assist</option>
+                <option value="Total Assist">Total Assist</option>
               </select>
             </div>
           </div>
 
-          {/* Section 3: Waris & Kemasukan */}
+          {/* Section 3: Next of Kin & Admission Details */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Nama Waris / Penjaga</label>
+              <label className="font-semibold text-slate-700">Next of Kin / Primary Contact</label>
               <input
                 type="text"
-                placeholder="cth: Siti Sarah (Anak)"
+                placeholder="e.g. Siti Sarah (Daughter)"
                 value={emergencyName}
                 onChange={(e) => setEmergencyName(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-teal-600 focus:outline-hidden"
@@ -271,10 +271,10 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="font-semibold text-slate-700">No. Telefon Waris</label>
+              <label className="font-semibold text-slate-700">Emergency Phone Number</label>
               <input
                 type="text"
-                placeholder="cth: 012-3456789"
+                placeholder="e.g. 012-3456789"
                 value={emergencyPhone}
                 onChange={(e) => setEmergencyPhone(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-teal-600 focus:outline-hidden"
@@ -284,7 +284,7 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Tarikh Kemasukan (DOA)</label>
+              <label className="font-semibold text-slate-700">Date of Admission (DOA)</label>
               <input
                 type="date"
                 value={admissionDate}
@@ -294,7 +294,7 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Masa Kemasukan</label>
+              <label className="font-semibold text-slate-700">Time of Admission</label>
               <input
                 type="time"
                 value={admissionTime}
@@ -312,7 +312,7 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({
               disabled={loading}
               className="px-4 py-2.5 rounded-2xl border border-slate-200 hover:bg-slate-100 font-semibold text-slate-700 transition-colors text-xs"
             >
-              Batal
+              Cancel
             </button>
             <button
               type="submit"
@@ -320,7 +320,7 @@ export const AdmissionModal: React.FC<AdmissionModalProps> = ({
               className="px-5 py-2.5 rounded-2xl bg-[#0B3B2C] hover:bg-[#07281E] text-white font-semibold transition-colors flex items-center gap-2 shadow-xs text-xs"
             >
               <Check className="w-4 h-4 text-[#C5E875]" />
-              <span>{loading ? 'Mendaftar...' : 'Sahkan & Daftar'}</span>
+              <span>{loading ? 'Admitting...' : 'Confirm & Admit'}</span>
             </button>
           </div>
         </form>

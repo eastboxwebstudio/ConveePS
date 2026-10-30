@@ -67,13 +67,13 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
 
   // Days of current week for calendar strip
   const weekDays = [
-    { day: 'Isn', date: '14', status: 'Selesai' },
-    { day: 'Sel', date: '15', status: 'Selesai' },
-    { day: 'Rab', date: '16', status: 'Selesai' },
-    { day: 'Kha', date: '17', status: 'Aktif' },
-    { day: 'Jum', date: '18', status: 'Dijadualkan' },
-    { day: 'Sab', date: '19', status: 'Dijadualkan' },
-    { day: 'Ahd', date: '20', status: 'Dijadualkan' },
+    { day: 'Mon', date: '14', status: 'Completed' },
+    { day: 'Tue', date: '15', status: 'Completed' },
+    { day: 'Wed', date: '16', status: 'Completed' },
+    { day: 'Thu', date: '17', status: 'Active' },
+    { day: 'Fri', date: '18', status: 'Scheduled' },
+    { day: 'Sat', date: '19', status: 'Scheduled' },
+    { day: 'Sun', date: '20', status: 'Scheduled' },
   ];
 
   // Acuity trend bars representing clinical activity dynamically driven by timeFilter
@@ -88,44 +88,44 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
     }
   > = {
     '7D': {
-      periodLabel: '7 Hari Lepas (Minggu Ini)',
+      periodLabel: 'Last 7 Days (This Week)',
       stabilityRate: '94.2%',
-      admissionCount: `${stats.new_admissions_7d} Baru`,
-      dischargeCount: `${stats.discharges_total} Selesai`,
+      admissionCount: `${stats.new_admissions_7d} New`,
+      dischargeCount: `${stats.discharges_total} Discharged`,
       bars: [
-        { label: 'Isn', total: 6, stable: 6, alert: 0 },
-        { label: 'Sel', total: 6, stable: 5, alert: 1 },
-        { label: 'Rab', total: 6, stable: 6, alert: 0 },
-        { label: 'Kha', total: 6, stable: 4, alert: 2, highlighted: true }, // Coral accent bar today
-        { label: 'Jum', total: 6, stable: 6, alert: 0 },
-        { label: 'Sab', total: 6, stable: 6, alert: 0 },
-        { label: 'Ahd', total: 6, stable: 6, alert: 0 },
+        { label: 'Mon', total: 6, stable: 6, alert: 0 },
+        { label: 'Tue', total: 6, stable: 5, alert: 1 },
+        { label: 'Wed', total: 6, stable: 6, alert: 0 },
+        { label: 'Thu', total: 6, stable: 4, alert: 2, highlighted: true }, // Coral accent bar today
+        { label: 'Fri', total: 6, stable: 6, alert: 0 },
+        { label: 'Sat', total: 6, stable: 6, alert: 0 },
+        { label: 'Sun', total: 6, stable: 6, alert: 0 },
       ],
     },
     '30D': {
-      periodLabel: '30 Hari Lepas (Bulan Semasa)',
+      periodLabel: 'Last 30 Days (Current Month)',
       stabilityRate: '96.5%',
-      admissionCount: `${stats.new_admissions_7d * 3 + 2} Baru`,
-      dischargeCount: `${stats.discharges_total + 5} Selesai`,
+      admissionCount: `${stats.new_admissions_7d * 3 + 2} New`,
+      dischargeCount: `${stats.discharges_total + 5} Discharged`,
       bars: [
-        { label: 'Mggu 1', total: 8, stable: 8, alert: 0 },
-        { label: 'Mggu 2', total: 10, stable: 9, alert: 1 },
-        { label: 'Mggu 3', total: 9, stable: 8, alert: 1 },
-        { label: 'Mggu 4', total: 11, stable: 9, alert: 2, highlighted: true },
+        { label: 'Wk 1', total: 8, stable: 8, alert: 0 },
+        { label: 'Wk 2', total: 10, stable: 9, alert: 1 },
+        { label: 'Wk 3', total: 9, stable: 8, alert: 1 },
+        { label: 'Wk 4', total: 11, stable: 9, alert: 2, highlighted: true },
       ],
     },
     'All': {
-      periodLabel: 'Semua Rekod Sejarah (Tahun 2026)',
+      periodLabel: 'All Historical Records (2026)',
       stabilityRate: '97.8%',
-      admissionCount: `${stats.total_active_patients + stats.discharges_total + 12} Kumulatif`,
-      dischargeCount: `${stats.discharges_total + 18} Rekod`,
+      admissionCount: `${stats.total_active_patients + stats.discharges_total + 12} Cumulative`,
+      dischargeCount: `${stats.discharges_total + 18} Records`,
       bars: [
-        { label: 'Mei', total: 12, stable: 11, alert: 1 },
+        { label: 'May', total: 12, stable: 11, alert: 1 },
         { label: 'Jun', total: 14, stable: 14, alert: 0 },
         { label: 'Jul', total: 15, stable: 13, alert: 2 },
-        { label: 'Ogo', total: 14, stable: 14, alert: 0 },
+        { label: 'Aug', total: 14, stable: 14, alert: 0 },
         { label: 'Sep', total: 16, stable: 15, alert: 1 },
-        { label: 'Okt', total: 18, stable: 16, alert: 2, highlighted: true },
+        { label: 'Oct', total: 18, stable: 16, alert: 2, highlighted: true },
       ],
     },
   };
@@ -158,7 +158,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
             <div className="flex items-center gap-2.5">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100 animate-pulse" />
               <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-                Prestasi Penjagaan Klinikal & Status Wad
+                Clinical Care Performance & Ward Status
               </h2>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EAF5DC] text-[#0B3B2C] border border-emerald-200/60 hidden sm:inline-flex items-center gap-1">
                 <Sparkles className="w-2.5 h-2.5" />
@@ -166,7 +166,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-1">
-              Paparan metrik dan carta tanda vital mengikut tempoh: <strong className="text-slate-800">{activePeriod.periodLabel}</strong>
+              Displaying clinical metrics and vital charts for: <strong className="text-slate-800">{activePeriod.periodLabel}</strong>
             </p>
           </div>
 
@@ -174,7 +174,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
             {/* Filter pills with clear interactive cues */}
             <div
               role="group"
-              aria-label="Pilihan tempoh masa"
+              aria-label="Time period selection"
               className="inline-flex rounded-2xl bg-[#F2F6F2] p-1 border border-emerald-950/10 text-xs font-semibold shadow-inner"
             >
               <button
@@ -189,7 +189,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                 }`}
               >
-                <span>Semua</span>
+                <span>All</span>
               </button>
               <button
                 type="button"
@@ -203,7 +203,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                 }`}
               >
-                <span>30 Hari</span>
+                <span>30 Days</span>
               </button>
               <button
                 type="button"
@@ -217,7 +217,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                 }`}
               >
-                <span>7 Hari</span>
+                <span>7 Days</span>
               </button>
             </div>
           </div>
@@ -228,20 +228,20 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
           {/* Metric 1: Total Active Patients */}
           <div className="sm:pr-4">
             <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
-              <span className="font-medium text-slate-600">Pesakit Dalam Jagaan</span>
+              <span className="font-medium text-slate-600">Active Residents</span>
               <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#EAF5DC] text-[#0B3B2C]">
                 <TrendingUp className="w-3 h-3" />
-                Aktif
+                Active
               </span>
             </div>
             <div className="flex items-baseline gap-2">
               <span className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight tabular-nums">
                 {stats.total_active_patients}
               </span>
-              <span className="text-xs font-semibold text-slate-400">/ 30 Katil</span>
+              <span className="text-xs font-semibold text-slate-400">/ 30 Beds</span>
             </div>
             <p className="text-xs text-slate-500 mt-2 font-medium">
-              Zon Lelaki: <strong className="text-blue-900">{stats.male_zone_count}</strong> · Zon Perempuan:{' '}
+              Male Ward: <strong className="text-blue-900">{stats.male_zone_count}</strong> · Female Ward:{' '}
               <strong className="text-rose-900">{stats.female_zone_count}</strong>
             </p>
           </div>
@@ -249,16 +249,16 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
           {/* Metric 2: Clinical Acuity Alerts */}
           <div className="sm:px-4">
             <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
-              <span className="font-medium text-slate-600">Indeks Amaran Klinikal</span>
+              <span className="font-medium text-slate-600">Clinical Alert Index</span>
               {stats.alerts.red_alert_today > 0 ? (
                 <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">
                   <Flame className="w-3 h-3" />
-                  Perhatian
+                  Attention
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#EAF5DC] text-[#0B3B2C]">
                   <CheckCircle2 className="w-3 h-3 text-emerald-700" />
-                  Stabil
+                  Stable
                 </span>
               )}
             </div>
@@ -273,7 +273,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
               <span className="text-xs font-semibold text-slate-400">Red Alert</span>
             </div>
             <p className="text-xs text-slate-500 mt-2 font-medium">
-              Tolak Ubat: <strong className="text-amber-800">{stats.alerts.refuse_meds_today}</strong> · Kurang Selera:{' '}
+              Refuse Meds: <strong className="text-amber-800">{stats.alerts.refuse_meds_today}</strong> · Poor Appetite:{' '}
               <strong className="text-slate-800">{stats.alerts.poor_appetite_today}</strong>
             </p>
           </div>
@@ -281,20 +281,20 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
           {/* Metric 3: Shift Checks Today / Selected Period */}
           <div className="sm:px-4">
             <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
-              <span className="font-medium text-slate-600">Catatan Semakan Syif</span>
+              <span className="font-medium text-slate-600">Shift Check Logs</span>
               <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#F2F6F2] text-slate-700">
                 <Clock className="w-3 h-3" />
-                {timeFilter === '7D' ? '7 Hari' : timeFilter === '30D' ? '30 Hari' : 'Kumulatif'}
+                {timeFilter === '7D' ? '7 Days' : timeFilter === '30D' ? '30 Days' : 'Cumulative'}
               </span>
             </div>
             <div className="flex items-baseline gap-2">
               <span className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight tabular-nums">
                 {displayedUpdates}
               </span>
-              <span className="text-xs font-semibold text-slate-400">rekod</span>
+              <span className="text-xs font-semibold text-slate-400">records</span>
             </div>
             <p className="text-xs text-slate-500 mt-2 font-medium">
-              Hari ini: <strong className="text-slate-800">{stats.updates_today.total}</strong> · AM: <strong className="text-slate-800">{stats.updates_today.am_shift}</strong> · Night:{' '}
+              Today: <strong className="text-slate-800">{stats.updates_today.total}</strong> · AM: <strong className="text-slate-800">{stats.updates_today.am_shift}</strong> · Night:{' '}
               <strong className="text-slate-800">{stats.updates_today.night_shift}</strong>
             </p>
           </div>
@@ -302,19 +302,19 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
           {/* Metric 4: Average Stay & Direct Discharge */}
           <div className="sm:pl-4">
             <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
-              <span className="font-medium text-slate-600">Purata Tempoh Rawatan</span>
+              <span className="font-medium text-slate-600">Average Stay Duration</span>
               <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#EAF5DC] text-[#0B3B2C]">
-                Pemulihan
+                Recovery
               </span>
             </div>
             <div className="flex items-baseline gap-1.5">
               <span className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight tabular-nums">
                 {stats.avg_length_of_stay}
               </span>
-              <span className="text-xs font-semibold text-slate-400">Hari</span>
+              <span className="text-xs font-semibold text-slate-400">Days</span>
             </div>
             <p className="text-xs text-slate-500 mt-2 font-medium">
-              Kemasukan: <strong className="text-slate-800">{displayedAdmissions}</strong> · Discaj:{' '}
+              Admissions: <strong className="text-slate-800">{displayedAdmissions}</strong> · Discharges:{' '}
               <strong className="text-emerald-800 font-bold">{activePeriod.dischargeCount}</strong>
             </p>
           </div>
@@ -329,10 +329,10 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
             <div className="flex items-center justify-between gap-4 mb-4">
               <div>
                 <h3 className="text-base font-bold text-slate-900 tracking-tight">
-                  Aktiviti & Tahap Kestabilan Pesakit
+                  Resident Activity & Clinical Stability
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Taburan status mengikut {activePeriod.periodLabel}
+                  Status distribution across {activePeriod.periodLabel}
                 </p>
               </div>
 
@@ -340,11 +340,11 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
               <div className="flex items-center gap-3 text-xs">
                 <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#0B3B2C]" />
-                  <span className="text-slate-600 font-medium text-[11px]">Stabil</span>
+                  <span className="text-slate-600 font-medium text-[11px]">Stable</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#FF6B4A]" />
-                  <span className="text-slate-600 font-medium text-[11px]">Perhatian / Red Alert</span>
+                  <span className="text-slate-600 font-medium text-[11px]">Attention / Red Alert</span>
                 </div>
               </div>
             </div>
@@ -369,7 +369,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
                       <div className="relative w-full flex items-end justify-center h-36">
                         {/* Hover Tooltip */}
                         <div className={`absolute -top-8 ${isSelected ? 'opacity-100 ring-2 ring-emerald-500' : 'opacity-0 group-hover:opacity-100'} transition-opacity bg-slate-900 text-white text-[10px] font-semibold px-2 py-1 rounded-md pointer-events-none whitespace-nowrap shadow-sm z-10`}>
-                          {d.label}: {d.total} Pesakit ({d.stable} Stabil{d.alert > 0 ? `, ${d.alert} Alert` : ''})
+                          {d.label}: {d.total} Residents ({d.stable} Stable{d.alert > 0 ? `, ${d.alert} Alert` : ''})
                         </div>
 
                         {/* Bar */}
@@ -402,7 +402,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
           <div className="mt-6 pt-5 border-t border-slate-100 grid grid-cols-3 gap-3 text-center">
             <div className="p-2.5 rounded-2xl bg-[#F8FAF8] transition-all">
               <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
-                Kadar Kestabilan
+                Stability Rate
               </span>
               <span className="text-base font-extrabold text-[#0B3B2C] mt-0.5 block">
                 {activePeriod.stabilityRate}
@@ -410,7 +410,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
             </div>
             <div className="p-2.5 rounded-2xl bg-[#F8FAF8] transition-all">
               <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
-                Kemasukan ({timeFilter === 'All' ? 'Semua' : timeFilter})
+                Admissions ({timeFilter === 'All' ? 'All' : timeFilter})
               </span>
               <span className="text-base font-extrabold text-slate-800 mt-0.5 block">
                 {activePeriod.admissionCount}
@@ -418,7 +418,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
             </div>
             <div className="p-2.5 rounded-2xl bg-[#F8FAF8] transition-all">
               <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
-                Discaj ({timeFilter === 'All' ? 'Semua' : timeFilter})
+                Discharges ({timeFilter === 'All' ? 'All' : timeFilter})
               </span>
               <span className="text-base font-extrabold text-emerald-800 mt-0.5 block">
                 {activePeriod.dischargeCount}
@@ -432,10 +432,10 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-slate-900 tracking-tight">
-                Jadual Syif & Tugasan Penjagaan
+                Shift Schedule & Nursing Tasks
               </h3>
               <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#EAF5DC] text-[#0B3B2C]">
-                Hari Ini
+                Today
               </span>
             </div>
 
@@ -467,38 +467,38 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-amber-600" />
-                    <span className="text-xs font-bold">Syif Morning (07:00 – 17:00 / 7:00am – 5:00pm)</span>
+                    <span className="text-xs font-bold">Morning Shift (07:00 – 17:00 / 7:00am – 5:00pm)</span>
                   </div>
                   <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-white/80 text-amber-900 border border-amber-300">
-                    Vital Sign Wajib
+                    Mandatory Vitals
                   </span>
                 </div>
                 <p className="text-[11px] text-amber-900/90 leading-tight">
-                  Semakan tanda vital pagi (BP, Nadi, Suhu, SpO2), sarapan dan ubat pagi untuk pesakit Zon L & P.
+                  Morning vital sign checks (BP, Pulse, Temp, SpO2), breakfast assistance, and morning medications for Male & Female wards.
                 </p>
                 <div className="mt-2 flex items-center justify-between text-[10px] text-amber-800/80 font-medium">
-                  <span>Jururawat: Shahdan / Hajar</span>
-                  <span className="font-semibold text-amber-950">Kapasiti: 30 Katil</span>
+                  <span>Nurse on Duty: Shahdan / Hajar</span>
+                  <span className="font-semibold text-amber-950">Capacity: 30 Beds</span>
                 </div>
               </div>
 
-              {/* Card 2: Soft Cyan/Sky (Petang Shift - ADL & Care) */}
+              {/* Card 2: Soft Cyan/Sky (Evening Shift - ADL & Care) */}
               <div className="p-3.5 rounded-2xl bg-[#E0F2FE] border border-[#BAE6FD]/60 text-sky-950 transition-all hover:shadow-2xs">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-sky-600" />
-                    <span className="text-xs font-bold">Syif Petang (14:00 – 00:00 / 2:00pm – 12:00am)</span>
+                    <span className="text-xs font-bold">Evening Shift (14:00 – 00:00 / 2:00pm – 12:00am)</span>
                   </div>
                   <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-white/80 text-sky-900 border border-sky-300">
-                    Jagaan & Ubat
+                    Care & Meds
                   </span>
                 </div>
                 <p className="text-[11px] text-sky-900/90 leading-tight">
-                  Pemberian ubat petang/malam, sesi pemulihan, makan malam, dressing luka, dan kebersihan diri pesakit.
+                  Evening medications, rehabilitation support, dinner service, wound dressing, and resident personal hygiene.
                 </p>
                 <div className="mt-2 flex items-center justify-between text-[10px] text-sky-800/80 font-medium">
-                  <span>Jururawat: Shahdan</span>
-                  <span className="font-semibold text-sky-950">Tugasan ADL & Rawatan</span>
+                  <span>Nurse on Duty: Shahdan</span>
+                  <span className="font-semibold text-sky-950">ADL & Nursing Tasks</span>
                 </div>
               </div>
 
@@ -507,18 +507,18 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-rose-600" />
-                    <span className="text-xs font-bold">Syif Night (21:00 – 07:00 / 9:00pm – 7:00am)</span>
+                    <span className="text-xs font-bold">Night Shift (21:00 – 07:00 / 9:00pm – 7:00am)</span>
                   </div>
                   <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-white/80 text-rose-900 border border-rose-300">
-                    Vital Sign Wajib
+                    Mandatory Vitals
                   </span>
                 </div>
                 <p className="text-[11px] text-rose-900/90 leading-tight">
-                  Pemeriksaan tanda vital waktu malam (22:00 & 04:00), pengawasan tidur/rehat, dan kesiapsiagaan kecemasan.
+                  Overnight vital monitoring (22:00 & 04:00), sleep/rest surveillance, and emergency clinical readiness.
                 </p>
                 <div className="mt-2 flex items-center justify-between text-[10px] text-rose-800/80 font-medium">
-                  <span>Jururawat: Hajar</span>
-                  <span className="font-semibold text-rose-950">Rondaan Berkala</span>
+                  <span>Nurse on Duty: Hajar</span>
+                  <span className="font-semibold text-rose-950">Periodic Ward Rounds</span>
                 </div>
               </div>
             </div>
@@ -536,7 +536,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
               className="cursor-pointer py-2.5 px-3 rounded-2xl bg-[#0B3B2C] hover:bg-[#07281E] active:scale-98 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-xs"
             >
               <ClipboardCheck className="w-4 h-4 text-[#C5E875]" />
-              <span>Rekod Vital (DAPUD)</span>
+              <span>Record Vitals (DAPUD)</span>
             </button>
 
             {onNavigateTab && (
@@ -545,7 +545,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
                 className="py-2.5 px-3 rounded-2xl bg-[#EAF5DC] hover:bg-[#d8eec0] text-[#0B3B2C] text-xs font-bold flex items-center justify-center gap-2 transition-colors border border-emerald-950/10 shadow-xs"
               >
                 <PackageCheck className="w-4 h-4 text-[#0B3B2C]" />
-                <span>Inventori & Ubatan</span>
+                <span>Inventory & Meds</span>
               </button>
             )}
           </div>
@@ -561,9 +561,9 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-900 tracking-tight">
-                Aktiviti Pemantauan Harian (DAPUD Clinical Log)
+                Daily Monitoring Activity (DAPUD Clinical Log)
               </h3>
-              <p className="text-xs text-slate-400">Catatan tanda vital terkini mengikut syif bertugas</p>
+              <p className="text-xs text-slate-400">Latest vital sign checks recorded across duty shifts</p>
             </div>
           </div>
 
@@ -571,7 +571,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
             onClick={onOpenMonitoring}
             className="text-xs font-bold text-[#0B3B2C] hover:text-emerald-950 flex items-center gap-1 group"
           >
-            <span>Semua Rekod</span>
+            <span>All Records</span>
             <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>
@@ -579,7 +579,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
         <div className="divide-y divide-slate-100">
           {stats.recent_activities.length === 0 ? (
             <div className="p-8 text-center text-xs text-slate-400">
-              Tiada rekod pemerhatian direkodkan setakat ini.
+              No monitoring records logged yet.
             </div>
           ) : (
             stats.recent_activities.map((rec) => {
@@ -608,7 +608,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
                         </span>
                         <span className="text-slate-300">·</span>
                         <span className="text-xs text-slate-600 font-medium">
-                          {rec.zone} · {rec.room_bed || 'Tanpa Katil'}
+                          {rec.zone} · {rec.room_bed || 'No Bed Assigned'}
                         </span>
                       </div>
 

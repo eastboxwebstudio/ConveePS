@@ -13,7 +13,7 @@ export const LoginView: React.FC = () => {
     e.preventDefault();
     setError(null);
     if (!username.trim() || !passcode) {
-      setError('Sila masukkan nama pengguna dan kata laluan.');
+      setError('Please enter username and passcode.');
       return;
     }
 
@@ -21,7 +21,7 @@ export const LoginView: React.FC = () => {
       setLoading(true);
       await login(username.trim(), passcode);
     } catch (err: any) {
-      setError(err.message || 'Log masuk gagal.');
+      setError(err.message || 'Login failed.');
     } finally {
       setLoading(false);
     }
@@ -56,8 +56,8 @@ export const LoginView: React.FC = () => {
         {/* Corporate Login Card */}
         <div className="bg-white rounded-3xl p-7 shadow-xs border border-emerald-950/5 space-y-5">
           <div className="pb-3 border-b border-slate-100">
-            <h2 className="text-sm font-bold text-slate-900">Log Masuk Kakitangan</h2>
-            <p className="text-xs text-slate-400 mt-0.5">Sahkan identiti anda untuk memulakan sesi syif bertugas.</p>
+            <h2 className="text-sm font-bold text-slate-900">Staff Sign In</h2>
+            <p className="text-xs text-slate-400 mt-0.5">Verify your credentials to begin your shift session.</p>
           </div>
 
           {error && (
@@ -69,13 +69,13 @@ export const LoginView: React.FC = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
             <div className="space-y-1">
-              <label className="font-bold text-slate-700">Nama Pengguna (Username)</label>
+              <label className="font-bold text-slate-700">Username</label>
               <div className="relative">
                 <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                 <input
                   type="text"
                   required
-                  placeholder="admin atau nurse.hajar"
+                  placeholder="admin or nurse.hajar"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full pl-9 pr-3 py-2.5 rounded-2xl border border-emerald-950/10 focus:ring-1 focus:ring-[#0B3B2C] focus:outline-hidden font-mono text-xs transition-colors bg-[#F8FAF8]"
@@ -84,7 +84,7 @@ export const LoginView: React.FC = () => {
             </div>
 
             <div className="space-y-1">
-              <label className="font-bold text-slate-700">Kata Laluan (Passcode)</label>
+              <label className="font-bold text-slate-700">Passcode</label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                 <input
@@ -103,14 +103,14 @@ export const LoginView: React.FC = () => {
               disabled={loading}
               className="w-full py-3 px-4 rounded-2xl bg-[#0B3B2C] hover:bg-[#07281E] text-white font-semibold text-xs transition-all shadow-xs mt-2 flex items-center justify-center gap-2"
             >
-              <span>{loading ? 'Mengesahkan Pengguna...' : 'Log Masuk Sesi'}</span>
+              <span>{loading ? 'Authenticating...' : 'Sign In'}</span>
               <ArrowRight className="w-4 h-4 text-[#C5E875]" />
             </button>
           </form>
 
           {/* Quick Demo Credentials */}
           <div className="pt-4 border-t border-slate-100">
-            <div className="text-[11px] font-semibold text-slate-500 mb-2">Pilihan Log Masuk Ujian Segera:</div>
+            <div className="text-[11px] font-semibold text-slate-500 mb-2">Quick Access Demo Profiles:</div>
             <div className="grid grid-cols-3 gap-1.5">
               <button
                 type="button"

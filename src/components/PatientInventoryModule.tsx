@@ -366,10 +366,10 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
               </span>
             </div>
             <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight mt-1">
-              Inventori Peralatan & Ubatan Pesakit
+              Resident Supplies & Medication Inventory
             </h1>
             <p className="text-xs sm:text-sm text-slate-500">
-              Modul semakan mingguan (Weekly Stock Check), pemantauan baki simpanan peribadi dan amaran restock pesakit.
+              Weekly stock check, personal supplies balance tracking, and restock alert management.
             </p>
           </div>
 
@@ -380,7 +380,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-[#0D382B] text-white text-xs font-semibold hover:bg-[#07241B] shadow-xs transition"
             >
               <ClipboardCheck className="w-4 h-4 text-[#C5E875]" />
-              Semakan Mingguan Baharu
+              New Weekly Check
             </button>
 
             <button
@@ -391,7 +391,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition"
             >
               <Plus className="w-4 h-4 text-emerald-700" />
-              Tambah Item
+              Add Item
             </button>
 
             {currentPatient && (
@@ -399,20 +399,20 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                 href={getExportInventoryCsvUrl(currentPatient.id)}
                 download
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition"
-                title="Muat Turun Format Spreadsheet CSV"
+                title="Download Spreadsheet CSV Format"
               >
                 <Download className="w-4 h-4 text-slate-500" />
-                Eksport CSV
+                Export CSV
               </a>
             )}
 
             <button
               onClick={() => window.print()}
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition"
-              title="Cetak Salinan Rasmi"
+              title="Print Official Copy"
             >
               <Printer className="w-4 h-4 text-slate-500" />
-              Cetak
+              Print
             </button>
           </div>
         </div>
@@ -420,9 +420,9 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
         {/* Global KPI Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-slate-100">
           <div className="bg-slate-50/80 rounded-2xl p-3 border border-slate-200/60">
-            <span className="text-[11px] font-medium text-slate-500">Jumlah Pesakit Dipantau</span>
+            <span className="text-[11px] font-medium text-slate-500">Monitored Residents</span>
             <div className="text-lg font-extrabold text-slate-900 mt-0.5">
-              {stats?.total_patients || patients.length} <span className="text-xs font-normal text-slate-500">penghuni</span>
+              {stats?.total_patients || patients.length} <span className="text-xs font-normal text-slate-500">residents</span>
             </div>
           </div>
 
@@ -434,27 +434,27 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-medium">Perlu Direstock (YES)</span>
+              <span className="text-[11px] font-medium">Restock Needed (YES)</span>
               {(stats?.total_restock_needed || 0) > 0 && (
                 <AlertTriangle className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
               )}
             </div>
             <div className="text-lg font-extrabold mt-0.5">
-              {stats?.total_restock_needed || 0} <span className="text-xs font-normal">item pusat</span>
+              {stats?.total_restock_needed || 0} <span className="text-xs font-normal">facility items</span>
             </div>
           </div>
 
           <div className="bg-blue-50/80 rounded-2xl p-3 border border-blue-200 text-blue-900">
-            <span className="text-[11px] font-medium">Barangan Peribadi Kurang</span>
+            <span className="text-[11px] font-medium">Personal Supplies Low</span>
             <div className="text-lg font-extrabold mt-0.5">
-              {stats?.personal_restock_needed || 0} <span className="text-xs font-normal">item</span>
+              {stats?.personal_restock_needed || 0} <span className="text-xs font-normal">items</span>
             </div>
           </div>
 
           <div className="bg-rose-50/80 rounded-2xl p-3 border border-rose-200 text-rose-900">
-            <span className="text-[11px] font-medium">Ubatan Perlu Top-up</span>
+            <span className="text-[11px] font-medium">Medications to Top-Up</span>
             <div className="text-lg font-extrabold mt-0.5">
-              {stats?.meds_restock_needed || 0} <span className="text-xs font-normal">preskripsi</span>
+              {stats?.meds_restock_needed || 0} <span className="text-xs font-normal">prescriptions</span>
             </div>
           </div>
         </div>
@@ -466,11 +466,11 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
             <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-              Pilihan Lembaran Pesakit (Sheets)
+              Resident Sheets Selector
             </span>
           </div>
           <span className="text-[11px] text-slate-400">
-            Klik nama pesakit untuk melihat senarai semakan mingguan
+            Click a resident name to inspect their weekly checklist & supplies
           </span>
         </div>
 
@@ -516,7 +516,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                   ({currentPatient.full_name.toUpperCase()})
                 </span>
                 <span className="text-xs font-bold text-slate-500">
-                  – PATIENT PERSONAL ITEMS – WEEKLY STOCK CHECK & RESTOCK UPDATE
+                  – RESIDENT PERSONAL ITEMS – WEEKLY STOCK CHECK & RESTOCK UPDATE
                 </span>
               </div>
 
@@ -525,10 +525,10 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                   MRN: <strong>{currentPatient.mrn}</strong>
                 </span>
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 font-medium text-slate-700">
-                  Katil: <strong>{currentPatient.room_bed || 'P-01'}</strong> ({currentPatient.zone})
+                  Bed: <strong>{currentPatient.room_bed || 'P-01'}</strong> ({currentPatient.zone === 'Zon Lelaki' ? 'Male Ward' : currentPatient.zone === 'Zon Perempuan' ? 'Female Ward' : currentPatient.zone})
                 </span>
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 font-medium text-slate-700">
-                  Jagaan: <strong>{currentPatient.care_level}</strong>
+                  Care Level: <strong>{currentPatient.care_level}</strong>
                 </span>
               </div>
             </div>
@@ -538,7 +538,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
               <div className="px-2.5 py-1 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center gap-1.5">
                 <UserCheck className="w-3.5 h-3.5 text-emerald-700" />
                 <div className="text-[11px] leading-tight">
-                  <span className="text-slate-400 block text-[9px] uppercase font-bold">Staf Semakan</span>
+                  <span className="text-slate-400 block text-[9px] uppercase font-bold">Supplies Staff</span>
                   <span className="font-extrabold text-emerald-950">
                     {latestCheck?.personal_staff_name || 'HAJAR'}
                   </span>
@@ -548,7 +548,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
               <div className="px-2.5 py-1 rounded-xl bg-blue-50 border border-blue-100 flex items-center gap-1.5">
                 <Pill className="w-3.5 h-3.5 text-blue-700" />
                 <div className="text-[11px] leading-tight">
-                  <span className="text-slate-400 block text-[9px] uppercase font-bold">Staf Ubatan</span>
+                  <span className="text-slate-400 block text-[9px] uppercase font-bold">Meds Staff</span>
                   <span className="font-extrabold text-blue-950">
                     {latestCheck?.med_staff_name || 'AISYAH'}
                   </span>
@@ -558,7 +558,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
               <div className="px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-slate-500" />
                 <div className="text-[11px] leading-tight">
-                  <span className="text-slate-400 block text-[9px] uppercase font-bold">Tarikh Semakan</span>
+                  <span className="text-slate-400 block text-[9px] uppercase font-bold">Audit Date</span>
                   <span className="font-bold text-slate-800">
                     {latestCheck?.check_date || '30 September 2026'}
                   </span>
@@ -573,9 +573,9 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>
-                  <strong>Perhatian:</strong> Pesakit ini memerlukan penambahan stok bagi{' '}
-                  <strong>{patientPersonalRestockCount} barangan peribadi</strong> dan{' '}
-                  <strong>{patientMedsRestockCount} ubatan harian</strong>.
+                  <strong>Attention:</strong> This resident requires stock replenishment for{' '}
+                  <strong>{patientPersonalRestockCount} personal care item(s)</strong> and{' '}
+                  <strong>{patientMedsRestockCount} medication item(s)</strong>.
                 </span>
               </div>
               <span className="px-2 py-0.5 rounded-full bg-amber-200 font-bold text-[11px] text-amber-900">
@@ -585,7 +585,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
           ) : (
             <div className="bg-emerald-50 px-5 py-2 border-b border-emerald-100 flex items-center gap-2 text-xs text-emerald-800">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>Semua barangan peribadi dan ubatan pesakit berada dalam keadaan mencukupi (Stock necessity: NO).</span>
+              <span>All personal care supplies and medications are well-stocked (Stock necessity: NO).</span>
             </div>
           )}
 
@@ -597,14 +597,14 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Cari item, baki atau catatan..."
+                placeholder="Search items, balance, or remarks..."
                 className="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-700"
               />
             </div>
 
             <div className="flex items-center gap-1.5 w-full sm:w-auto">
               <span className="text-[11px] text-slate-500 font-medium mr-1 flex items-center gap-1">
-                <Filter className="w-3.5 h-3.5" /> Tapis:
+                <Filter className="w-3.5 h-3.5" /> Filter:
               </span>
               <button
                 onClick={() => setFilterType('all')}
@@ -614,7 +614,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                     : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                Semua ({personalItems.length + medicationItems.length})
+                All ({personalItems.length + medicationItems.length})
               </button>
               <button
                 onClick={() => setFilterType('restock_only')}
@@ -624,7 +624,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                     : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                Perlu Restock ({totalPatientRestockCount})
+                Needs Restock ({totalPatientRestockCount})
               </button>
               <button
                 onClick={() => setFilterType('personal')}
@@ -634,7 +634,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                     : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                Barangan ({personalItems.length})
+                Personal Items ({personalItems.length})
               </button>
               <button
                 onClick={() => setFilterType('meds')}
@@ -644,14 +644,14 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                     : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                Ubatan ({medicationItems.length})
+                Medications ({medicationItems.length})
               </button>
             </div>
           </div>
 
           {/* Tables Container */}
           <div className="p-4 sm:p-5 space-y-6">
-            {/* SECTION 1: BARANGAN PERIBADI */}
+            {/* SECTION 1: PERSONAL CARE ITEMS */}
             {(filterType === 'all' || filterType === 'personal' || filterType === 'restock_only') && (
               <div>
                 <div className="flex items-center justify-between mb-2.5">
@@ -660,7 +660,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                       1
                     </span>
                     <h3 className="text-sm font-bold text-slate-800">
-                      Barangan Peribadi (Personal Care Items)
+                      Personal Care Supplies (Personal Care Items)
                     </h3>
                     <span className="text-xs text-slate-400">
                       (Diaper, Wet Tissue, Underpad, Gloves, Lotion, Milk, Toiletries, etc.)
@@ -674,7 +674,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                     }}
                     className="text-xs text-emerald-800 font-semibold hover:underline flex items-center gap-1"
                   >
-                    <Plus className="w-3.5 h-3.5" /> Tambah Barangan
+                    <Plus className="w-3.5 h-3.5" /> Add Item
                   </button>
                 </div>
 
@@ -690,14 +690,14 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                           <th className="px-3 py-2.5 w-28">Restock Date</th>
                           <th className="px-3 py-2.5 w-20">Qty</th>
                           <th className="px-4 py-2.5 min-w-[200px]">Remark</th>
-                          <th className="px-3 py-2.5 w-24 text-right">Tindakan</th>
+                          <th className="px-3 py-2.5 w-24 text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {displayedPersonal.length === 0 ? (
                           <tr>
                             <td colSpan={8} className="text-center py-6 text-slate-400 italic">
-                              Tiada barangan peribadi padan dengan penapis.
+                              No personal items match the current filter.
                             </td>
                           </tr>
                         ) : (
@@ -727,11 +727,11 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                                             setLightboxImage({
                                               url: item.image_url!,
                                               title: item.item_name,
-                                              subtitle: `Baki: ${item.stock_balance} · ${item.remark || 'Tiada catatan'}`,
+                                              subtitle: `Balance: ${item.stock_balance} · ${item.remark || 'No remark'}`,
                                             })
                                           }
                                           className="w-7 h-7 rounded-lg object-cover border border-slate-300 cursor-pointer shadow-2xs hover:scale-105 transition-transform"
-                                          title="Klik untuk lihat gambar rujukan"
+                                          title="Click to view reference image"
                                         />
                                         <button
                                           type="button"
@@ -740,7 +740,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                                             setActiveImageUploadUrl(item.image_url || null);
                                           }}
                                           className="absolute -top-1 -right-1 bg-white rounded-full p-0.5 border border-slate-300 shadow-2xs opacity-0 group-hover:opacity-100 transition-opacity"
-                                          title="Tukar gambar rujukan"
+                                          title="Change reference photo"
                                         >
                                           <Camera className="w-2.5 h-2.5 text-slate-700" />
                                         </button>
@@ -753,7 +753,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                                           setActiveImageUploadUrl(null);
                                         }}
                                         className="w-7 h-7 rounded-lg border border-dashed border-slate-300 hover:border-emerald-600 bg-slate-50 hover:bg-emerald-50 flex items-center justify-center text-slate-400 hover:text-emerald-700 transition-colors shrink-0"
-                                        title="Lampir gambar rujukan barang ini"
+                                        title="Attach reference photo for this item"
                                       >
                                         <Camera className="w-3.5 h-3.5" />
                                       </button>
@@ -773,7 +773,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                                   ) : (
                                     <span
                                       className={`font-semibold ${
-                                        item.stock_balance === '0' || item.stock_balance.toLowerCase().includes('tiada')
+                                        item.stock_balance === '0' || item.stock_balance.toLowerCase().includes('tiada') || item.stock_balance.toLowerCase().includes('none')
                                           ? 'text-rose-600 font-extrabold'
                                           : 'text-slate-800'
                                       }`}
@@ -787,7 +787,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                                 <td className="px-3 py-2 text-center">
                                   <button
                                     onClick={() => handleToggleNecessity(item)}
-                                    title="Klik untuk ubah YES / NO"
+                                    title="Click to toggle YES / NO"
                                     className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-black tracking-wide transition shadow-2xs ${
                                       isYes
                                         ? 'bg-[#1875D2] text-white hover:bg-blue-700 ring-2 ring-blue-300'
@@ -845,14 +845,14 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                                       <button
                                         onClick={() => handleSaveInline(item)}
                                         className="p-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
-                                        title="Simpan"
+                                        title="Save"
                                       >
                                         <Check className="w-3.5 h-3.5" />
                                       </button>
                                       <button
                                         onClick={() => setEditingItemId(null)}
                                         className="p-1 rounded-lg bg-slate-200 text-slate-600 hover:bg-slate-300"
-                                        title="Batal"
+                                        title="Cancel"
                                       >
                                         <X className="w-3.5 h-3.5" />
                                       </button>
@@ -868,7 +868,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                                           setIsRestockOpen(true);
                                         }}
                                         className="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-[10px] font-bold border border-emerald-200"
-                                        title="Rekod Restock Pantas"
+                                        title="Quick Restock Entry"
                                       >
                                         Restock
                                       </button>
@@ -881,7 +881,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                                           setInlineRestockQty(item.restock_qty || '');
                                         }}
                                         className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
-                                        title="Edit Baris"
+                                        title="Edit Row"
                                       >
                                         <Edit2 className="w-3.5 h-3.5" />
                                       </button>
@@ -899,7 +899,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
               </div>
             )}
 
-            {/* SECTION 2: UBATAN PESAKIT (15. Medicine) */}
+            {/* SECTION 2: MEDICATIONS (15. Medicine) */}
             {(filterType === 'all' || filterType === 'meds' || filterType === 'restock_only') && (
               <div className="pt-2">
                 <div className="flex items-center justify-between mb-2.5">
@@ -908,10 +908,10 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                       15
                     </span>
                     <h3 className="text-sm font-bold text-slate-800">
-                      Ubatan Pesakit (Prescription Medication)
+                      Resident Medications (Prescription Medication)
                     </h3>
                     <span className="text-xs px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 font-semibold border border-purple-100">
-                      Disemak oleh: {latestCheck?.med_staff_name || 'AISYAH'}
+                      Audited by: {latestCheck?.med_staff_name || 'AISYAH'}
                     </span>
                   </div>
 
@@ -922,7 +922,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                     }}
                     className="text-xs text-purple-800 font-semibold hover:underline flex items-center gap-1"
                   >
-                    <Plus className="w-3.5 h-3.5" /> Tambah Ubatan
+                    <Plus className="w-3.5 h-3.5" /> Add Medication
                   </button>
                 </div>
 
@@ -932,19 +932,19 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                       <thead className="bg-purple-50/80 text-purple-900 font-bold uppercase text-[10px] tracking-wider border-b border-purple-200/80">
                         <tr>
                           <th className="px-3 py-2.5 w-12 text-center">No</th>
-                          <th className="px-4 py-2.5 w-52">Nama Ubat (Drug Name)</th>
+                          <th className="px-4 py-2.5 w-52">Medication Name (Drug Name)</th>
                           <th className="px-4 py-2.5 w-32">Stock balance</th>
                           <th className="px-3 py-2.5 w-32 text-center">Stock necessity</th>
                           <th className="px-3 py-2.5 w-28">Restock Date</th>
                           <th className="px-4 py-2.5 min-w-[200px]">Remark / Status</th>
-                          <th className="px-3 py-2.5 w-24 text-right">Tindakan</th>
+                          <th className="px-3 py-2.5 w-24 text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-purple-100/60">
                         {displayedMedication.length === 0 ? (
                           <tr>
                             <td colSpan={7} className="text-center py-6 text-slate-400 italic">
-                              Tiada rekod ubatan padan dengan penapis.
+                              No medication records match the current filter.
                             </td>
                           </tr>
                         ) : (
@@ -974,11 +974,11 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                                             setLightboxImage({
                                               url: med.image_url!,
                                               title: med.item_name,
-                                              subtitle: `Baki: ${med.stock_balance} · ${med.remark || 'Tiada catatan'}`,
+                                              subtitle: `Balance: ${med.stock_balance} · ${med.remark || 'No remark'}`,
                                             })
                                           }
                                           className="w-7 h-7 rounded-lg object-cover border border-purple-300 cursor-pointer shadow-2xs hover:scale-105 transition-transform"
-                                          title="Klik untuk lihat gambar kotak ubat"
+                                          title="Click to view medication pack image"
                                         />
                                         <button
                                           type="button"
@@ -987,7 +987,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                                             setActiveImageUploadUrl(med.image_url || null);
                                           }}
                                           className="absolute -top-1 -right-1 bg-white rounded-full p-0.5 border border-slate-300 shadow-2xs opacity-0 group-hover:opacity-100 transition-opacity"
-                                          title="Tukar gambar kotak ubat"
+                                          title="Change medication pack image"
                                         >
                                           <Camera className="w-2.5 h-2.5 text-slate-700" />
                                         </button>
@@ -1000,7 +1000,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                                           setActiveImageUploadUrl(null);
                                         }}
                                         className="w-7 h-7 rounded-lg border border-dashed border-purple-200 hover:border-purple-600 bg-purple-50/50 hover:bg-purple-100 flex items-center justify-center text-purple-400 hover:text-purple-700 transition-colors shrink-0"
-                                        title="Lampirkan foto kotak ubat rujukan"
+                                        title="Attach medication pack photo"
                                       >
                                         <Camera className="w-3.5 h-3.5" />
                                       </button>
@@ -1032,7 +1032,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                                 <td className="px-3 py-2 text-center">
                                   <button
                                     onClick={() => handleToggleNecessity(med)}
-                                    title="Klik untuk ubah YES / NO"
+                                    title="Click to toggle YES / NO"
                                     className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-black tracking-wide transition shadow-2xs ${
                                       isYes
                                         ? 'bg-[#1875D2] text-white hover:bg-blue-700 ring-2 ring-blue-300'
@@ -1069,7 +1069,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                                     <div className="flex items-center gap-1.5">
                                       {isYes && (
                                         <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 text-[10px] font-bold">
-                                          Perlu topup
+                                          Top-up needed
                                         </span>
                                       )}
                                       <span className="text-slate-600">{med.remark || '-'}</span>
@@ -1083,14 +1083,14 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                                       <button
                                         onClick={() => handleSaveInline(med)}
                                         className="p-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
-                                        title="Simpan"
+                                        title="Save"
                                       >
                                         <Check className="w-3.5 h-3.5" />
                                       </button>
                                       <button
                                         onClick={() => setEditingItemId(null)}
                                         className="p-1 rounded-lg bg-slate-200 text-slate-600 hover:bg-slate-300"
-                                        title="Batal"
+                                        title="Cancel"
                                       >
                                         <X className="w-3.5 h-3.5" />
                                       </button>
@@ -1106,7 +1106,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                                           setIsRestockOpen(true);
                                         }}
                                         className="px-2 py-1 rounded-lg bg-purple-50 text-purple-800 hover:bg-purple-100 text-[10px] font-bold border border-purple-200"
-                                        title="Restock Ubat"
+                                        title="Restock Medication"
                                       >
                                         Restock
                                       </button>
@@ -1119,14 +1119,14 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                                           setInlineRestockQty(med.restock_qty || '');
                                         }}
                                         className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
-                                        title="Edit Baris"
+                                        title="Edit Row"
                                       >
                                         <Edit2 className="w-3.5 h-3.5" />
                                       </button>
                                       <button
                                         onClick={() => handleDeleteItem(med.id)}
                                         className="p-1 rounded-lg text-slate-300 hover:text-rose-600 hover:bg-rose-50"
-                                        title="Padam"
+                                        title="Delete"
                                       >
                                         <Trash2 className="w-3.5 h-3.5" />
                                       </button>
@@ -1149,7 +1149,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
               <div className="pt-4 border-t border-slate-100">
                 <div className="flex items-center gap-2 mb-2 text-xs font-bold text-slate-700">
                   <History className="w-4 h-4 text-slate-500" />
-                  <span>Sejarah Semakan Mingguan Pesakit</span>
+                  <span>Resident Weekly Audit History</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                   {checkHistory.map((chk) => (
@@ -1164,13 +1164,13 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                         </span>
                       </div>
                       <div className="text-[11px] text-slate-500">
-                        Staf Semakan: <strong>{chk.personal_staff_name}</strong>
+                        Auditor Staff: <strong>{chk.personal_staff_name}</strong>
                         {chk.med_staff_name ? ` & ${chk.med_staff_name}` : ''}
                       </div>
                       <div className="text-[11px]">
-                        Item perlu restock:{' '}
+                        Restock items needed:{' '}
                         <strong className={chk.total_restock_needed > 0 ? 'text-amber-700' : 'text-emerald-700'}>
-                          {chk.total_restock_needed} daripada {chk.total_items}
+                          {chk.total_restock_needed} of {chk.total_items}
                         </strong>
                       </div>
                       {chk.general_remarks && (
@@ -1198,7 +1198,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                 </div>
                 <div>
                   <h3 className="font-extrabold text-slate-900 text-sm">
-                    Kemas Kini Stok / Top-up
+                    Stock Top-Up / Restock Entry
                   </h3>
                   <p className="text-[11px] text-slate-400">
                     {selectedItemForRestock.item_name} ({currentPatient?.full_name})
@@ -1216,34 +1216,34 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
             <form onSubmit={handleSubmitRestock} className="space-y-4 pt-4 text-xs">
               <div>
                 <label className="block text-slate-700 font-bold mb-1">
-                  Kuantiti Ditambah / Diterima (Qty Restocked)
+                  Quantity Received / Restocked (Qty Restocked)
                 </label>
                 <input
                   type="text"
                   required
                   value={restockQtyInput}
                   onChange={(e) => setRestockQtyInput(e.target.value)}
-                  placeholder="Contoh: 5 paks, 30 biji, 2 botol"
+                  placeholder="e.g. 5 packs, 30 tablets, 2 bottles"
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-700"
                 />
               </div>
 
               <div>
                 <label className="block text-slate-700 font-bold mb-1">
-                  Baki Stok Baharu (New Stock Balance)
+                  New Stock Balance
                 </label>
                 <input
                   type="text"
                   value={restockNewBalanceInput}
                   onChange={(e) => setRestockNewBalanceInput(e.target.value)}
-                  placeholder={`Baki semasa: ${selectedItemForRestock.stock_balance}. Sila isi baki baharu.`}
+                  placeholder={`Current balance: ${selectedItemForRestock.stock_balance}. Enter new balance.`}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-700"
                 />
               </div>
 
               <div>
                 <label className="block text-slate-700 font-bold mb-1">
-                  Tarikh Restock
+                  Restock Date
                 </label>
                 <input
                   type="date"
@@ -1256,19 +1256,19 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
 
               <div>
                 <label className="block text-slate-700 font-bold mb-1">
-                  Catatan / Pembekal (Remark)
+                  Remarks / Supplier
                 </label>
                 <input
                   type="text"
                   value={restockRemarkInput}
                   onChange={(e) => setRestockRemarkInput(e.target.value)}
-                  placeholder="Contoh: Dihantar oleh anak pesakit / Dibeli di farmasi"
+                  placeholder="e.g. Delivered by family / Purchased from pharmacy"
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-700"
                 />
               </div>
 
               <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-900 text-[11px]">
-                Penambahan ini akan mengemas kini baki dan menetapkan status <strong>Stock necessity = NO</strong> (Mencukupi).
+                This restock entry will update the stock balance and reset <strong>Stock necessity = NO</strong> (Sufficient).
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2">
@@ -1277,13 +1277,13 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                   onClick={() => setIsRestockOpen(false)}
                   className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-2 rounded-xl bg-[#0D382B] text-white font-bold hover:bg-[#07241B]"
                 >
-                  Sahkan & Kemas Kini
+                  Confirm & Update
                 </button>
               </div>
             </form>
@@ -1302,10 +1302,10 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                 </div>
                 <div>
                   <h3 className="font-extrabold text-slate-900 text-sm">
-                    Tambah Item / Ubatan Baharu
+                    Add New Supply / Medication
                   </h3>
                   <p className="text-[11px] text-slate-400">
-                    Untuk penghuni: {currentPatient?.full_name}
+                    For resident: {currentPatient?.full_name}
                   </p>
                 </div>
               </div>
@@ -1320,7 +1320,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
             <form onSubmit={handleAddItem} className="space-y-4 pt-4 text-xs">
               <div>
                 <label className="block text-slate-700 font-bold mb-1">
-                  Kategori
+                  Category
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -1332,7 +1332,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                         : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                     }`}
                   >
-                    Barangan Peribadi
+                    Personal Care
                   </button>
                   <button
                     type="button"
@@ -1343,14 +1343,14 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                         : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                     }`}
                   >
-                    Ubatan (15. Medicine)
+                    Medication (15. Medicine)
                   </button>
                 </div>
               </div>
 
               <div>
                 <label className="block text-slate-700 font-bold mb-1">
-                  Nama Item / Ubat
+                  Item / Drug Name
                 </label>
                 <input
                   type="text"
@@ -1359,8 +1359,8 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                   onChange={(e) => setNewItemName(e.target.value)}
                   placeholder={
                     newItemCategory === 'personal'
-                      ? 'Contoh: Minyak Angin, Pelindung Tilam, Susu Khas'
-                      : 'Contoh: Metformin 500mg, Gabapentin 300mg'
+                      ? 'e.g. Medicated Oil, Mattress Protector, Ensure Milk'
+                      : 'e.g. Metformin 500mg, Gabapentin 300mg'
                   }
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-700"
                 />
@@ -1368,21 +1368,21 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
 
               <div>
                 <label className="block text-slate-700 font-bold mb-1">
-                  Baki Stok Semasa
+                  Current Stock Balance
                 </label>
                 <input
                   type="text"
                   required
                   value={newItemBalance}
                   onChange={(e) => setNewItemBalance(e.target.value)}
-                  placeholder="Contoh: 1 botol, 14 biji, Cukup, 0"
+                  placeholder="e.g. 1 bottle, 14 tablets, Sufficient, 0"
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-700"
                 />
               </div>
 
               <div>
                 <label className="block text-slate-700 font-bold mb-1">
-                  Perlu Restock Segera? (Stock Necessity)
+                  Replenishment Needed? (Stock Necessity)
                 </label>
                 <div className="flex items-center gap-3">
                   <label className="flex items-center gap-1.5 cursor-pointer">
@@ -1394,7 +1394,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                       onChange={() => setNewItemNecessity('NO')}
                       className="text-emerald-700"
                     />
-                    <span className="font-semibold text-slate-700">NO (Mencukupi)</span>
+                    <span className="font-semibold text-slate-700">NO (Sufficient)</span>
                   </label>
                   <label className="flex items-center gap-1.5 cursor-pointer">
                     <input
@@ -1405,20 +1405,20 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                       onChange={() => setNewItemNecessity('YES')}
                       className="text-blue-700"
                     />
-                    <span className="font-semibold text-blue-700">YES (Perlu Restock)</span>
+                    <span className="font-semibold text-blue-700">YES (Needs Restock)</span>
                   </label>
                 </div>
               </div>
 
               <div>
                 <label className="block text-slate-700 font-bold mb-1">
-                  Catatan / Keterangan
+                  Remarks / Instructions
                 </label>
                 <input
                   type="text"
                   value={newItemRemark}
                   onChange={(e) => setNewItemRemark(e.target.value)}
-                  placeholder="Contoh: Arahan dos, simpan di peti sejuk, dll."
+                  placeholder="e.g. Dosage instructions, store in refrigerator, etc."
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-700"
                 />
               </div>
@@ -1426,7 +1426,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
               {/* Image attachment in Add Item Modal */}
               <div>
                 <label className="block text-slate-700 font-bold mb-1">
-                  Lampiran Gambar Rujukan (Pilihan)
+                  Reference Photo Attachment (Optional)
                 </label>
                 <div className="flex items-center gap-2">
                   {newItemImage ? (
@@ -1436,19 +1436,19 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                         alt="Preview"
                         className="w-12 h-12 rounded-lg object-cover border border-slate-300"
                       />
-                      <span className="text-[11px] text-slate-600 flex-1">Gambar dipilih</span>
+                      <span className="text-[11px] text-slate-600 flex-1">Image selected</span>
                       <button
                         type="button"
                         onClick={() => setNewItemImage(null)}
                         className="text-rose-600 hover:text-rose-800 text-xs font-semibold px-2 py-1"
                       >
-                        Padam
+                        Remove
                       </button>
                     </div>
                   ) : (
                     <label className="flex items-center justify-center gap-2 w-full py-2.5 px-3 border border-dashed border-slate-300 hover:border-emerald-700 rounded-xl bg-slate-50 hover:bg-emerald-50/30 cursor-pointer transition-colors text-slate-600">
                       <Camera className="w-4 h-4 text-slate-500" />
-                      <span className="font-semibold text-xs">Pilih Foto Kotak / Barangan</span>
+                      <span className="font-semibold text-xs">Select Product / Box Photo</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -1473,13 +1473,13 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                   onClick={() => setIsAddItemOpen(false)}
                   className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-2 rounded-xl bg-[#0D382B] text-white font-bold hover:bg-[#07241B]"
                 >
-                  Tambah Item
+                  Add Item
                 </button>
               </div>
             </form>
@@ -1499,10 +1499,10 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                 </div>
                 <div>
                   <h3 className="font-extrabold text-slate-900 text-base">
-                    Rekod Semakan Mingguan Inventori (Weekly Stock Check)
+                    Weekly Stock Check Audit
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Penghuni: <strong>{currentPatient.full_name}</strong> ({currentPatient.mrn} - {currentPatient.room_bed})
+                    Resident: <strong>{currentPatient.full_name}</strong> ({currentPatient.mrn} - {currentPatient.room_bed})
                   </p>
                 </div>
               </div>
@@ -1521,7 +1521,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 bg-emerald-50/50 rounded-2xl border border-emerald-100">
                   <div>
                     <label className="block text-slate-700 font-bold mb-1">
-                      Tarikh Semakan
+                      Audit Date
                     </label>
                     <input
                       type="date"
@@ -1534,7 +1534,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
 
                   <div>
                     <label className="block text-slate-700 font-bold mb-1">
-                      Jururawat Barangan Peribadi
+                      Personal Supplies Nurse
                     </label>
                     <input
                       type="text"
@@ -1548,7 +1548,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
 
                   <div>
                     <label className="block text-slate-700 font-bold mb-1">
-                      Jururawat Ubatan (15. Medicine)
+                      Medication Nurse (15. Medicine)
                     </label>
                     <input
                       type="text"
@@ -1567,11 +1567,11 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                     <thead className="bg-slate-100 text-slate-700 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200">
                       <tr>
                         <th className="px-3 py-2 w-12 text-center">No</th>
-                        <th className="px-4 py-2 w-48">Item / Ubatan</th>
-                        <th className="px-4 py-2 w-32">Baki Semasa</th>
-                        <th className="px-3 py-2 w-28 text-center">Perlu Restock?</th>
-                        <th className="px-3 py-2 w-28">Tarikh Restock</th>
-                        <th className="px-4 py-2">Catatan</th>
+                        <th className="px-4 py-2 w-48">Item / Medication</th>
+                        <th className="px-4 py-2 w-32">Current Balance</th>
+                        <th className="px-3 py-2 w-28 text-center">Needs Restock?</th>
+                        <th className="px-3 py-2 w-28">Restock Date</th>
+                        <th className="px-4 py-2">Remark</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -1649,7 +1649,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                               <input
                                 type="text"
                                 value={item.remark}
-                                placeholder="Catatan tambahan"
+                                placeholder="Additional notes"
                                 onChange={(e) => {
                                   const val = e.target.value;
                                   setWeeklyCheckDraftItems((prev) =>
@@ -1670,13 +1670,13 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
 
                 <div>
                   <label className="block text-slate-700 font-bold mb-1">
-                    Ulasan / Makluman Keseluruhan Semakan Mingguan
+                    Overall Audit Notes & Family Communication
                   </label>
                   <textarea
                     rows={2}
                     value={weeklyGeneralRemarks}
                     onChange={(e) => setWeeklyGeneralRemarks(e.target.value)}
-                    placeholder="Contoh: Keluarga telah dimaklumkan untuk membawa bekalan Diaper dan Ubatan harian sebelum hujung minggu."
+                    placeholder="e.g. Next of kin notified to replenish Diapers and regular medications by this weekend."
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-700"
                   />
                 </div>
@@ -1685,8 +1685,8 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
               {/* Modal Footer */}
               <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/70 rounded-b-3xl">
                 <span className="text-xs text-slate-500">
-                  Jumlah item:{' '}
-                  <strong>{weeklyCheckDraftItems.length}</strong> (Perlu restock:{' '}
+                  Total items:{' '}
+                  <strong>{weeklyCheckDraftItems.length}</strong> (Needs restock:{' '}
                   <strong className="text-blue-700">
                     {weeklyCheckDraftItems.filter((i) => i.stock_necessity === 'YES').length}
                   </strong>
@@ -1698,13 +1698,13 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                     onClick={() => setIsWeeklyCheckModalOpen(false)}
                     className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-100"
                   >
-                    Batal
+                    Cancel
                   </button>
                   <button
                     type="submit"
                     className="px-5 py-2 rounded-xl bg-[#0D382B] text-white font-bold hover:bg-[#07241B] shadow-xs"
                   >
-                    Simpan Semakan Mingguan
+                    Save Weekly Audit
                   </button>
                 </div>
               </div>
@@ -1723,7 +1723,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                   <Camera className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-sm">Gambar Rujukan Item</h3>
+                  <h3 className="font-bold text-slate-900 text-sm">Item Reference Image</h3>
                   <p className="text-[11px] text-slate-500 line-clamp-1">{itemForImageUpload.item_name}</p>
                 </div>
               </div>
@@ -1737,7 +1737,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
 
             <div className="pt-4 space-y-3 text-xs">
               <p className="text-slate-600 leading-relaxed text-[11px]">
-                Kepilkan foto produk, jenama, atau kotak ubat bagi memudahkan staf lain mengenal pasti barangan pesakit:
+                Attach a photo of the product, packaging, or medication box to help duty staff identify the item quickly:
               </p>
 
               {activeImageUploadUrl ? (
@@ -1745,13 +1745,13 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                   <div className="relative border border-slate-200 rounded-2xl overflow-hidden bg-slate-50 max-h-56 flex items-center justify-center">
                     <img
                       src={activeImageUploadUrl}
-                      alt="Pratonton"
+                      alt="Preview"
                       className="max-h-48 w-full object-contain"
                     />
                   </div>
                   <div className="flex justify-between items-center pt-1">
                     <label className="text-[11px] text-emerald-700 hover:underline cursor-pointer font-bold">
-                      Tukar foto lain
+                      Change photo
                       <input
                         type="file"
                         accept="image/*"
@@ -1779,7 +1779,7 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                       onClick={() => setActiveImageUploadUrl(null)}
                       className="text-[11px] text-rose-600 hover:underline font-semibold"
                     >
-                      Padam foto
+                      Delete photo
                     </button>
                   </div>
                 </div>
@@ -1788,8 +1788,8 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                   <div className="w-10 h-10 rounded-full bg-white shadow-2xs flex items-center justify-center text-slate-500">
                     <Camera className="w-5 h-5" />
                   </div>
-                  <span className="font-bold text-xs text-slate-800">Muat Naik Gambar / Foto Kamera (R2 Cloud)</span>
-                  <span className="text-[10px] text-slate-400">Format imej PNG, JPG (Muat naik automatik ke Cloudflare R2)</span>
+                  <span className="font-bold text-xs text-slate-800">Upload Image / Camera Photo</span>
+                  <span className="text-[10px] text-slate-400">PNG, JPG format (Automatic secure cloud storage)</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -1820,14 +1820,14 @@ export const PatientInventoryModule: React.FC<PatientInventoryModuleProps> = ({
                   onClick={() => setItemForImageUpload(null)}
                   className="px-3.5 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleSaveItemImage}
                   className="px-4 py-2 rounded-xl bg-[#0D382B] text-white hover:bg-[#07241B] font-bold shadow-xs"
                 >
-                  Simpan Gambar
+                  Save Photo
                 </button>
               </div>
             </div>

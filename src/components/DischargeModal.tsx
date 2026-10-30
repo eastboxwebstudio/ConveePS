@@ -28,7 +28,7 @@ export const DischargeModal: React.FC<DischargeModalProps> = ({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!patient?.admission_id) {
-      setError('Tiada rekod kemasukan aktif dijumpai untuk pesakit ini.');
+      setError('No active admission record found for this resident.');
       return;
     }
 
@@ -36,7 +36,7 @@ export const DischargeModal: React.FC<DischargeModalProps> = ({
       setLoading(true);
       await apiDischargePatient(patient.admission_id, {
         discharge_destination: destination,
-        discharge_summary: summary || 'Pesakit discaj dalam keadaan stabil mengikut prosedur fasiliti.',
+        discharge_summary: summary || 'Resident discharged in stable condition in accordance with facility protocols.',
         emergency_contact_notified: contactNotified,
         medications_given: medsGiven || patient.prescribed_medications || '',
       });
@@ -44,7 +44,7 @@ export const DischargeModal: React.FC<DischargeModalProps> = ({
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Gagal memproses discaj.');
+      setError(err.message || 'Failed to process discharge.');
     } finally {
       setLoading(false);
     }
@@ -60,8 +60,8 @@ export const DischargeModal: React.FC<DischargeModalProps> = ({
               <LogOut className="w-5 h-5 stroke-[2.5]" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900 tracking-tight">Proses Pelepasan / Discaj Pesakit</h2>
-              <p className="text-xs text-slate-500 mt-0.5">Pelepasan rasmi terus daripada Convee Care Centre.</p>
+              <h2 className="text-base font-bold text-slate-900 tracking-tight">Resident Discharge Process</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Official discharge from Convee Care Centre.</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 rounded-2xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors">
@@ -85,7 +85,9 @@ export const DischargeModal: React.FC<DischargeModalProps> = ({
                 <span className="text-slate-300 mx-2">•</span>
                 <span className="font-bold text-slate-900">{patient.full_name}</span>
               </div>
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#EAF5DC] text-[#0B3B2C]">{patient.zone}</span>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#EAF5DC] text-[#0B3B2C]">
+                {patient.zone === 'Zon Lelaki' ? 'Male Ward' : patient.zone === 'Zon Perempuan' ? 'Female Ward' : patient.zone}
+              </span>
             </div>
             <div className="text-slate-500 text-[11px] mt-1.5">
               Diagnosis: {patient.primary_diagnosis}
@@ -93,24 +95,24 @@ export const DischargeModal: React.FC<DischargeModalProps> = ({
           </div>
 
           <div className="space-y-1">
-            <label className="font-bold text-slate-700">Destinasi Discaj *</label>
+            <label className="font-bold text-slate-700">Discharge Destination *</label>
             <select
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-2xl border border-emerald-950/10 bg-[#F8FAF8] text-slate-800 font-semibold focus:outline-hidden"
             >
-              <option value="Rumah (Jagaan Keluarga)">Rumah (Jagaan Keluarga)</option>
-              <option value="Hospital Rujukan / Pakar">Hospital Rujukan / Pakar</option>
-              <option value="Pusat Pemulihan / Jagaan Lain">Pusat Pemulihan / Jagaan Lain</option>
-              <option value="Meninggal Dunia (BOD)">Meninggal Dunia</option>
+              <option value="Home (Family Care)">Home (Family Care)</option>
+              <option value="Hospital / Specialist Referral">Hospital / Specialist Referral</option>
+              <option value="Rehabilitation / Other Care Center">Rehabilitation / Other Care Center</option>
+              <option value="Deceased (BOD)">Deceased</option>
             </select>
           </div>
 
           <div className="space-y-1">
-            <label className="font-bold text-slate-700">Ringkasan Pelepasan & Keadaan Semasa</label>
+            <label className="font-bold text-slate-700">Discharge Summary & Current Condition</label>
             <textarea
               rows={3}
-              placeholder="cth: Pesakit discaj dalam keadaan stabil, luka kering, ubat dibekalkan untuk 2 minggu."
+              placeholder="e.g. Resident discharged in stable condition, wound dry, medications provided for 2 weeks."
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-2xl border border-emerald-950/10 focus:ring-1 focus:ring-[#0B3B2C] focus:outline-hidden bg-[#F8FAF8]"
@@ -118,10 +120,10 @@ export const DischargeModal: React.FC<DischargeModalProps> = ({
           </div>
 
           <div className="space-y-1">
-            <label className="font-bold text-slate-700">Bekalan Ubat Yang Diserahkan</label>
+            <label className="font-bold text-slate-700">Supplied Take-Home Medications</label>
             <input
               type="text"
-              placeholder="cth: Amlodipine 10mg (14 hari), Aspirin 100mg (14 hari)"
+              placeholder="e.g. Amlodipine 10mg (14 days), Aspirin 100mg (14 days)"
               value={medsGiven}
               onChange={(e) => setMedsGiven(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-2xl border border-emerald-950/10 focus:ring-1 focus:ring-[#0B3B2C] focus:outline-hidden bg-[#F8FAF8]"
@@ -136,7 +138,7 @@ export const DischargeModal: React.FC<DischargeModalProps> = ({
                 onChange={(e) => setContactNotified(e.target.checked)}
                 className="w-4 h-4 rounded text-emerald-800 border-slate-300 focus:ring-emerald-700"
               />
-              <span className="font-medium text-xs">Waris / Penjaga telah dimaklumkan mengenai discaj ini.</span>
+              <span className="font-medium text-xs">Next of Kin / Primary Caregiver has been notified of this discharge.</span>
             </label>
           </div>
 
@@ -148,7 +150,7 @@ export const DischargeModal: React.FC<DischargeModalProps> = ({
               disabled={loading}
               className="px-4 py-2.5 rounded-2xl border border-slate-200 hover:bg-slate-100 font-semibold text-slate-700 transition-colors text-xs"
             >
-              Batal
+              Cancel
             </button>
             <button
               type="submit"
@@ -156,7 +158,7 @@ export const DischargeModal: React.FC<DischargeModalProps> = ({
               className="px-5 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-semibold transition-colors flex items-center gap-2 shadow-xs text-xs"
             >
               <Check className="w-4 h-4" />
-              <span>{loading ? 'Memproses...' : 'Sahkan & Lengkapkan Discaj'}</span>
+              <span>{loading ? 'Processing...' : 'Confirm & Complete Discharge'}</span>
             </button>
           </div>
         </form>

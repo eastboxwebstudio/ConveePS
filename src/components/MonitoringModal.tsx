@@ -43,47 +43,47 @@ const BEHAVIOR_OPTIONS: { id: PatientBehaviorCategory; label: string; desc: stri
   {
     id: 'Calm & Cooperative',
     label: 'Calm & Cooperative',
-    desc: 'Tenang, mematuhi arahan, bekerjasama dengan jururawat/penjaga',
+    desc: 'Calm, compliant with instructions, cooperative with nursing staff',
   },
   {
     id: 'Agitated / Restless',
     label: 'Agitated / Restless',
-    desc: 'Gelisah, mundar-mandir, tidak boleh duduk diam',
+    desc: 'Restless, pacing, unable to sit still',
   },
   {
     id: 'Verbal Aggression',
     label: 'Verbal Aggression',
-    desc: 'Menjerit, memarahi staf, menggunakan perkataan kasar',
+    desc: 'Shouting, scolding staff, harsh words',
   },
   {
     id: 'Repetitive Behaviour',
     label: 'Repetitive Behaviour',
-    desc: 'Mengulang soalan atau perbuatan yang sama berulang kali',
+    desc: 'Repeating the same question or action repeatedly',
   },
   {
     id: 'Wandering',
     label: 'Wandering',
-    desc: 'Berjalan tanpa hala tuju atau cuba keluar dari kawasan',
+    desc: 'Aimless walking or attempting to exit the premises',
   },
   {
     id: 'Anxious / Fearful',
     label: 'Anxious / Fearful',
-    desc: 'Kelihatan bimbang, ketakutan, kerap mencari kepastian',
+    desc: 'Appears worried, fearful, constantly seeking reassurance',
   },
   {
     id: 'Confused / Disoriented',
     label: 'Confused / Disoriented',
-    desc: 'Keliru, sukar mengenali orang, tempat atau masa',
+    desc: 'Confused, difficulty recognizing people, places, or time',
   },
   {
     id: 'Attention-Seeking',
     label: 'Attention-Seeking',
-    desc: 'Kerap memanggil staf atau meminta bantuan berulang kali',
+    desc: 'Frequently calling staff or repeatedly requesting assistance',
   },
   {
     id: 'Emotionally Distressed',
     label: 'Emotionally Distressed',
-    desc: 'Menangis, rasa sedih, perubahan mood yang mendadak',
+    desc: 'Crying, sad mood, sudden emotional mood swings',
   },
 ];
 
@@ -323,7 +323,7 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Gagal menyimpan rekod pemantauan.');
+      setError(err.message || 'Failed to save monitoring record.');
     } finally {
       setLoading(false);
     }
@@ -348,10 +348,10 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
               </div>
               <div>
                 <h2 className="text-base font-bold text-slate-900 tracking-tight">
-                  Catatan Pemantauan Syif (DAPUD)
+                  Shift Clinical Monitoring (DAPUD)
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Pemeriksaan keadaan pesakit, tanda vital, tiub, diet, dan tingkah laku.
+                  Resident observations, vital signs, tubes, diet, and behavior assessment.
                 </p>
               </div>
             </div>
@@ -375,20 +375,20 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
             {/* Patient & Shift selection */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#F8FAF8] p-3.5 rounded-2xl border border-emerald-950/10">
               <div className="space-y-1">
-                <label className="font-bold text-slate-800">Pilih Pesakit *</label>
+                <label className="font-bold text-slate-800">Select Resident *</label>
                 <select
                   value={patientId}
                   onChange={(e) => setPatientId(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-medium"
                 >
                   {availablePatients.length === 0 ? (
-                    <option value="">Tiada pesakit aktif dijumpai</option>
+                    <option value="">No active residents found</option>
                   ) : (
                     availablePatients.map((p) => {
                       if (!p) return null;
                       return (
                         <option key={p.id} value={p.id}>
-                          {p.mrn} — {p.full_name} ({p.room_bed || p.zone || 'Wad'})
+                          {p.mrn} — {p.full_name} ({p.room_bed || p.zone || 'Ward'})
                         </option>
                       );
                     })
@@ -397,27 +397,27 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-slate-800">Syif Bertugas *</label>
+                <label className="font-bold text-slate-800">Duty Shift *</label>
                 <select
                   value={shift}
                   onChange={(e) => setShift(e.target.value as ShiftType)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-medium"
                 >
-                  <option value="Morning (7:00am-5:00pm)">Morning (7:00am - 5:00pm) [Vital Sign Wajib]</option>
-                  <option value="Petang (2:00pm-12:00am)">Petang (2:00pm - 12:00am) [Jagaan & Ubat]</option>
-                  <option value="Night (9:00pm-7:00am)">Night (9:00pm - 7:00am) [Vital Sign Wajib]</option>
+                  <option value="Morning (7:00am-5:00pm)">Morning (7:00am - 5:00pm) [Mandatory Vitals]</option>
+                  <option value="Petang (2:00pm-12:00am)">Evening (2:00pm - 12:00am) [ADL & Care]</option>
+                  <option value="Night (9:00pm-7:00am)">Night (9:00pm - 7:00am) [Mandatory Vitals]</option>
                 </select>
               </div>
             </div>
 
-            {/* 1. Patient Condition Section (Directly from Page 1 Table) */}
+            {/* 1. Patient Condition Section */}
             <div className="p-4 rounded-2xl border border-emerald-950/10 bg-white space-y-3">
               <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                 <span className="font-bold text-slate-900 flex items-center gap-1.5 text-xs">
                   <Activity className="w-4 h-4 text-emerald-700" />
-                  A. Status Keadaan Pesakit (Patient Condition)
+                  A. Resident Clinical Condition
                 </span>
-                <span className="text-[10px] text-slate-400 font-medium">Berdasarkan Syif: {String(shift || 'Morning').split(' ')[0]}</span>
+                <span className="text-[10px] text-slate-400 font-medium">Duty Shift: {String(shift || 'Morning').split(' ')[0]}</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -486,7 +486,7 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
 
                 {/* Appetite */}
                 <div className="space-y-1 bg-slate-50/70 p-2.5 rounded-xl border border-slate-100">
-                  <label className="font-bold text-slate-700">Appetite (Selera)</label>
+                  <label className="font-bold text-slate-700">Appetite</label>
                   <div className="grid grid-cols-3 gap-1 pt-0.5">
                     {(['Good', 'Fair', 'Poor'] as PatientConditionAppetite[]).map((val) => (
                       <button
@@ -507,7 +507,7 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
 
                 {/* Urine */}
                 <div className="space-y-1 bg-slate-50/70 p-2.5 rounded-xl border border-slate-100">
-                  <label className="font-bold text-slate-700">Urine (Kencing)</label>
+                  <label className="font-bold text-slate-700">Urine Output</label>
                   <div className="grid grid-cols-3 gap-1 pt-0.5">
                     {(['Normal', 'Reduced', 'Other'] as PatientConditionUrine[]).map((val) => (
                       <button
@@ -527,7 +527,7 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
                   {urine === 'Other' && (
                     <input
                       type="text"
-                      placeholder="Nyatakan, cth: Berdarah / CBD Catheter..."
+                      placeholder="Specify, e.g. Hematuria / Foley Catheter..."
                       value={urineOther}
                       onChange={(e) => setUrineOther(e.target.value)}
                       className="mt-1 w-full px-2 py-1 rounded-lg border border-slate-200 bg-white text-[11px]"
@@ -537,7 +537,7 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
 
                 {/* Bowel */}
                 <div className="space-y-1 bg-slate-50/70 p-2.5 rounded-xl border border-slate-100">
-                  <label className="font-bold text-slate-700">Bowel (Najis / Perkumuhan)</label>
+                  <label className="font-bold text-slate-700">Bowel Movement</label>
                   <div className="grid grid-cols-3 gap-1 pt-0.5">
                     {(['Normal', 'No bowel motion', 'Diarrhoea'] as PatientConditionBowel[]).map((val) => (
                       <button
@@ -558,26 +558,26 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
               </div>
             </div>
 
-            {/* 2. Diet Plan & 3. Tube Management (Page 1) */}
+            {/* 2. Diet Plan & 3. Tube Management */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {/* Diet Plan */}
               <div className="p-3.5 rounded-2xl border border-emerald-950/10 bg-white space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-slate-900 flex items-center gap-1.5">
                     <Utensils className="w-4 h-4 text-amber-600" />
-                    Diet Plan (Pelan Pemakanan)
+                    Diet Plan
                   </span>
-                  <span className="text-[10px] text-slate-400">Boleh isi sendiri</span>
+                  <span className="text-[10px] text-slate-400">Custom entry enabled</span>
                 </div>
 
                 <div className="flex flex-wrap gap-1.5">
                   {[
-                    'Makan bubur',
-                    'Soft diet',
                     'Normal diet',
-                    'Pureed (Kisar)',
+                    'Soft diet',
+                    'Porridge / Puree',
                     'Diabetic diet',
-                    'NPO (Puasa)',
+                    'Low Salt',
+                    'NPO (Fasting)',
                   ].map((preset) => (
                     <button
                       type="button"
@@ -596,7 +596,7 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
 
                 <input
                   type="text"
-                  placeholder="Contoh: Makan bubur ayam lumat / Soft diet..."
+                  placeholder="e.g. Chicken porridge / soft diet..."
                   value={dietPlan}
                   onChange={(e) => setDietPlan(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 font-medium text-xs focus:border-emerald-600 focus:outline-hidden"
@@ -608,7 +608,7 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-slate-900 flex items-center gap-1.5">
                     <Activity className="w-4 h-4 text-blue-600" />
-                    Pengurusan Tiub (Tube Management)
+                    Tube Management
                   </span>
                   <span className="text-[10px] text-slate-400">NGT / CBD</span>
                 </div>
@@ -621,7 +621,7 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
                       onChange={(e) => setHasNgt(e.target.checked)}
                       className="w-4 h-4 rounded text-[#0B3B2C] focus:ring-[#0B3B2C]"
                     />
-                    <span>NGT tube (Tiub Hidung/Perut)</span>
+                    <span>NGT Tube (Nasogastric / Feeding)</span>
                   </label>
 
                   <label className="flex items-center gap-2 cursor-pointer font-semibold text-slate-700">
@@ -631,7 +631,7 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
                       onChange={(e) => setHasCbd(e.target.checked)}
                       className="w-4 h-4 rounded text-[#0B3B2C] focus:ring-[#0B3B2C]"
                     />
-                    <span>CBD Tube (Kencing)</span>
+                    <span>CBD / Foley Catheter (Urinary)</span>
                   </label>
                 </div>
 
@@ -657,8 +657,7 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
                         value={tubeSize}
                         onChange={(e) => setTubeSize(e.target.value)}
                         className="w-full px-2 py-1 rounded-lg border border-slate-200 bg-white text-[11px]"
-                      >
-                      </input>
+                      />
                     </div>
 
                     <div>
@@ -675,15 +674,15 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
               </div>
             </div>
 
-            {/* 4. Patient Behavior Section (Page 2 - Specific 9 Ticked Options) */}
+            {/* 4. Patient Behavior Section */}
             <div className="p-4 rounded-2xl border border-emerald-950/10 bg-white space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-slate-900 flex items-center gap-1.5">
                   <UserCheck className="w-4 h-4 text-amber-600" />
-                  Tingkah Laku Pesakit (Patient Behavior)
+                  Resident Behavior Assessment
                 </span>
                 <span className="text-[10px] text-slate-500 font-medium">
-                  {Array.isArray(selectedBehaviors) ? selectedBehaviors.length : 0} dipilih (Pilihan Bertanda Dokumen)
+                  {Array.isArray(selectedBehaviors) ? selectedBehaviors.length : 0} selected
                 </span>
               </div>
 
@@ -729,18 +728,18 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
               <div className="flex items-center justify-between">
                 <span className="font-bold text-slate-800 flex items-center gap-1.5">
                   <HeartPulse className="w-4 h-4 text-rose-600" />
-                  Tanda-tanda Vital (Vital Signs)
+                  Vital Signs
                 </span>
                 {isVitalShift && (
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200">
-                    Wajib 2x Sehari (AM & Night)
+                    Mandatory 2x Daily (AM & Night)
                   </span>
                 )}
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Tekanan Darah (BP)</label>
+                  <label className="font-semibold text-slate-700">Blood Pressure (BP)</label>
                   <input
                     type="text"
                     placeholder="120/80"
@@ -751,7 +750,7 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Kadar Nadi (bpm)</label>
+                  <label className="font-semibold text-slate-700">Pulse Rate (bpm)</label>
                   <input
                     type="number"
                     placeholder="76"
@@ -762,7 +761,7 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Suhu (°C)</label>
+                  <label className="font-semibold text-slate-700">Temperature (°C)</label>
                   <input
                     type="number"
                     step="0.1"
@@ -787,10 +786,10 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Glukosa Darah (mmol/L)</label>
+                  <label className="font-semibold text-slate-700">Blood Glucose (mmol/L)</label>
                   <input
                     type="text"
-                    placeholder="5.6 atau -"
+                    placeholder="5.6 or -"
                     value={bloodSugar}
                     onChange={(e) => setBloodSugar(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 font-mono text-xs"
@@ -798,23 +797,23 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Skala Sakit (0-10)</label>
+                  <label className="font-semibold text-slate-700">Pain Scale (0-10)</label>
                   <select
                     value={painLevel}
                     onChange={(e) => setPainLevel(Number(e.target.value))}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white"
                   >
-                    <option value={0}>0 — Tiada Sakit (No Pain)</option>
-                    <option value={1}>1 — Sakit Ringan</option>
-                    <option value={2}>2 — Sakit Ringan</option>
-                    <option value={3}>3 — Sakit Sederhana</option>
-                    <option value={4}>4 — Sakit Mengganggu</option>
-                    <option value={5}>5 — Sakit Kuat</option>
+                    <option value={0}>0 — No Pain</option>
+                    <option value={1}>1 — Mild Pain</option>
+                    <option value={2}>2 — Mild Pain</option>
+                    <option value={3}>3 — Moderate Pain</option>
+                    <option value={4}>4 — Distressing Pain</option>
+                    <option value={5}>5 — Severe Pain</option>
                   </select>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Status Klinikal</label>
+                  <label className="font-semibold text-slate-700">Clinical Status</label>
                   <select
                     value={clinicalStatus}
                     onChange={(e) => setClinicalStatus(e.target.value as ClinicalStatus)}
@@ -824,8 +823,8 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
                         : 'border-emerald-300 bg-emerald-50 text-emerald-800'
                     }`}
                   >
-                    <option value="Stable">Stable (Stabil)</option>
-                    <option value="Red Alert">Red Alert (Perhatian Rapi)</option>
+                    <option value="Stable">Stable</option>
+                    <option value="Red Alert">Red Alert (Close Attention)</option>
                   </select>
                 </div>
               </div>
@@ -834,7 +833,7 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
             {/* ADL Care & Medication */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div className="space-y-1">
-                <label className="font-semibold text-slate-700">Pengambilan Ubat</label>
+                <label className="font-semibold text-slate-700">Medication Administration</label>
                 <select
                   value={medication}
                   onChange={(e) => setMedication(e.target.value as any)}
@@ -842,47 +841,47 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
                     medication === 'REFUSE' ? 'border-rose-300 bg-rose-50 text-rose-700 font-bold' : 'border-slate-200 bg-white'
                   }`}
                 >
-                  <option value="SERVED">SERVED (Telah Diberi)</option>
-                  <option value="REFUSE">REFUSE (Menolak Ubat)</option>
-                  <option value="WITHHELD">WITHHELD (Ditangguhkan)</option>
+                  <option value="SERVED">SERVED (Administered)</option>
+                  <option value="REFUSE">REFUSE (Refused Medication)</option>
+                  <option value="WITHHELD">WITHHELD (Withheld)</option>
                 </select>
               </div>
 
               <div className="space-y-1">
-                <label className="font-semibold text-slate-700">Kebersihan Diri / Mandi</label>
+                <label className="font-semibold text-slate-700">Personal Hygiene / Bath</label>
                 <select
                   value={hygiene}
                   onChange={(e) => setHygiene(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white"
                 >
-                  <option value="Normal shower">Mandi Biasa (Shower)</option>
-                  <option value="Sponging and bed bath">Lap Badan di Katil (Sponging)</option>
+                  <option value="Normal shower">Normal shower</option>
+                  <option value="Sponging and bed bath">Bed bath & sponging</option>
                 </select>
               </div>
 
               <div className="space-y-1">
-                <label className="font-semibold text-slate-700">Rawatan Luka / Dressing</label>
+                <label className="font-semibold text-slate-700">Wound Care / Dressing</label>
                 <select
                   value={wound}
                   onChange={(e) => setWound(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white"
                 >
-                  <option value="N/A">N/A (Tiada Luka)</option>
-                  <option value="DONE">DONE (Selesai Dibalut)</option>
+                  <option value="N/A">N/A (No Wound)</option>
+                  <option value="DONE">DONE (Dressing Completed)</option>
                 </select>
               </div>
             </div>
 
-            {/* 5. Attachment Picture & 6. Nurse Advice Column (Page 3) */}
+            {/* 5. Attachment Picture & 6. Nurse Advice Column */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {/* Attachment Picture (Contoh: Gambar Luka) */}
+              {/* Attachment Picture */}
               <div className="p-3.5 rounded-2xl border border-emerald-950/10 bg-white space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-slate-900 flex items-center gap-1.5">
                     <Camera className="w-4 h-4 text-emerald-700" />
-                    Kepilkan Gambar (Attachment Picture)
+                    Attach Clinical Photo
                   </span>
-                  <span className="text-[10px] text-slate-400">Contoh: Gambar luka / kulit</span>
+                  <span className="text-[10px] text-slate-400">e.g. Wound or skin condition</span>
                 </div>
 
                 <input
@@ -897,25 +896,25 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
                   <div className="relative border border-slate-200 rounded-xl p-2 bg-slate-50 flex items-center gap-3">
                     <img
                       src={attachmentImage}
-                      alt="Lampiran luka/keadaan pesakit"
+                      alt="Clinical photo attachment"
                       className="w-16 h-16 object-cover rounded-lg border border-slate-200 cursor-pointer hover:opacity-90"
                       onClick={() => setPreviewEnlargedImage(attachmentImage)}
                     />
                     <div className="flex-1">
-                      <p className="font-semibold text-slate-800 text-[11px]">Gambar berjaya dimuat naik</p>
+                      <p className="font-semibold text-slate-800 text-[11px]">Photo uploaded successfully</p>
                       <button
                         type="button"
                         onClick={() => setPreviewEnlargedImage(attachmentImage)}
                         className="text-[10px] text-emerald-700 hover:underline font-medium block"
                       >
-                        Klik untuk lihat saiz penuh
+                        Click to view full size
                       </button>
                     </div>
                     <button
                       type="button"
                       onClick={() => setAttachmentImage(null)}
                       className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-                      title="Padam gambar"
+                      title="Remove photo"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -930,10 +929,10 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
                       <Camera className="w-4 h-4" />
                     </div>
                     <span className="font-semibold text-[11px] text-slate-800">
-                      Klik untuk ambil foto / muat naik fail
+                      Click to take photo / upload file
                     </span>
                     <span className="text-[10px] text-slate-400">
-                      Format PNG, JPG atau WEBP (Maks 5MB)
+                      PNG, JPG or WEBP (Max 5MB)
                     </span>
                   </button>
                 )}
@@ -944,15 +943,15 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-slate-900 flex items-center gap-1.5">
                     <FileText className="w-4 h-4 text-emerald-700" />
-                    Nurse Advice Column (Nasihat Jururawat)
+                    Nurse Advice Column
                   </span>
                   <span className="text-[10px] text-emerald-700 font-bold bg-[#EAF5DC] px-2 py-0.5 rounded-full">
-                    Arahan Syif Seterusnya
+                    Next Shift Notes
                   </span>
                 </div>
                 <textarea
                   rows={3}
-                  placeholder="Catatan nasihat khusus jururawat untuk syif seterusnya / doktor (cth: pantau BP setiap 2 jam, dressing luka dibersihkan dengan Normal Saline esok pagi)..."
+                  placeholder="Specific nursing instructions for the next shift / attending doctor (e.g. Monitor BP every 2 hours, clean wound with Normal Saline tomorrow morning)..."
                   value={nurseAdvice}
                   onChange={(e) => setNurseAdvice(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-emerald-700 focus:outline-hidden text-xs"
@@ -962,10 +961,10 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
 
             {/* General Handover Notes */}
             <div className="space-y-1">
-              <label className="font-semibold text-slate-700">Laporan Kejururawatan Umum (Handover Notes)</label>
+              <label className="font-semibold text-slate-700">General Handover Notes</label>
               <textarea
                 rows={2}
-                placeholder="Catatan perkembangan harian pesakit, interaksi keluarga atau doktor pelawat..."
+                placeholder="Daily clinical progress, resident interaction, family communications..."
                 value={nursingReport}
                 onChange={(e) => setNursingReport(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-emerald-700 focus:outline-hidden"
@@ -980,7 +979,7 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
                 disabled={loading}
                 className="px-4 py-2.5 rounded-2xl border border-slate-200 hover:bg-slate-100 font-semibold text-slate-700 transition-colors text-xs"
               >
-                Batal
+                Cancel
               </button>
               <button
                 type="submit"
@@ -988,7 +987,7 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
                 className="px-5 py-2.5 rounded-2xl bg-[#0B3B2C] hover:bg-[#07281E] text-white font-semibold transition-colors flex items-center gap-2 shadow-xs text-xs"
               >
                 <Check className="w-4 h-4 text-[#C5E875]" />
-                <span>{loading ? 'Menyimpan...' : 'Simpan Rekod Syif DAPUD'}</span>
+                <span>{loading ? 'Saving...' : 'Save DAPUD Shift Record'}</span>
               </button>
             </div>
           </form>
@@ -1000,7 +999,7 @@ export const MonitoringModal: React.FC<MonitoringModalProps> = ({
         <div className="fixed inset-0 z-[110] bg-black/80 flex items-center justify-center p-4 backdrop-blur-xs">
           <div className="relative max-w-2xl w-full bg-white rounded-3xl p-4 overflow-hidden shadow-2xl">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <span className="font-bold text-slate-900 text-sm">Lampiran Gambar Pemerhatian Pesakit</span>
+              <span className="font-bold text-slate-900 text-sm">Resident Clinical Observation Photo</span>
               <button
                 type="button"
                 onClick={() => setPreviewEnlargedImage(null)}
