@@ -37,8 +37,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function logout() {
-    await apiLogout();
-    setUser(null);
+    try {
+      await apiLogout();
+    } catch (err) {
+      console.warn('Logout error:', err);
+    } finally {
+      setUser(null);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('convee_token');
+      }
+    }
   }
 
   async function refreshUser() {

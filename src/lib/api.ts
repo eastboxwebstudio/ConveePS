@@ -58,9 +58,17 @@ export async function apiLogin(username: string, passcode: string) {
 export async function apiLogout() {
   try {
     await request('/auth/logout', { method: 'POST' });
+  } catch (err) {
+    console.warn('apiLogout request error (proceeding with local cleanup):', err);
   } finally {
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem('convee_token');
+    }
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.clear();
+    }
+    if (typeof document !== 'undefined') {
+      document.cookie = 'convee_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
     }
   }
 }

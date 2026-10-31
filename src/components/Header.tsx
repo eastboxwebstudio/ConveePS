@@ -143,11 +143,17 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
           <button
-            onClick={() => logout()}
+            type="button"
+            onClick={async (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              await logout();
+            }}
             title="Log out of system"
-            className="p-1 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors ml-1"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors ml-1 cursor-pointer"
+            aria-label="Log out"
           >
-            <LogOut className="w-3.5 h-3.5" />
+            <LogOut className="w-4 h-4" />
           </button>
         </div>
 

@@ -16,6 +16,7 @@ import {
   Bed,
   PackageCheck,
   CalendarDays,
+  LogOut,
 } from 'lucide-react';
 
 export type NavTab =
@@ -44,7 +45,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const isAdmin = user?.role === 'admin';
 
   const clinicalItems: { id: NavTab; label: string; icon: React.FC<{ className?: string }> }[] = [
@@ -192,6 +193,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
               Male Ward: 3/6 · Female Ward: 3/6
             </p>
           </div>
+
+          <button
+            type="button"
+            onClick={async () => {
+              onClose();
+              await logout();
+            }}
+            className="w-full mt-2.5 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50/80 border border-rose-200/70 transition-all cursor-pointer"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Sign Out</span>
+          </button>
         </div>
       </aside>
     </>

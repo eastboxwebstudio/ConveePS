@@ -92,6 +92,29 @@ export default {
     }
 
     // ==========================================
+    // 1.1 AUTH: LOGOUT
+    // ==========================================
+    if (url.pathname === '/api/auth/logout' && request.method === 'POST') {
+      try {
+        const cookie = request.headers.get('cookie') || '';
+        const token = (cookie.match(/convee_session=([^;]+)/) || [])[1] || request.headers.get('authorization')?.replace(/^Bearer\s+/, '');
+        if (token) {
+          await env.DB.prepare('DELETE FROM sessions WHERE token = ?').bind(token).run().catch(() => {});
+        }
+      } catch {}
+
+      const headers = new Headers({
+        'Content-Type': 'application/json',
+        'Set-Cookie': 'convee_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT',
+      });
+
+      return new Response(JSON.stringify({ success: true, message: 'Logged out successfully.' }), {
+        status: 200,
+        headers,
+      });
+    }
+
+    // ==========================================
     // 2. AUTH: ME
     // ==========================================
     if (url.pathname === '/api/auth/me') {

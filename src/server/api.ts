@@ -119,15 +119,30 @@ apiRouter.post('/auth/login', async (req: Request, res: Response) => {
   }
 });
 
-apiRouter.post('/auth/logout', requireAuth, async (req: Request, res: Response) => {
-  if (req.sessionToken) {
-    await run('DELETE FROM sessions WHERE token = ?', [req.sessionToken]);
+apiRouter.post('/auth/logout', async (req: Request, res: Response) => {
+  const cookieHeader = req.headers.cookie || '';
+  const cookies = Object.fromEntries(
+    cookieHeader.split(';').map(c => {
+      const parts = c.trim().split('=');
+      return [parts[0], decodeURIComponent(parts.slice(1).join('='))];
+    })
+  );
+  const authHeader = req.headers.authorization;
+  const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.substring(7) : null;
+  const token = req.sessionToken || bearerToken || cookies['convee_session'];
+
+  if (token) {
+    try {
+      await run('DELETE FROM sessions WHERE token = ?', [token]);
+    } catch (e) {
+      console.error('Error deleting session:', e);
+    }
   }
   res.clearCookie('convee_session', { path: '/' });
   if (req.user) {
-    await logAudit(req.user, 'LOGOUT', 'users', req.user.id, `Pengguna ${req.user.username} log keluar.`);
+    await logAudit(req.user, 'LOGOUT', 'users', req.user.id, `User ${req.user.username} logged out.`).catch(() => {});
   }
-  return res.json({ success: true, message: 'Berjaya log keluar.' });
+  return res.json({ success: true, message: 'Successfully logged out.' });
 });
 
 apiRouter.get('/auth/me', requireAuth, (req: Request, res: Response) => {
