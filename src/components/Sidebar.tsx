@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext.js';
+import { DashboardStats } from '../types/index.js';
 import {
   LayoutDashboard,
   Users,
@@ -37,6 +38,7 @@ interface SidebarProps {
   onSelectTab: (tab: NavTab) => void;
   isOpen: boolean;
   onClose: () => void;
+  stats?: DashboardStats | null;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -44,9 +46,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectTab,
   isOpen,
   onClose,
+  stats,
 }) => {
   const { user, logout } = useAuth();
   const isAdmin = user?.role === 'admin';
+
+  const totalOccupied = stats ? stats.total_active_patients : 6;
+  const maleCount = stats ? stats.male_zone_count : 3;
+  const femaleCount = stats ? stats.female_zone_count : 3;
+  const occupancyPercent = Math.min(100, Math.round((totalOccupied / 30) * 100));
 
   const clinicalItems: { id: NavTab; label: string; icon: React.FC<{ className?: string }> }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -183,14 +191,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <Bed className="w-3.5 h-3.5" />
                 Bed Capacity
               </span>
-              <span className="text-[11px] font-mono text-emerald-800 font-extrabold">6 / 12</span>
+              <span className="text-[11px] font-mono text-emerald-800 font-extrabold">{totalOccupied} / 30</span>
             </div>
             {/* Progress bar */}
             <div className="w-full h-1.5 bg-white/80 rounded-full overflow-hidden">
-              <div className="h-full bg-[#0B3B2C] rounded-full" style={{ width: '50%' }} />
+              <div
+                className="h-full bg-[#0B3B2C] rounded-full transition-all duration-300"
+                style={{ width: `${occupancyPercent}%` }}
+              />
             </div>
             <p className="text-[10px] text-slate-500 mt-2 font-medium">
-              Male Ward: 3/6 · Female Ward: 3/6
+              Male Ward: {maleCount}/15 · Female Ward: {femaleCount}/15
             </p>
           </div>
 
