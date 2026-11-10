@@ -2,12 +2,9 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext.js';
 import {
   LogOut,
-  Plus,
-  ClipboardPenLine,
   Menu,
   Search,
   Bell,
-  Clock,
   CircleDot,
 } from 'lucide-react';
 import { ZoneType } from '../types/index.js';
@@ -15,36 +12,17 @@ import { ZoneType } from '../types/index.js';
 interface HeaderProps {
   currentZone: ZoneType | '';
   onZoneChange: (zone: ZoneType | '') => void;
-  onOpenAdmission: () => void;
-  onOpenMonitoring: () => void;
+  onOpenAdmission?: () => void;
+  onOpenMonitoring?: () => void;
   onToggleSidebar: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   currentZone,
   onZoneChange,
-  onOpenAdmission,
-  onOpenMonitoring,
   onToggleSidebar,
 }) => {
   const { user, logout } = useAuth();
-
-  // Determine current active shift based on local hour
-  const now = new Date();
-  const hour = now.getHours();
-  let activeShiftName = 'Morning Shift';
-  let activeShiftHours = '7:00am – 5:00pm';
-  let isVitalShift = true;
-
-  if (hour >= 14 && hour < 21) {
-    activeShiftName = 'Evening Shift';
-    activeShiftHours = '2:00pm – 12:00am';
-    isVitalShift = false;
-  } else if (hour >= 21 || hour < 7) {
-    activeShiftName = 'Night Shift';
-    activeShiftHours = '9:00pm – 7:00am';
-    isVitalShift = true;
-  }
 
   const initials = user?.full_name
     ? user.full_name
@@ -119,16 +97,8 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Right: Shift Status, User & Primary CTA Button */}
+      {/* Right: User Profile & Controls */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Shift indicator badge */}
-        <div className="hidden xl:flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-white border border-emerald-950/5 text-xs font-medium shadow-2xs text-slate-700">
-          <Clock className="w-3.5 h-3.5 text-slate-400" />
-          <span className="font-bold text-[#0B3B2C]">{activeShiftName}</span>
-          <span className="text-slate-300">·</span>
-          <span className="font-mono text-slate-500 tabular-nums text-[11px]">{activeShiftHours}</span>
-        </div>
-
         {/* User Card */}
         <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-2xl bg-white border border-emerald-950/5 shadow-2xs">
           <div className="w-8 h-8 rounded-full bg-[#EAF5DC] text-[#0B3B2C] flex items-center justify-center font-bold text-xs ring-2 ring-[#C5E875]">
@@ -156,15 +126,6 @@ export const Header: React.FC<HeaderProps> = ({
             <LogOut className="w-4 h-4" />
           </button>
         </div>
-
-        {/* Primary CTA (Inspired by + Create campaigns in reference) */}
-        <button
-          onClick={onOpenAdmission}
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-[#0B3B2C] hover:bg-[#07281E] text-white text-xs font-semibold transition-all shadow-xs shrink-0"
-        >
-          <Plus className="w-3.5 h-3.5 text-[#C5E875]" />
-          <span>Admit Resident</span>
-        </button>
       </div>
     </header>
   );

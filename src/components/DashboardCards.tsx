@@ -17,6 +17,7 @@ import {
   Sparkles,
   PackageCheck,
   Pill,
+  Plus,
 } from 'lucide-react';
 import { NavTab } from './Sidebar.js';
 
@@ -49,7 +50,6 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
   onOpenMonitoring,
   onNavigateTab,
 }) => {
-  const [selectedDay, setSelectedDay] = useState<number>(3); // Wednesday active
   const [timeFilter, setTimeFilter] = useState<'All' | '30D' | '7D'>('7D');
   const [selectedBar, setSelectedBar] = useState<string | null>(null);
 
@@ -64,17 +64,6 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
       </div>
     );
   }
-
-  // Days of current week for calendar strip
-  const weekDays = [
-    { day: 'Mon', date: '14', status: 'Completed' },
-    { day: 'Tue', date: '15', status: 'Completed' },
-    { day: 'Wed', date: '16', status: 'Completed' },
-    { day: 'Thu', date: '17', status: 'Active' },
-    { day: 'Fri', date: '18', status: 'Scheduled' },
-    { day: 'Sat', date: '19', status: 'Scheduled' },
-    { day: 'Sun', date: '20', status: 'Scheduled' },
-  ];
 
   // Acuity trend bars representing clinical activity dynamically driven by timeFilter
   const chartDataByFilter: Record<
@@ -150,6 +139,66 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* 0. STAFF QUICK ACTIONS HUB: 3 core daily tools grouped in one easy-to-reach place */}
+      <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-emerald-950/10 shadow-xs">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-[#EAF5DC] text-[#0B3B2C] flex items-center justify-center font-bold shadow-2xs">
+              <Sparkles className="w-4 h-4 text-[#0B3B2C]" />
+            </div>
+            <div>
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">
+                Staff Quick Actions
+              </h3>
+              <p className="text-[11px] text-slate-500">
+                Primary daily shift actions for nursing & care staff
+              </p>
+            </div>
+          </div>
+          <span className="hidden sm:inline-flex text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#EAF5DC] text-[#0B3B2C] border border-[#C5E875]/60">
+            3 Core Daily Tools
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          {/* Button 1: Record Vitals (DAPUD) */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onOpenMonitoring();
+            }}
+            className="cursor-pointer py-3 px-4 rounded-2xl bg-[#0B3B2C] hover:bg-[#07281E] active:scale-98 text-white text-xs font-bold flex items-center justify-center gap-2.5 transition-all shadow-xs"
+          >
+            <ClipboardCheck className="w-4 h-4 text-[#C5E875] shrink-0" />
+            <span>Record Vitals (DAPUD)</span>
+          </button>
+
+          {/* Button 2: Inventory & Meds */}
+          {onNavigateTab && (
+            <button
+              type="button"
+              onClick={() => onNavigateTab('inventory')}
+              className="cursor-pointer py-3 px-4 rounded-2xl bg-[#EAF5DC] hover:bg-[#d8eec0] active:scale-98 text-[#0B3B2C] text-xs font-bold flex items-center justify-center gap-2.5 transition-colors border border-emerald-950/10 shadow-xs"
+            >
+              <PackageCheck className="w-4 h-4 text-[#0B3B2C] shrink-0" />
+              <span>Inventory & Meds</span>
+            </button>
+          )}
+
+          {/* Button 3: Admit Resident */}
+          <button
+            type="button"
+            onClick={onOpenAdmission}
+            className="cursor-pointer py-3 px-4 rounded-2xl bg-white hover:bg-slate-50 active:scale-98 text-slate-800 text-xs font-bold flex items-center justify-center gap-2.5 transition-colors border border-slate-200/90 shadow-2xs"
+          >
+            <Plus className="w-4 h-4 text-[#0B3B2C] shrink-0" />
+            <span>Admit Resident</span>
+          </button>
+        </div>
+      </div>
+
       {/* 1. TOP CARD: Multi-Metric Header Card with Vertical Dividers (Inspired by "Performance Over Time" in reference) */}
       <div className="bg-white rounded-3xl p-6 sm:p-7 border border-emerald-950/5 shadow-xs transition-all">
         {/* Header row */}
@@ -439,27 +488,6 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
               </span>
             </div>
 
-            {/* Calendar Strip */}
-            <div className="flex items-center justify-between gap-1.5 p-1 rounded-2xl bg-[#F4F8F4] border border-emerald-950/5 mb-5">
-              {weekDays.map((w, idx) => {
-                const isActive = selectedDay === idx;
-                return (
-                  <button
-                    key={w.day}
-                    onClick={() => setSelectedDay(idx)}
-                    className={`flex-1 py-2 px-1 rounded-xl flex flex-col items-center transition-all ${
-                      isActive
-                        ? 'bg-[#C5E875] text-[#0D382B] font-bold shadow-2xs'
-                        : 'text-slate-500 hover:text-slate-900'
-                    }`}
-                  >
-                    <span className="text-[10px] uppercase tracking-wider font-semibold">{w.day}</span>
-                    <span className="text-xs font-extrabold mt-0.5">{w.date}</span>
-                  </button>
-                );
-              })}
-            </div>
-
             {/* 3 Pastel Shift Schedule Cards (Amber, Cyan, Lavender) */}
             <div className="space-y-3">
               {/* Card 1: Warm Amber/Yellow (Morning Shift - Vital Check Required) */}
@@ -522,32 +550,6 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Quick Action Buttons */}
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onOpenMonitoring();
-              }}
-              className="cursor-pointer py-2.5 px-3 rounded-2xl bg-[#0B3B2C] hover:bg-[#07281E] active:scale-98 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-xs"
-            >
-              <ClipboardCheck className="w-4 h-4 text-[#C5E875]" />
-              <span>Record Vitals (DAPUD)</span>
-            </button>
-
-            {onNavigateTab && (
-              <button
-                onClick={() => onNavigateTab('inventory')}
-                className="py-2.5 px-3 rounded-2xl bg-[#EAF5DC] hover:bg-[#d8eec0] text-[#0B3B2C] text-xs font-bold flex items-center justify-center gap-2 transition-colors border border-emerald-950/10 shadow-xs"
-              >
-                <PackageCheck className="w-4 h-4 text-[#0B3B2C]" />
-                <span>Inventory & Meds</span>
-              </button>
-            )}
           </div>
         </div>
       </div>

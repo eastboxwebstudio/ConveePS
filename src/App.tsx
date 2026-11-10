@@ -23,7 +23,7 @@ import {
   apiGetDashboardSummary,
   apiUpdateKanbanStage,
 } from './lib/api.js';
-import { Activity } from 'lucide-react';
+import { Activity, ClipboardCheck, PackageCheck, Plus } from 'lucide-react';
 import { ErrorBoundary } from './components/ErrorBoundary.js';
 
 function MainApp() {
@@ -111,7 +111,7 @@ function MainApp() {
         />
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto px-4 sm:px-6 pb-8 pt-1">
+        <main className="flex-1 overflow-y-auto px-4 sm:px-6 pb-24 lg:pb-8 pt-1">
           <div className="max-w-7xl mx-auto space-y-6">
             {currentTab === 'dashboard' && (
               <DashboardCards
@@ -204,6 +204,46 @@ function MainApp() {
             {currentTab === 'settings' && <SettingsView />}
           </div>
         </main>
+        
+        {/* Mobile Sticky Quick Action Dock (3 Core Daily Tools grouped in one place for staff on phones) */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 px-3 py-2 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] flex items-center justify-around gap-2">
+          {/* Button 1: Record Vitals (DAPUD) */}
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedPatientForMonitoring(null);
+              setIsMonitoringOpen(true);
+            }}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl bg-[#0B3B2C] active:bg-[#07281E] text-white text-xs font-bold shadow-xs active:scale-95 transition-all text-center cursor-pointer"
+          >
+            <ClipboardCheck className="w-4 h-4 text-[#C5E875] shrink-0" />
+            <span className="truncate">Record Vitals</span>
+          </button>
+
+          {/* Button 2: Inventory & Meds */}
+          <button
+            type="button"
+            onClick={() => setCurrentTab('inventory')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs font-bold active:scale-95 transition-all text-center cursor-pointer ${
+              currentTab === 'inventory'
+                ? 'bg-[#C5E875] text-[#0D382B] shadow-xs'
+                : 'bg-[#EAF5DC] text-[#0B3B2C] border border-emerald-950/10'
+            }`}
+          >
+            <PackageCheck className="w-4 h-4 shrink-0" />
+            <span className="truncate">Inventory & Meds</span>
+          </button>
+
+          {/* Button 3: Admit Resident */}
+          <button
+            type="button"
+            onClick={() => setIsAdmissionOpen(true)}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl bg-slate-100 active:bg-slate-200 text-slate-800 border border-slate-200 text-xs font-bold active:scale-95 transition-all text-center cursor-pointer"
+          >
+            <Plus className="w-4 h-4 text-[#0B3B2C] shrink-0" />
+            <span className="truncate">Admit</span>
+          </button>
+        </div>
       </div>
 
       {/* Modals */}
